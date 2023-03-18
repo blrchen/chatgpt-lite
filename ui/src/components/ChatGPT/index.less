@@ -1,7 +1,7 @@
 @border-radius: 0.2rem;
 
 .chat-wrapper {
-  width: 100ch;
+  width: 100%;
   margin: 0 auto;
   .message-item {
     padding: 0.5rem 1rem;
@@ -152,5 +152,11 @@
         background-color: #ddd;
       }
     }
+  }
+}
+
+@media (min-width: 720px) {
+  .chat-wrapper {
+    width: 700px;
   }
 }

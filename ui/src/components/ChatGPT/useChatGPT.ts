@@ -54,21 +54,21 @@ export const useChatGPT = (props: ChatGPTProps) => {
   const currentMessage = useRef<string>('')
 
   const archiveCurrentMessage = () => {
-    setMessages((messages) => {
-      const data = [
-        ...messages,
-        {
-          content: currentMessage.current,
-          role: ChatRole.Assistant
-        }
-      ]
-      return data
-    })
-
-    setTimeout(() => {
-      setLoading(false)
-      currentMessage.current = ''
-    }, 0)
+    const content = currentMessage.current
+    currentMessage.current = ''
+    setLoading(false)
+    if (content) {
+      setMessages((messages) => {
+        return [
+          ...messages,
+          {
+            content,
+            role: ChatRole.Assistant
+          }
+        ]
+      })
+      scrollDown()
+    }
   }
 
   const fetchMessage = async (messages: ChatMessage[]) => {
@@ -91,8 +91,8 @@ export const useChatGPT = (props: ChatGPTProps) => {
           if (char) {
             currentMessage.current += char
             forceUpdate()
-            scrollDown()
           }
+          scrollDown()
         }
         done = readerDone
       }
