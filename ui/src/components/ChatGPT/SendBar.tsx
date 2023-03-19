@@ -1,6 +1,6 @@
 import React, { KeyboardEventHandler, useRef } from 'react'
 
-import { ClearOutlined } from '@ant-design/icons'
+import { ClearOutlined, SendOutlined } from '@ant-design/icons'
 
 import { ChatRole, SendBarProps } from './interface'
 import Show from './Show'
@@ -42,10 +42,9 @@ const SendBar = (props: SendBarProps) => {
       return
     }
 
-    // TODO: this conflicts with chinese input.
-    // if (e.key === 'Enter') {
-    //   handleSend()
-    // }
+    if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
+      handleSend()
+    }
   }
 
   return (
@@ -65,14 +64,14 @@ const SendBar = (props: SendBarProps) => {
           ref={inputRef!}
           className="input"
           disabled={disabled}
-          placeholder="Type message here"
+          placeholder="Type here. (Shift + Enter for new line)"
           autoComplete="off"
           rows={1}
           onKeyDown={onKeydown}
           onInput={onInputAutoSize}
         />
         <button className="button" title="Send" disabled={disabled} onClick={handleSend}>
-          Send
+          <SendOutlined />
         </button>
         <button className="button" title="Clear" disabled={disabled} onClick={handleClear}>
           <ClearOutlined />
