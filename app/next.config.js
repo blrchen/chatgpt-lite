@@ -3,6 +3,7 @@ const withLess = require("next-with-less");
 const path = require('node:path');
 
 const nextConfig = {
+  output: 'standalone',
   reactStrictMode: true,
   swcMinify: true,
   transpilePackages: ['antd-mobile'],

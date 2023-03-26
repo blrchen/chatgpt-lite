@@ -1,5 +1,6 @@
 import React, { KeyboardEventHandler, useRef } from 'react'
 
+import { ClearOutlined, SendOutlined } from '@ant-design/icons'
 
 import { ChatRole, SendBarProps } from './interface'
 import Show from './Show'
@@ -63,17 +64,17 @@ const SendBar = (props: SendBarProps) => {
           ref={inputRef!}
           className="input"
           disabled={disabled}
-          placeholder="Type here. (Shift + Enter for new line)"
+          placeholder="Shift + Enter for new line"
           autoComplete="off"
           rows={1}
           onKeyDown={onKeydown}
           onInput={onInputAutoSize}
         />
         <button className="button" title="Send" disabled={disabled} onClick={handleSend}>
-          Send
+          <SendOutlined />
         </button>
         <button className="button" title="Clear" disabled={disabled} onClick={handleClear}>
-          Clear
+          <ClearOutlined />
         </button>
       </div>
     </Show>
