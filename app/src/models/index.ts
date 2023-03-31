@@ -1,7 +1,6 @@
 export interface Message {
-  role: Role;
-  content: string;
+  role: Role
+  content: string
 }
 
-export type Role = "assistant" | "user";
-
+export type Role = 'assistant' | 'user'

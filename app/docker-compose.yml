@@ -1,4 +1,4 @@
-version: '3.6'
+version: '3.8'
 
 services:
   gptlite:
@@ -6,6 +6,8 @@ services:
     ports:
       - "3000:3000"
     environment:
+      - OPENAI_BASE_URL=
       - OPENAI_API_KEY=
-      - AZURE_OPENAI_API_BASE_URL=
+      - AZURE_OPENAI_BASE_URL=
+      - AZURE_OPENAI_DEPLOYMENT=
       - AZURE_OPENAI_API_KEY=
