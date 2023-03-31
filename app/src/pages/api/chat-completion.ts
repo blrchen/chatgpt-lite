@@ -1,118 +1,120 @@
-import {Message} from "@/models";
-import {createParser, ParsedEvent, ReconnectInterval} from "eventsource-parser";
+import { Message } from '@/models'
+import { createParser, ParsedEvent, ReconnectInterval } from 'eventsource-parser'
 
 export const config = {
-  runtime: "edge"
-};
+  runtime: 'edge'
+}
 
 const handler = async (req: Request): Promise<Response> => {
+  let deployment
   try {
     const { messages } = (await req.json()) as {
-      messages: Message[];
-    };
+      messages: Message[]
+    }
 
-    const charLimit = 12000;
-    let charCount = 0;
-    let messagesToSend = [];
+    const charLimit = 12000
+    let charCount = 0
+    let messagesToSend = []
 
     for (let i = 0; i < messages.length; i++) {
-      const message = messages[i];
+      const message = messages[i]
       if (charCount + message.content.length > charLimit) {
-        break;
+        break
       }
-      charCount += message.content.length;
-      messagesToSend.push(message);
+      charCount += message.content.length
+      messagesToSend.push(message)
     }
 
-    const useOpenAI = process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY.length > 0;
+    const useOpenAI = process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY.length > 0
 
-    let apiUrl: string;
-    let apiKey: string;
-    let model: string;
+    let apiUrl: string
+    let apiKey: string
+    let model: string
     if (useOpenAI) {
-      const endpoint = "https://api.openai.com";
-      model = "gpt-3.5-turbo";
-      apiUrl = `${endpoint}/v1/chat/completions`;
-      apiKey = process.env.OPENAI_API_KEY || '';
+      const apiBaseUrl = process.env.OPENAI_BASE_URL || 'https://api.openai.com'
+      apiUrl = `${apiBaseUrl}/v1/chat/completions`
+      apiKey = process.env.OPENAI_API_KEY || ''
+      model = 'gpt-3.5-turbo'
     } else {
-      const apiBaseUrl = process.env.AZURE_OPENAI_API_BASE_URL; //
-      const version = "2023-03-15-preview";
-      model = "gpt-35-turbo";
-      apiUrl = `${apiBaseUrl}/openai/deployments/${model}/chat/completions?api-version=${version}`;
-      apiKey = process.env.AZURE_OPENAI_API_KEY || '';
+      const apiBaseUrl = process.env.AZURE_OPENAI_BASE_URL
+      const version = '2023-03-15-preview'
+      const deployment = process.env.AZURE_OPENAI_DEPLOYMENT || ''
+      apiUrl = `${apiBaseUrl}/openai/deployments/${deployment}/chat/completions?api-version=${version}`
+      apiKey = process.env.AZURE_OPENAI_API_KEY || ''
+      model = 'gpt-35-turbo'
     }
 
-    const stream = await OpenAIStream(apiUrl, apiKey, model, messagesToSend);
+    const stream = await OpenAIStream(apiUrl, apiKey, model, messagesToSend)
 
-    return new Response(stream);
+    return new Response(stream)
   } catch (error) {
-    console.error(error);
-    return new Response("Error", { status: 500 });
+    console.error(error)
+    return new Response('Error', { status: 500 })
   }
-};
+}
 
-const OpenAIStream = async (apiUrl:string, apiKey:string, model:string,  messages: Message[]) => {
-  const encoder = new TextEncoder();
-  const decoder = new TextDecoder();
+const OpenAIStream = async (apiUrl: string, apiKey: string, model: string, messages: Message[]) => {
+  const encoder = new TextEncoder()
+  const decoder = new TextDecoder()
   const res = await fetch(apiUrl, {
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
       Authorization: `Bearer ${apiKey}`,
-      "api-key": `${apiKey}`
+      'api-key': `${apiKey}`
     },
-    method: "POST",
+    method: 'POST',
     body: JSON.stringify({
       model: model,
-      frequency_penalty:0,
+      frequency_penalty: 0,
       max_tokens: 4000,
       messages: [
         {
-          role: "system",
+          role: 'system',
           content: `You are an AI assistant that helps people find information.`
         },
         ...messages
       ],
-      presence_penalty:0,
+      presence_penalty: 0,
       stream: true,
       temperature: 0.7,
       top_p: 0.95
     })
-  });
+  })
 
   if (res.status !== 200) {
-    const statusText = res.statusText; 
-    throw new Error(`OpenAI API returned an error: ${statusText}`);
+    const statusText = res.statusText
+    throw new Error(`OpenAI API returned an error: ${statusText}`)
   }
 
   return new ReadableStream({
     async start(controller) {
       const onParse = (event: ParsedEvent | ReconnectInterval) => {
-        if (event.type === "event") {
-          const data = event.data;
+        if (event.type === 'event') {
+          const data = event.data
 
-          if (data === "[DONE]") {
-            controller.close();
-            return;
+          if (data === '[DONE]') {
+            controller.close()
+            return
           }
 
           try {
-            const json = JSON.parse(data);
-            const text = json.choices[0].delta.content;
-            const queue = encoder.encode(text);
-            controller.enqueue(queue);
+            const json = JSON.parse(data)
+            const text = json.choices[0].delta.content
+            const queue = encoder.encode(text)
+            controller.enqueue(queue)
           } catch (e) {
-            controller.error(e);
+            controller.error(e)
           }
         }
-      };
+      }
 
-      const parser = createParser(onParse);
+      const parser = createParser(onParse)
 
       for await (const chunk of res.body as any) {
-        const str = decoder.decode(chunk).replace("[DONE]\n", "[DONE]\n\n");
-        parser.feed(str);
+        const str = decoder.decode(chunk).replace('[DONE]\n', '[DONE]\n\n')
+        parser.feed(str)
       }
     }
-  });
-};
-export default handler;
+  })
+}
+export default handler
