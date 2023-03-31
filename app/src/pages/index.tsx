@@ -14,7 +14,7 @@ export default function Home() {
         <HeaderBar />
         <Content className={styles.main}>
           {/*<ChatGPT fetchPath="http://localhost:3000/api/chat-completion" />*/}
-          <ChatGPT fetchPath="https://gptlite-afi11hliq-blrchen.vercel.app/api/chat-completion" />
+          <ChatGPT fetchPath="https://gptlite.vercel.app/api/chat-completion" />
         </Content>
         <FooterBar />
       </Layout>
