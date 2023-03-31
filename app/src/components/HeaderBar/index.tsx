@@ -1,9 +1,12 @@
 import React from 'react'
 
-import { Layout } from 'antd'
+import { CompressOutlined, ExpandOutlined, GithubOutlined } from '@ant-design/icons'
+import { Layout, Space, Typography } from 'antd'
 
 import styles from './index.module.less'
-import Link from "antd/lib/typography/Link";
+
+const { Link } = Typography
+
 const { Header } = Layout
 
 const HeaderBar = () => {
@@ -11,8 +14,21 @@ const HeaderBar = () => {
     <>
       <Header className={styles.header}>
         <div className={styles.logoBar}>
-            <h1>Unleash Your Creativity with ChatGPT</h1>
+          <Link href="/">
+            <h1>GPT Lite</h1>
+          </Link>
         </div>
+        <Space className={styles.right} size={0}>
+          <span className={styles.right}>
+            <Link
+              className={styles.action}
+              href="https://github.com/blrchen/gptlite"
+              target="_blank"
+            >
+              <GithubOutlined />
+            </Link>
+          </span>
+        </Space>
       </Header>
       <div className={styles.vacancy} />
     </>
