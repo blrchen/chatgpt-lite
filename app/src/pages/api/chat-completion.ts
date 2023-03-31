@@ -25,25 +25,25 @@ const handler = async (req: Request): Promise<Response> => {
       messagesToSend.push(message)
     }
 
-    const useOpenAI = process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY.length > 0
+    const useAzureOpenAI =
+      process.env.AZURE_OPENAI_BASE_URL && process.env.AZURE_OPENAI_BASE_URL.length > 0
 
     let apiUrl: string
     let apiKey: string
     let model: string
-    if (useOpenAI) {
-      const apiBaseUrl = process.env.OPENAI_BASE_URL || 'https://api.openai.com'
-      apiUrl = `${apiBaseUrl}/v1/chat/completions`
-      apiKey = process.env.OPENAI_API_KEY || ''
-      model = 'gpt-3.5-turbo'
-    } else {
+    if (useAzureOpenAI) {
       const apiBaseUrl = process.env.AZURE_OPENAI_BASE_URL
       const version = '2023-03-15-preview'
       const deployment = process.env.AZURE_OPENAI_DEPLOYMENT || ''
       apiUrl = `${apiBaseUrl}/openai/deployments/${deployment}/chat/completions?api-version=${version}`
       apiKey = process.env.AZURE_OPENAI_API_KEY || ''
       model = 'gpt-35-turbo'
+    } else {
+      const apiBaseUrl = process.env.OPENAI_BASE_URL || 'https://api.openai.com'
+      apiUrl = `${apiBaseUrl}/v1/chat/completions`
+      apiKey = process.env.OPENAI_API_KEY || ''
+      model = 'gpt-3.5-turbo'
     }
-
     const stream = await OpenAIStream(apiUrl, apiKey, model, messagesToSend)
 
     return new Response(stream)
@@ -83,7 +83,9 @@ const OpenAIStream = async (apiUrl: string, apiKey: string, model: string, messa
 
   if (res.status !== 200) {
     const statusText = res.statusText
-    throw new Error(`OpenAI API returned an error: ${statusText}`)
+    throw new Error(
+      `The OpenAI API has encountered an error with a status code of ${res.status} and message ${statusText}`
+    )
   }
 
   return new ReadableStream({
