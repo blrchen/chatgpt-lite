@@ -15,6 +15,7 @@ const HeaderBar = () => {
       <Header className={styles.header}>
         <div className={styles.logoBar}>
           <Link href="/">
+            <img alt="logo" src="/logo192.png" />
             <h1>GPT Lite</h1>
           </Link>
         </div>

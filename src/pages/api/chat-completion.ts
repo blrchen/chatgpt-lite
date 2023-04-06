@@ -6,7 +6,6 @@ export const config = {
 }
 
 const handler = async (req: Request): Promise<Response> => {
-  let deployment
   try {
     const { messages } = (await req.json()) as {
       messages: Message[]
@@ -26,20 +25,20 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     const useAzureOpenAI =
-      process.env.AZURE_OPENAI_BASE_URL && process.env.AZURE_OPENAI_BASE_URL.length > 0
+      process.env.AZURE_OPENAI_API_BASE_URL && process.env.AZURE_OPENAI_API_BASE_URL.length > 0
 
     let apiUrl: string
     let apiKey: string
     let model: string
     if (useAzureOpenAI) {
-      const apiBaseUrl = process.env.AZURE_OPENAI_BASE_URL
+      const apiBaseUrl = process.env.AZURE_OPENAI_API_BASE_URL
       const version = '2023-03-15-preview'
       const deployment = process.env.AZURE_OPENAI_DEPLOYMENT || ''
       apiUrl = `${apiBaseUrl}/openai/deployments/${deployment}/chat/completions?api-version=${version}`
       apiKey = process.env.AZURE_OPENAI_API_KEY || ''
       model = 'gpt-35-turbo'
     } else {
-      const apiBaseUrl = process.env.OPENAI_BASE_URL || 'https://api.openai.com'
+      const apiBaseUrl = process.env.OPENAI_API_BASE_URL || 'https://api.openai.com'
       apiUrl = `${apiBaseUrl}/v1/chat/completions`
       apiKey = process.env.OPENAI_API_KEY || ''
       model = 'gpt-3.5-turbo'
