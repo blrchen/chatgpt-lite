@@ -1,3 +1,5 @@
+# This Dockerfile is generated based on sample in the following document
+# https://github.com/vercel/next.js/blob/canary/examples/with-docker/Dockerfile
 FROM node:18-alpine AS base
 
 # Install dependencies only when needed
