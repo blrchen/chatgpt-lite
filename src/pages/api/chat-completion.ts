@@ -31,17 +31,23 @@ const handler = async (req: Request): Promise<Response> => {
     let apiKey: string
     let model: string
     if (useAzureOpenAI) {
-      const apiBaseUrl = process.env.AZURE_OPENAI_API_BASE_URL
+      let apiBaseUrl = process.env.AZURE_OPENAI_API_BASE_URL
       const version = '2023-03-15-preview'
       const deployment = process.env.AZURE_OPENAI_DEPLOYMENT || ''
+      if (apiBaseUrl && apiBaseUrl.endsWith("/")) {
+        apiBaseUrl = apiBaseUrl.slice(0, -1);
+      }
       apiUrl = `${apiBaseUrl}/openai/deployments/${deployment}/chat/completions?api-version=${version}`
       apiKey = process.env.AZURE_OPENAI_API_KEY || ''
-      model = 'gpt-35-turbo'
+      model = '' // Azure Open AI always ignores the model and decides based on the deployment name passed through.
     } else {
-      const apiBaseUrl = process.env.OPENAI_API_BASE_URL || 'https://api.openai.com'
+      let apiBaseUrl = process.env.OPENAI_API_BASE_URL || 'https://api.openai.com'
+      if (apiBaseUrl && apiBaseUrl.endsWith("/")) {
+        apiBaseUrl = apiBaseUrl.slice(0, -1);
+      }
       apiUrl = `${apiBaseUrl}/v1/chat/completions`
       apiKey = process.env.OPENAI_API_KEY || ''
-      model = 'gpt-3.5-turbo'
+      model = 'gpt-3.5-turbo' // todo: allow this to be passed through from client and support gpt-4
     }
     const stream = await OpenAIStream(apiUrl, apiKey, model, messagesToSend)
 

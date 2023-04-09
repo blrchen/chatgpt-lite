@@ -13,8 +13,7 @@ export default function Home() {
       <Layout>
         <HeaderBar />
         <Content className={styles.main}>
-          {/* <ChatGPT fetchPath="http://localhost:3000/api/chat-completion" /> */}
-          <ChatGPT fetchPath="https://gptlite-next-westus3.azurewebsites.net/api/chat-completion" />
+           <ChatGPT fetchPath="/api/chat-completion" />
         </Content>
         <FooterBar />
       </Layout>
