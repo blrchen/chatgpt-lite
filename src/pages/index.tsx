@@ -13,7 +13,7 @@ export default function Home() {
       <Layout>
         <HeaderBar />
         <Content className={styles.main}>
-           <ChatGPT fetchPath="/api/chat-completion" />
+          <ChatGPT fetchPath="/api/chat-completion" />
         </Content>
         <FooterBar />
       </Layout>

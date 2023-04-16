@@ -38,7 +38,7 @@ GPT Lite 是一个基于 Next.js 和 AntD 的第三方 ChatGPT UI 页面，支�
 点击下面的 Deploy 按钮即可一键部署至 Vercel:
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fblrchen%2Fgptlite&env=OPENAI_API_KEY&project-name=gptlite&framework=nextjs&repository-name=gptlite)
 
-## 环境变量说明：
+## 环境变量说明
 
 OpenAI 相关环境变量：
 
@@ -49,16 +49,16 @@ OpenAI 相关环境变量：
 
 Azure Open AI 相关环境变量：
 
-| Name                        | Description                                    |
-| --------------------------- |------------------------------------------------|
-| AZURE_OPENAI_API_BASE_URL   | 类似格式：https://xxx.openai.azure.com         |
-| AZURE_OPENAPIKEY            | 密钥                                             |
-| AZURE_OPENDEPLOYMENT        | Model 部署名称                                     |
+| Name                      | Description                                    |
+|---------------------------|------------------------------------------------|
+| AZURE_OPENAI_API_BASE_URL | 类似格式：https://xxx.openai.azure.com           |
+| AZURE_OPENAI_APIKEY       | 密钥                                            |
+| AZURE_OPENAI_DEPLOYMENT   | Model 部署名称                                   |
 
-## 贡献代码方式:
+## 贡献代码方式
 
 欢迎提交各种PR。
 
-# 免责声明:
+# 免责声明
 
 此代码仅供演示和测试目的。
