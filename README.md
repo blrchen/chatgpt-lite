@@ -11,7 +11,6 @@ Example use cases for GPT Lite include:
 - Creating a private web-based ChatGPT for exclusive use among friends without sharing an API key.
 - Learning to develop web applications using OpenAI's API.
 
-
 [Live Demo](https://gptlite.vercel.app)
 ![demo](./docs/images/demo.jpg)
 
@@ -51,11 +50,11 @@ For OpenAI-specific environments:
 
 For Azure Open AI-specific environments:
 
-| Name                          | Description                                    |
-|-------------------------------|------------------------------------------------|
-| AZURE_OPEN_AI_API_BASE_URL    | Endpoint (e.g., https://xxx.openai.azure.com). |
-| AZURE_OPEN_AI_API_KEY         | Key                                            |
-| AZURE_OPEN_AI_API_DEPLOYMENT  | Model deployment name                        |
+| Name                       | Description                                    |
+|----------------------------|------------------------------------------------|
+| AZURE_OPENAI_API_BASE_URL  | Endpoint (e.g., https://xxx.openai.azure.com). |
+| AZURE_OPENAI_API_KEY       | Key                                            |
+| AZURE_OPENAI_DEPLOYMENT    | Model deployment name                          |
 
 ## Contribution
 We welcome PRs of any size.
