@@ -1,14 +1,11 @@
-import React, { KeyboardEventHandler, useRef } from 'react'
+import React, { KeyboardEventHandler } from 'react'
 
-import { ClearOutlined, SendOutlined } from '@ant-design/icons'
-
+import { ClearOutlined, SendOutlined, SettingOutlined } from '@ant-design/icons'
 import { ChatRole, SendBarProps } from './interface'
 import Show from './Show'
 
 const SendBar = (props: SendBarProps) => {
-  const { loading, disabled, onSend, onClear, onStop } = props
-
-  const inputRef = useRef<HTMLTextAreaElement>(null)
+  const { loading, disabled, inputRef, onSettings, onSend, onClear, onStop } = props
 
   const onInputAutoSize = () => {
     if (inputRef.current) {
@@ -70,11 +67,15 @@ const SendBar = (props: SendBarProps) => {
           onKeyDown={onKeydown}
           onInput={onInputAutoSize}
         />
+
         <button className="button" title="Send" disabled={disabled} onClick={handleSend}>
           <SendOutlined />
         </button>
         <button className="button" title="Clear" disabled={disabled} onClick={handleClear}>
           <ClearOutlined />
+        </button>
+        <button className="button" title="Settings" disabled={disabled} onClick={onSettings}>
+          <SettingOutlined />
         </button>
       </div>
     </Show>
