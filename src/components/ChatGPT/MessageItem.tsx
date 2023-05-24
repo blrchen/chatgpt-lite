@@ -27,7 +27,7 @@ const MessageItem = (props: ChatMessageItemProps) => {
 
   return (
     <div className="message-item">
-      <div className="meta">
+      <div className={`meta meta-${message.role}`}>
         <div className="avatar">
           <span className={message.role}></span>
         </div>

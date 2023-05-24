@@ -1,0 +1,43 @@
+.layout {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 100%;
+  .header {
+    padding-right: 150px;
+
+    --header-height: 64px;
+    > div:first-child {
+      float: left;
+      margin-right: 20px;
+    }
+    .menuWrapper {
+      display: inline;
+    }
+    > div:last-child {
+      transform: translate(100px, -64px);
+    }
+    ~ div {
+      height: 64px;
+    }
+  }
+  .main {
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    padding: 30px 50px 0;
+  }
+}
+
+@media (max-width: 767px) {
+  .layout {
+    .header {
+      padding: 0 16px;
+      > div:last-child {
+        display: none;
+      }
+    }
+    .main {
+      padding: 16px 16px 0;
+    }
+  }
+}
