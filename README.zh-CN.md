@@ -10,7 +10,7 @@ GPT Lite 的用途包括：
 - 创建便于家人朋友共享使用的 ChatGPT 程序，无需共享 API 密钥。
 - 学习如何使用 OpenAI API 开发 Web 应用程序。
 
-如需访问最小功能版本的 ChatGPT UI，请前往 [gptlite-minimal](https://github.com/blrchen/gptlite-minimal)。
+如需访问最小功能版本的 ChatGPT UI，请前往 [GPT Lite Minimal](https://github.com/blrchen/gptlite-minimal)。
 
 [在线演示](https://gptlite.vercel.app)
 ![演示](./docs/images/demo.jpg)

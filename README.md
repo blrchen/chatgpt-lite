@@ -11,7 +11,7 @@ Example use cases for GPT Lite include:
 - Creating a private web-based ChatGPT for exclusive use among friends without sharing an API key.
 - Learning web application development using OpenAI's API.
 
-For a minimal ChatGPT UI, visit [gptlite](https://github.com/blrchen/gptlite-minimal).
+For a minimal ChatGPT UI, visit [GPT Lite Minimal](https://github.com/blrchen/gptlite-minimal).
 
 [Live Demo](https://gptlite.vercel.app)
 ![demo](./docs/images/demo.jpg)
