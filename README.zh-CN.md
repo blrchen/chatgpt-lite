@@ -1,8 +1,8 @@
-# GPT Lite
+# ChatGPT Lite
 
 [English](./README.md) | 简体中文
 
-GPT Lite 是一个基于 Next.js 和 AntD 的 ChatGPT UI 应用，支持 OpenAI 和 Azure OpenAI 账户。
+ChatGPT Lite 是一个基于 Next.js 和 OpenAI Streaming API的 ChatGPT UI 应用，支持 OpenAI 和 Azure OpenAI 账户。
 
 GPT Lite 的用途包括：
 - 作为官方网站的替代品，解决免费版连接不稳定和刷新问题，节省 Plus 订阅费用。
@@ -10,10 +10,10 @@ GPT Lite 的用途包括：
 - 创建便于家人朋友共享使用的 ChatGPT 程序，无需共享 API 密钥。
 - 学习如何使用 OpenAI API 开发 Web 应用程序。
 
-如需访问最小功能版本的 ChatGPT UI，请前往 [GPT Lite Minimal](https://github.com/blrchen/gptlite-minimal)。
+如需访问最小功能版本的 ChatGPT UI，请前往 [ChatGPT Lite](https://github.com/blrchen/chatgpt-minimal)。
 
-[在线演示](https://gptlite.vercel.app)
-![演示](./docs/images/demo.jpg)
+[在线演示](https://chatgpt-lite.vercel.app)
+![演示](./docs/images/demo.zh-CN.jpg)
 
 ## 前提条件
 
@@ -38,7 +38,7 @@ GPT Lite 的用途包括：
 ## 在 Vercel 上一键部署
 
 点击下面的按钮一键部署到 Vercel：
-[![使用 Vercel 部署](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fblrchen%2Fgptlite&project-name=gptlite&framework=nextjs&repository-name=gptlite)
+[![使用 Vercel 部署](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fblrchen%2Fchatgpt-lite&project-name=chatgpt-lite&framework=nextjs&repository-name=chatgpt-lite)
 
 ## 环境变量
 
