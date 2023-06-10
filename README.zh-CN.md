@@ -12,7 +12,7 @@ GPT Lite 的用途包括：
 
 如需访问最小功能版本的 ChatGPT UI，请前往 [ChatGPT Lite](https://github.com/blrchen/chatgpt-minimal)。
 
-[在线演示](https://chatgpt-lite.vercel.app)
+[在线演示](https://gptlite.vercel.app)
 ![演示](./docs/images/demo.zh-CN.jpg)
 
 ## 前提条件

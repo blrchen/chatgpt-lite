@@ -13,7 +13,7 @@ Example use cases for GPT Lite include:
 
 For a minimal ChatGPT UI, visit [ChatGPT Minimal](https://github.com/blrchen/chatgpt-minimal).
 
-[Live Demo](https://chatgpt-lite.vercel.app)
+[Live Demo](https://gptlite.vercel.app)
 ![demo](./docs/images/demo.jpg)
 
 ## Prerequisites
