@@ -26,7 +26,7 @@ const HeaderBar = (props: HeaderBarProps) => {
         <div className={styles.logoBar}>
           <Link href="/">
             <img alt="logo" src="/logo192.png" />
-            <h1>GPT Lite (Preview)</h1>
+            <h1>ChatGPT Lite (Preview)</h1>
           </Link>
         </div>
         {children}
@@ -41,7 +41,7 @@ const HeaderBar = (props: HeaderBarProps) => {
           <span className={styles.right}>
             <Link
               className={styles.action}
-              href="https://github.com/blrchen/gptlite"
+              href="https://github.com/blrchen/chatgpt-lite"
               target="_blank"
             >
               <GithubOutlined />
