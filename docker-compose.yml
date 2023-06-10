@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  gptlite:
+  chatgpt-lite:
     build: .
     ports:
       - "3000:3000"

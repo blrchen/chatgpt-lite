@@ -1,8 +1,8 @@
-# GPT Lite
+# ChatGPT Lite
 
 English | [简体中文](./README.zh-CN.md)
 
-GPT Lite is a fast ChatGPT UI demo application built using Next.js and AntD. It supports both OpenAI and Azure OpenAI accounts.
+ChatGPT Lite is a fast ChatGPT UI application built using Next.js and And Design. It supports both OpenAI and Azure OpenAI accounts.
 
 Example use cases for GPT Lite include:
 
@@ -11,9 +11,9 @@ Example use cases for GPT Lite include:
 - Creating a private web-based ChatGPT for exclusive use among friends without sharing an API key.
 - Learning web application development using OpenAI's API.
 
-For a minimal ChatGPT UI, visit [GPT Lite Minimal](https://github.com/blrchen/gptlite-minimal).
+For a minimal ChatGPT UI, visit [ChatGPT Minimal](https://github.com/blrchen/chatgpt-minimal).
 
-[Live Demo](https://gptlite.vercel.app)
+[Live Demo](https://chatgpt-lite.vercel.app)
 ![demo](./docs/images/demo.jpg)
 
 ## Prerequisites
@@ -33,13 +33,13 @@ You need either an OpenAI account or an Azure OpenAI account.
 
 1. Clone the repository and navigate to the root directory.
 2. Update the `OPENAI_API_KEY` environment variable in the `docker-compose.yml` file.
-3. Build the application using `docker-compose build .`
+3. Build the application using `docker-compose build .`.
 4. Start it by running `docker-compose up -d`.
 
 ## One-click Deploy on Vercel
 
 Click the button below to deploy to Vercel:
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fblrchen%2Fgptlite&project-name=gptlite&framework=nextjs&repository-name=gptlite)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fblrchen%2Fchatgpt-lite&project-name=chatgpt-lite&framework=nextjs&repository-name=chatgpt-lite)
 
 ## Environment Variables
 

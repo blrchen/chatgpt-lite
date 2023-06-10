@@ -22,7 +22,7 @@ const menuItems = [
   {
     key: '/feedback',
     icon: <BugOutlined />,
-    label: <Link to="https://github.com/blrchen/gptlite/issues">Feedback</Link>
+    label: <Link to="https://github.com/blrchen/chatgpt-lite/issues">Feedback</Link>
   }
 ]
 
