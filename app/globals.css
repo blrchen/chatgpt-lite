@@ -1,0 +1,95 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root,
+html,
+body {
+  height: 100%;
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 0, 0, 0;
+    --background-end-rgb: 0, 0, 0;
+  }
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(to bottom, transparent, rgb(var(--background-end-rgb)))
+    rgb(var(--background-start-rgb));
+}
+
+.markdown pre {
+  word-break: break-all;
+  white-space: break-spaces;
+}
+
+.markdown ul {
+  @apply list-disc list-inside;
+}
+.markdown ol {
+  @apply list-decimal list-inside;
+  margin-bottom: 10px;
+  margin-left: 10px;
+}
+.markdown ul ul,
+.markdown ul ol,
+.markdown ol ul,
+.markdown ol ol {
+  @apply pl-5 mt-2;
+}
+.markdown ul > li > p:first-child,
+.markdown ol > li > p:first-child {
+  @apply contents;
+}
+.markdown ul > li > p:first-child ~ *,
+.markdown ol > li > p:first-child ~ * {
+  @apply mt-2;
+}
+.markdown ul > li,
+.markdown ol > li {
+  @apply mb-2;
+}
+.markdown blockquote,
+.markdown dd,
+.markdown dl,
+.markdown figure,
+.markdown h1,
+.markdown h2,
+.markdown h3,
+.markdown h4,
+.markdown h5,
+.markdown h6,
+.markdown hr,
+.markdown p,
+.markdown pre {
+  margin: revert;
+  margin-top: 0;
+  @apply mb-2;
+}
+.markdown code {
+  background-color: rgba(175, 184, 193, 0.2);
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgb(255 255 255 / 70%);
+  border-radius: 3px;
+  box-shadow: inset 0 0 5px rgb(0 21 41 / 5%);
+}
+
+::-webkit-scrollbar-track {
+  background: rgb(0 0 0 / 6%);
+  border-radius: 3px;
+  box-shadow: inset 0 0 5px rgb(0 21 41 / 5%);
+}

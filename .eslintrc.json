@@ -1,3 +1,22 @@
 {
-  "extends": "next/core-web-vitals"
+  "extends": "next/core-web-vitals",
+  "rules": {
+    "react/react-in-jsx-scope": 0,
+    "import/no-extraneous-dependencies": 0,
+    "no-sparse-arrays": 1,
+    "import/extensions": 0,
+    "no-shadow": 0,
+    "no-nested-ternary": 0,
+    "no-restricted-globals": 0,
+    "@typescript-eslint/ban-types": 0,
+    "react/static-property-placement": [
+      "warn",
+      "property assignment",
+      {
+        "contextTypes": "static public field",
+        "contextType": "static public field",
+        "displayName": "static public field"
+      }
+    ]
+  }
 }
