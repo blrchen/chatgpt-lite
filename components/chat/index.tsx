@@ -96,6 +96,7 @@ const Chat = (props: ChatProps, ref: any) => {
           }
           done = readerDone
         }
+        // The delay of timeout can not be 0 as it will cause the message to not be rendered in racing condition
         setTimeout(() => {
           setConversation?.([
             ...conversation!,
@@ -103,7 +104,7 @@ const Chat = (props: ChatProps, ref: any) => {
             { content: resultContent, role: 'assistant' }
           ])
           setCurrentMessage('')
-        }, 0)
+        }, 1)
       } else {
         const reuslt = await response.json()
         toast.error(reuslt.error)
