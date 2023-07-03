@@ -6,13 +6,13 @@ export interface Message {
 }
 export async function POST(req: NextRequest) {
   try {
-    const { input, messages, prompt } = (await req.json()) as {
-      input: string
-      messages: Message[]
+    const { prompt,  messages,input } = (await req.json()) as {
       prompt: string
+      messages: Message[]
+      input: string
     }
     const messagesWithHistory = [
-      { content: prompt, role: 'assistant' },
+      { content: prompt, role: 'system' },
       ...messages,
       { content: input, role: 'user' }
     ]
@@ -39,7 +39,7 @@ const getApiConfig = () => {
   let model: string
   if (useAzureOpenAI) {
     let apiBaseUrl = process.env.AZURE_OPENAI_API_BASE_URL
-    const version = '2023-03-15-preview'
+    const version = '2023-05-15'
     const deployment = process.env.AZURE_OPENAI_DEPLOYMENT || ''
     if (apiBaseUrl && apiBaseUrl.endsWith('/')) {
       apiBaseUrl = apiBaseUrl.slice(0, -1)
