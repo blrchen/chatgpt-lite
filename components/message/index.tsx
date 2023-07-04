@@ -17,7 +17,7 @@ const Message = (props: MessageProps) => {
     <div
       className={`group w-full text-gray-800 dark:text-gray-100 border-b border-black/10 bg-white`}
     >
-      <div className="text-sm gap-4 md:gap-6 md:max-w-2xl lg:max-w-2xl xl:max-w-3xl flex lg:px-0 m-auto w-full p-4">
+      <div className="text-sm gap-4 md:gap-6 md:max-w-2xl lg:max-w-2xl xl:max-w-3xl flex lg:px-4 w-full p-4">
         <div
           className={cs(
             `relative h-7 w-7 rounded-sm text-white flex items-center justify-center text-opacity-100r`,
