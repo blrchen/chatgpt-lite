@@ -7,7 +7,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "lint:prettier": "prettier --write '**/*.{ts,tsx,js,html,css,less,md}'"
+    "lint:fix": "eslint . --fix",
+    "lint:strict": "eslint --max-warnings=0 .",
+    "format": "prettier --write '**/*.{ts,tsx,js,html,css,md}'",
+    "format:check": "prettier --check '**/*.{ts,tsx,js,html,css,md}'"
   },
   "dependencies": {
     "@material-tailwind/react": "^2.0.3",

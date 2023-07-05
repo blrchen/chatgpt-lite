@@ -197,7 +197,7 @@ const useChatHook = () => {
       document.body.removeAttribute('style')
       localStorage.setItem(StorageKeys.Chat_List, JSON.stringify(chatList))
     }
-  }, [])
+  }, [onChangeChat, onCreateChat])
 
   useEffect(() => {
     if (currentChat) {
