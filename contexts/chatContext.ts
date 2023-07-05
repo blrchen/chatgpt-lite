@@ -2,7 +2,7 @@ import { createContext } from 'react'
 
 const ChatContext = createContext<{
   personaPanelType: string
-  DefaultPersona: Persona[]
+  DefaultPersonas: Persona[]
   currentChat?: Chat
   chatList: Chat[]
   personas: Persona[]
@@ -24,7 +24,7 @@ const ChatContext = createContext<{
   onClosePersonaPanel?: () => void
 }>({
   personaPanelType: 'chat',
-  DefaultPersona: [],
+  DefaultPersonas: [],
   chatList: [],
   personas: []
 })

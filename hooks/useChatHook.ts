@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
 import axios from 'axios'
 import { v4 as uuid } from 'uuid'
-
+import { DefaultPersonas } from '@/constants/persona'
 import { ChatGPInstance } from '@/components/chat'
 
 enum StorageKeys {
@@ -25,15 +25,6 @@ const uploadFiles = async (files: File[]) => {
   return data
 }
 
-export const DefaultPersona: Persona[] = [
-  {
-    id: 'chatgpt',
-    role: 'system',
-    name: 'ChatGPT',
-    prompt: 'You are an AI assistant that helps people find information.',
-    isDefault: true
-  }
-]
 let isInit = false
 
 const useChatHook = () => {
@@ -190,7 +181,7 @@ const useChatHook = () => {
 
       onChangeChat(currentChat || chatList[0])
     } else {
-      onCreateChat(DefaultPersona[0])
+      onCreateChat(DefaultPersonas[0])
     }
 
     return () => {
@@ -227,13 +218,13 @@ const useChatHook = () => {
 
   useEffect(() => {
     if (isInit && !openPersonaPanel && chatList.length === 0) {
-      onCreateChat(DefaultPersona[0])
+      onCreateChat(DefaultPersonas[0])
     }
     isInit = true
   }, [chatList, openPersonaPanel, onCreateChat])
 
   return {
-    DefaultPersona,
+    DefaultPersonas,
     chatRef,
     currentChat,
     chatList,
