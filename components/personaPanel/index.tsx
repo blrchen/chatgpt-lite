@@ -19,7 +19,7 @@ export interface PersonaPanelProps {}
 const PersonaPanel = (props: PersonaPanelProps) => {
   const {
     personaPanelType,
-    DefaultPersona,
+    DefaultPersonas,
     personas,
     openPersonaPanel,
     onDeletePersona,
@@ -52,8 +52,8 @@ const PersonaPanel = (props: PersonaPanelProps) => {
   )
 
   useEffect(() => {
-    handleSearch(personaPanelType, [...DefaultPersona, ...personas], searchText)
-  }, [personaPanelType, searchText, DefaultPersona, personas, handleSearch])
+    handleSearch(personaPanelType, [...DefaultPersonas, ...personas], searchText)
+  }, [personaPanelType, searchText, DefaultPersonas, personas, handleSearch])
 
   return openPersonaPanel ? (
     <div className="absolute top-0 z-10 h-full w-full flex-1 flex-col overflow-auto bg-white">

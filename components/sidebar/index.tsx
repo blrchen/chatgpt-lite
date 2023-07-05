@@ -20,7 +20,7 @@ const Sidebar = () => {
   const {
     currentChat,
     chatList,
-    DefaultPersona,
+    DefaultPersonas,
     onDeleteChat,
     onChangeChat,
     onCreateChat,
@@ -33,7 +33,7 @@ const Sidebar = () => {
           <ListItem
             className="border border-dashed border-green-300 rounded-sm py-2 items-center hover:bg-white active:bg-white hover:border-green-400 "
             onClick={() => {
-              onCreateChat?.(DefaultPersona[0])
+              onCreateChat?.(DefaultPersonas[0])
             }}
           >
             <Typography className="text-center flex-1 text-sm  text-green-500">New Chat</Typography>
