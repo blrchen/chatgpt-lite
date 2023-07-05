@@ -34,7 +34,7 @@ const NormalForm = (props: NormalFormProps, ref: any) => {
       setValue('name', detail.name, { shouldTouch: true })
       setValue('prompt', detail.prompt, { shouldTouch: true })
     }
-  }, [detail, setValue])
+  }, [detail])
 
   return (
     <form onSubmit={formSubmit}>
