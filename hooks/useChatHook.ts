@@ -188,6 +188,7 @@ const useChatHook = () => {
       document.body.removeAttribute('style')
       localStorage.setItem(StorageKeys.Chat_List, JSON.stringify(chatList))
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {

@@ -32,6 +32,7 @@ const PersonaPanel = (props: PersonaPanelProps) => {
   const [promptList, setPromptList] = useState<Persona[]>([])
   const [searchText, setSearchText] = useState('')
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const handleSearch = useCallback(
     debounce((type: string, list: Persona[], searchText: string) => {
       setPromptList(

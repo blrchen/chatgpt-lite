@@ -34,6 +34,7 @@ const NormalForm = (props: NormalFormProps, ref: any) => {
       setValue('name', detail.name, { shouldTouch: true })
       setValue('prompt', detail.prompt, { shouldTouch: true })
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [detail])
 
   return (
