@@ -176,9 +176,7 @@ const Chat = (props: ChatProps, ref: any) => {
         {currentChat?.persona?.name}
       </div>
       <div className="flex-1 overflow-auto">
-        {conversation?.map((item, index) => (
-          <Message key={index} message={item} />
-        ))}
+        {conversation?.map((item, index) => <Message key={index} message={item} />)}
         {currentMessage && <Message message={{ content: currentMessage, role: 'assistant' }} />}
         <div ref={bottomOfChatRef}></div>
       </div>
