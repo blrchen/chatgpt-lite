@@ -3,7 +3,7 @@ export const DefaultPersonas: Persona[] = [
     id: 'chatgpt',
     role: 'system',
     name: 'ChatGPT',
-    prompt: 'You are an AI assistant that helps people find information.',
+    prompt: 'You are ChatGPT, a large language model trained by OpenAI.',
     isDefault: true
   },
   {
