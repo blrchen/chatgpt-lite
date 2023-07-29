@@ -178,6 +178,7 @@ const Chat = (props: ChatProps, ref: any) => {
       <div className="flex-1 overflow-auto">
         {conversation?.map((item, index) => <Message key={index} message={item} />)}
         {currentMessage && <Message message={{ content: currentMessage, role: 'assistant' }} />}
+        <div className="flex justify-center">{isLoading && <Spinner className="h-8 w-8" />}</div>
         <div ref={bottomOfChatRef}></div>
       </div>
       <div className="w-full border-t bg-white p-2">
@@ -198,7 +199,6 @@ const Chat = (props: ChatProps, ref: any) => {
             onChange={(e) => setMessage(e.target.value)}
             onKeyDown={handleKeypress}
           ></textarea>
-          {isLoading && <Spinner color="blue" />}
           <IconButton disabled={isLoading} color="blue-gray" size="sm" onClick={sendMessage}>
             <FiSend className="h-4 w-4" />
           </IconButton>
