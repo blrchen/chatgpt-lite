@@ -2,57 +2,85 @@
 
 English | [简体中文](./README.zh-CN.md)
 
-ChatGPT Lite is a fast ChatGPT UI application developed using Next.js. It supports both OpenAI and Azure OpenAI accounts.
+ChatGPT Lite is a lightweight ChatGPT web interface developed using Next.js and the [OpenAI Chat API](https://platform.openai.com/docs/api-reference/chat). It's compatible with both OpenAI and Azure OpenAI accounts.
 
-Example use cases for GPT Lite include:
+Key features:
 
-- A cost-effective alternative to ChatGPT's free version or Plus subscription ($20/month) by deploying a custom webchat UI with API integration.
-- Deploying a custom ChatGPT web app to explore OpenAI's ChatGPT completion API and prompting capabilities.
-- Creating a private web-based ChatGPT for exclusive use among friends without sharing an API key.
-- A high-quality code base that serves as an excellent starting point for your next AI Next.js project.
+- Deploy a custom ChatGPT web interface that supports markdown, prompt storage, and multi-person chats.
+- Create a private, web-based ChatGPT for use among friends without sharing your API key.
+- Clear and expandable codebase, ideal as a starting point for your next AI Next.js project.
 
-Visit [ChatGPT Minimal](https://github.com/blrchen/chatgpt-minimal) for a beginner-friendly version of the ChatGPT UI code base.
+## Demo
 
-[Live Demo](https://gptlite.vercel.app)
+Visit the demo site here: [ChatGPT Demo Site](https://gptlite.vercel.app)
+
 ![demo](./docs/images/demo.jpg)
+
+For a beginner-friendly version of the ChatGPT UI codebase, visit [ChatGPT Minimal](https://github.com/blrchen/chatgpt-minimal).
 
 ## Prerequisites
 
-You'll need either an OpenAI account or an Azure OpenAI account.
+You need an OpenAI or Azure OpenAI account.
 
-## Running Locally
+## Deployment
+
+Refer to the [Environment Variables](#environment-variables) section for necessary environment variables.
+
+### Deploy on Vercel
+
+Click the button below to deploy on Vercel:
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fblrchen%2Fchatgpt-lite&project-name=chatgpt-lite&framework=nextjs&repository-name=chatgpt-lite)
+
+### Deploy with Docker
+
+For OpenAI account users:
+
+```
+docker run -d -p 3000:3000 \
+   -e OPENAI_API_KEY="<REPLACE-ME>" \
+   blrchen/chatgpt-lite
+```
+
+For Azure OpenAI account users:
+
+```
+docker run -d -p 3000:3000 \
+   -e AZURE_OPENAI_API_BASE_URL="<REPLACE-ME>" \
+   -e AZURE_OPENAI_API_KEY="<REPLACE-ME>" \
+   -e AZURE_OPENAI_DEPLOYMENT="<REPLACE-ME>" \
+   blrchen/chatgpt-lite
+```
+
+## Development
+
+### Running Locally
 
 1. Install NodeJS 18.
 2. Clone the repository.
 3. Install dependencies with `npm install`.
-4. Copy `.env.example` file to `.env.local` and update environment variables.
+4. Copy `.env.example` to `.env.local` and update environment variables.
 5. Start the application using `npm run dev`.
 6. Visit `http://localhost:3000` in your browser.
 
-## Run with Docker
+### Running Locally with Docker
 
 1. Clone the repository and navigate to the root directory.
 2. Update the `OPENAI_API_KEY` environment variable in the `docker-compose.yml` file.
 3. Build the application using `docker-compose build .`.
 4. Start it by running `docker-compose up -d`.
 
-## One-click Deploy on Vercel
-
-Click the button below to deploy to Vercel:
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fblrchen%2Fchatgpt-lite&project-name=chatgpt-lite&framework=nextjs&repository-name=chatgpt-lite)
-
 ## Environment Variables
 
-You will need to use the environment variables defined in [`.env.example`](.env.example) to run the application. Below is an explanation of each environment variable:
+Required environment variables:
 
-For OpenAI-specific environments:
+For OpenAI account:
 
-| Name                | Description                                                                                            | Default Value            |
-| ------------------- | ------------------------------------------------------------------------------------------------------ | ------------------------ |
-| OPENAI_API_BASE_URL | Use only if you intend to use a reserved proxy for `api.openai.com`.                                   | `https://api.openai.com` |
-| OPENAI_API_KEY      | Obtain secret key string from the [Open AI API website](https://platform.openai.com/account/api-keys). |
+| Name                | Description                                                                                             | Default Value            |
+| ------------------- | ------------------------------------------------------------------------------------------------------- | ------------------------ |
+| OPENAI_API_BASE_URL | Use if you plan to use a reverse proxy for `api.openai.com`.                                            | `https://api.openai.com` |
+| OPENAI_API_KEY      | Secret key string obtained from the [OpenAI API website](https://platform.openai.com/account/api-keys). |
 
-For Azure Open AI-specific environments:
+For Azure OpenAI account:
 
 | Name                      | Description                                    |
 | ------------------------- | ---------------------------------------------- |
@@ -62,8 +90,8 @@ For Azure Open AI-specific environments:
 
 ## Contribution
 
-We welcome PRs of any size.
+PRs of all sizes are welcome.
 
 ## Disclaimers
 
-This code is intended solely for demonstration and testing purposes.
+This code is intended for demonstration and testing purposes only.
