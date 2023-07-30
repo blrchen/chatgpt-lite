@@ -174,11 +174,11 @@ const Chat = (props: ChatProps, ref: any) => {
     <div className="flex relative max-w-full flex-1 flex-col h-full bg-gray-100">
       <div className="flex w-full items-center justify-center gap-1 border-b border-black/10 bg-gray-50 p-3 text-blue-gray-900">
         {currentChat?.persona?.name}
+        {isLoading && <Spinner color="blue" />}
       </div>
       <div className="flex-1 overflow-auto">
         {conversation?.map((item, index) => <Message key={index} message={item} />)}
         {currentMessage && <Message message={{ content: currentMessage, role: 'assistant' }} />}
-        <div className="flex justify-center">{isLoading && <Spinner className="h-8 w-8" />}</div>
         <div ref={bottomOfChatRef}></div>
       </div>
       <div className="w-full border-t bg-white p-2">
