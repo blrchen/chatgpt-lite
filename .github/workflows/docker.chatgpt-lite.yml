@@ -30,8 +30,8 @@ jobs:
       - name: Build and push multi-arch image
         uses: docker/build-push-action@v4
         with:
-          context: ./chatgpt-lite
-          file: chatgpt-lite/Dockerfile
+          context: .
+          file: ./Dockerfile
           platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
