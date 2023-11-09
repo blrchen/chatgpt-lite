@@ -79,6 +79,7 @@ For OpenAI account:
 | ------------------- | ------------------------------------------------------------------------------------------------------- | ------------------------ |
 | OPENAI_API_BASE_URL | Use if you plan to use a reverse proxy for `api.openai.com`.                                            | `https://api.openai.com` |
 | OPENAI_API_KEY      | Secret key string obtained from the [OpenAI API website](https://platform.openai.com/account/api-keys). |
+| OPENAI_MODEL        | Model of GPT used                                                                                       | `gpt-3.5-turbo`          |
 
 For Azure OpenAI account:
 
