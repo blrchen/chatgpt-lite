@@ -15,7 +15,7 @@
   "dependencies": {
     "@material-tailwind/react": "2.0.6",
     "@microsoft/fetch-event-source": "2.0.1",
-    "axios": "1.4.0",
+    "axios": "1.6.0",
     "clsx": "1.2.1",
     "eventsource-parser": "1.0.0",
     "lodash-es": "4.17.21",
