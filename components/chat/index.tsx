@@ -106,8 +106,8 @@ const Chat = (props: ChatProps, ref: any) => {
           setCurrentMessage('')
         }, 1)
       } else {
-        const reuslt = await response.json()
-        toast.error(reuslt.error)
+        const result = await response.json()
+        toast.error(result.error)
       }
 
       setIsLoading(false)
