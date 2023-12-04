@@ -4,7 +4,7 @@
 
 ## 演示
 
-访问  [ChatGPT Lite 演示网站](https://bit.ly/chatgpt-lite)
+访问 [ChatGPT Lite 演示网站](https://bit.ly/chatgpt-lite)
 
 ## 功能
 
