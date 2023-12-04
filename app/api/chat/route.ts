@@ -54,7 +54,7 @@ const getApiConfig = () => {
     }
     apiUrl = `${apiBaseUrl}/v1/chat/completions`
     apiKey = process.env.OPENAI_API_KEY || ''
-    model = process.env.OPENAI_MODEL || 'gpt-3.5-turbo'
+    model = 'gpt-3.5-turbo' // todo: allow this to be passed through from client and support gpt-4
   }
 
   return { apiUrl, apiKey, model }
