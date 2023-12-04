@@ -12,10 +12,10 @@ const nextConfig = {
       {
         source: '/',
         destination: '/chat',
-        permanent: true,
-      },
+        permanent: true
+      }
     ]
-  },
+  }
 }
 
 module.exports = nextConfig

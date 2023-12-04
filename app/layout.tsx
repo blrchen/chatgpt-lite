@@ -12,11 +12,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-            <ThemesProvider>
-              <Header />
-              {children}
-              <Toaster />
-            </ThemesProvider>
+        <ThemesProvider>
+          <Header />
+          {children}
+          <Toaster />
+        </ThemesProvider>
       </body>
     </html>
   )

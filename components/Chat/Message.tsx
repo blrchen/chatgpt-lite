@@ -22,7 +22,7 @@ const Message = (props: MessageProps) => {
   return (
     <Flex gap="4" className="mb-5">
       <Avatar
-        fallback={ <SiOpenai className="h-4 w-4 " />}
+        fallback={<SiOpenai className="h-4 w-4" />}
         color={isUser ? undefined : 'green'}
         size="2"
         radius="full"
