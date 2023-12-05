@@ -1,15 +1,13 @@
 'use client'
 
 import { useContext } from 'react'
-import { Avatar, Flex, Text } from '@radix-ui/themes'
+import { Avatar, Flex } from '@radix-ui/themes'
 import { SiOpenai } from 'react-icons/si'
 import { HiUser } from 'react-icons/hi'
-import cs from 'classnames'
-
 import { Markdown } from '@/components'
-
 import ChatContext from './chatContext'
 import { ChatMessage } from './interface'
+
 export interface MessageProps {
   message: ChatMessage
 }
@@ -22,7 +20,7 @@ const Message = (props: MessageProps) => {
   return (
     <Flex gap="4" className="mb-5">
       <Avatar
-        fallback={<SiOpenai className="h-4 w-4" />}
+        fallback={isUser ? <HiUser className="h-4 w-4" /> : <SiOpenai className="h-4 w-4" />}
         color={isUser ? undefined : 'green'}
         size="2"
         radius="full"
