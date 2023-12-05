@@ -2,21 +2,21 @@
 
 [English](./README.md) | 简体中文
 
-ChatGPT Lite是一个基于Next.js和[OpenAI Chat API](https://platform.openai.com/docs/api-reference/chat)的网站程序，兼容OpenAI和Azure OpenAI账户。
+## 演示
 
-主要功能：
+访问 [ChatGPT Lite 演示网站](https://bit.ly/chatgpt-lite)
+
+## 功能
+
+ChatGPT Lite是一个基于Next.js和[OpenAI Chat API](https://platform.openai.com/docs/api-reference/chat)的网站程序，兼容OpenAI和Azure OpenAI账户。
 
 - 部署个性化ChatGPT程序，支持Markdown显示，提示词商店，多角色对话等。
 - 创建供朋友使用的ChatGPT程序，无需共享API密钥。
-- 提供清晰的代码，易于扩展，适合作为你的下一个AI Next.js项目的起点。
-
-## Demo
-
-在线演示网站: [ChatGPT Lite 演示网站](https://gptlite.vercel.app)
+- 提供清晰易读的代码，便于扩展，适合作为你的下一个AI Next.js项目的起点。
 
 ![演示](./docs/images/demo.zh-CN.jpg)
 
-对初学者友好的ChatGPT UI代码库，请访问[ChatGPT Minimal](https://github.com/blrchen/chatgpt-minimal)。
+如需对初学者友好的ChatGPT UI代码库，请访问[ChatGPT Minimal](https://github.com/blrchen/chatgpt-minimal)。
 
 ## 前提条件
 
@@ -79,6 +79,7 @@ OpenAI账户环境变量：
 | ------------------- | ---------------------------------------------------------------------------------- | ------------------------ |
 | OPENAI_API_BASE_URL | 如需为`api.openai.com`使用反向代理，请使用此变量。                                 | `https://api.openai.com` |
 | OPENAI_API_KEY      | 从[OpenAI API网站](https://platform.openai.com/account/api-keys)获取的密钥字符串。 |
+| OPENAI_MODEL        | GPT模型                                                                            | `gpt-3.5-turbo`          |
 
 Azure OpenAI账户环境变量：
 
@@ -91,7 +92,3 @@ Azure OpenAI账户环境变量：
 ## 贡献
 
 欢迎提交各种大小的PR。
-
-## 免责声明
-
-此代码仅供演示和测试使用。

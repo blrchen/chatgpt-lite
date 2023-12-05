@@ -1,0 +1,45 @@
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+@import '@radix-ui/themes/styles.css';
+
+:root {
+  @apply h-full;
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 0, 0, 0;
+    --background-end-rgb: 0, 0, 0;
+  }
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  @apply h-full;
+}
+
+.prose :where(pre):not(:where([class~='not-prose'], [class~='not-prose'] *)) {
+  position: relative;
+  background-color: rgb(30, 30, 30) !important;
+}
+
+.radix-themes {
+  @apply flex flex-col;
+}
+
+.navbar-collapse {
+  @apply max-md:absolute  max-md:top-14 max-md:gap-0 max-md:left-0 max-md:right-0 max-md:px-1 max-md:flex-col max-md:items-start max-md:backdrop-blur-md max-md:bg-white/20 max-md:shadow-sm max-md:overflow-hidden;
+  height: 0px;
+  transition: 0.5s;
+  > a {
+    @apply py-2 w-full;
+  }
+  &.show {
+    height: 168px;
+  }
+}

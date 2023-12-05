@@ -1,0 +1,48 @@
+.chat-textarea {
+  .rt-TextAreaInput {
+    height: 50px;
+    @apply py-3 px-4 pr-24;
+  }
+}
+
+.chart-sider-bar {
+  @apply overflow-hidden w-64 z-10;
+
+  background-color: var(--color-background);
+  transition: 0.5s;
+
+  @apply max-md:absolute max-md:top-0 max-md:bottom-0   max-md:border-none max-md:w-0;
+
+  .rt-ScrollAreaViewport > div {
+    display: block;
+  }
+
+  > div {
+    border-right: 1px solid var(--gray-a4);
+  }
+
+  &.show {
+    @apply w-64;
+  }
+}
+
+.bg-token-surface-primary {
+  @apply flex gap-2 select-none items-center rounded-2xl px-3 py-2 duration-100;
+  background-color: var(--accent-a2);
+
+  &:hover {
+    background-color: var(--accent-a3);
+  }
+}
+
+.bg-token-surface {
+  @apply flex gap-2 select-none items-center rounded-2xl px-3 py-2 duration-100 justify-between;
+
+  &.active {
+    background-color: var(--accent-a4);
+  }
+
+  &:hover {
+    background-color: var(--accent-a3);
+  }
+}

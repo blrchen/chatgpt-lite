@@ -2,17 +2,17 @@
 
 English | [简体中文](./README.zh-CN.md)
 
-ChatGPT Lite is a lightweight ChatGPT web interface developed using Next.js and the [OpenAI Chat API](https://platform.openai.com/docs/api-reference/chat). It's compatible with both OpenAI and Azure OpenAI accounts.
+## Demo
 
-Key features:
+Visit the [ChatGPT Lite Demo Site](https://bit.ly/chatgpt-lite)
+
+## Features
+
+ChatGPT Lite is a lightweight ChatGPT web interface developed using Next.js and the [OpenAI Chat API](https://platform.openai.com/docs/api-reference/chat). It's compatible with both OpenAI and Azure OpenAI accounts.
 
 - Deploy a custom ChatGPT web interface that supports markdown, prompt storage, and multi-person chats.
 - Create a private, web-based ChatGPT for use among friends without sharing your API key.
 - Clear and expandable codebase, ideal as a starting point for your next AI Next.js project.
-
-## Demo
-
-Visit the demo site here: [ChatGPT Demo Site](https://gptlite.vercel.app)
 
 ![demo](./docs/images/demo.jpg)
 
@@ -92,7 +92,3 @@ For Azure OpenAI account:
 ## Contribution
 
 PRs of all sizes are welcome.
-
-## Disclaimers
-
-This code is intended for demonstration and testing purposes only.

@@ -1,0 +1,41 @@
+.spin-loading {
+  @apply relative select-none;
+
+  .spin-chidren::after {
+    @apply opacity-100 pointer-events-none;
+  }
+
+  .spin-loading-layer-inner {
+    @apply absolute top-1/2 left-1/2;
+    transform: translate(-50%, -50%);
+    z-index: 2;
+  }
+}
+
+.spin-chidren {
+  &::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--gray-a3);
+    opacity: 0;
+    transition: opacity 0.1s cubic-bezier(0, 0, 1, 1);
+    pointer-events: none;
+    z-index: 1;
+  }
+}
+
+.spin-loading-layer {
+  @apply text-center select-none;
+}
+
+.spin-dot-list {
+  @apply relative inline-block w-14 h-2;
+  transform-style: preserve-3d;
+  perspective: 200px;
+}
