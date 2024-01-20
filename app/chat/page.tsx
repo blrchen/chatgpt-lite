@@ -1,8 +1,7 @@
 'use client'
 
 import { Flex } from '@radix-ui/themes'
-import { Chat, ChatSiderBar, PersonaPanel, ChatContext, useChatHook } from '@/components'
-
+import { Chat, ChatContext, ChatSideBar, PersonaPanel, useChatHook } from '@/components'
 import PersonaModal from './PersonaModal'
 
 const ChatPage = () => {
@@ -11,7 +10,7 @@ const ChatPage = () => {
   return (
     <ChatContext.Provider value={provider}>
       <Flex style={{ height: 'calc(100% - 56px)' }} className="relative">
-        <ChatSiderBar />
+        <ChatSideBar />
         <div className="flex-1 relative">
           <Chat ref={provider.chatRef} />
           <PersonaPanel />

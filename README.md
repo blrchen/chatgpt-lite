@@ -29,6 +29,7 @@ Refer to the [Environment Variables](#environment-variables) section for necessa
 ### Deploy on Vercel
 
 Click the button below to deploy on Vercel:
+
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fblrchen%2Fchatgpt-lite&project-name=chatgpt-lite&framework=nextjs&repository-name=chatgpt-lite)
 
 ### Deploy with Docker

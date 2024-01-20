@@ -29,6 +29,7 @@ ChatGPT Lite是一个基于Next.js和[OpenAI Chat API](https://platform.openai.c
 ### 在Vercel上部署
 
 点击下方按钮部署到Vercel：
+
 [![使用Vercel部署](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fblrchen%2Fchatgpt-lite&project-name=chatgpt-lite&framework=nextjs&repository-name=chatgpt-lite)
 
 ### 使用Docker部署

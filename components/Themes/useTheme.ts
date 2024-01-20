@@ -1,6 +1,6 @@
 import { useContext } from 'react'
-import { ThemeContext } from './ThemeContext'
 import { UseThemeProps } from './interface'
+import { ThemeContext } from './ThemeContext'
 
 const defaultContext: UseThemeProps = { setTheme: (_) => {}, themes: [] }
 

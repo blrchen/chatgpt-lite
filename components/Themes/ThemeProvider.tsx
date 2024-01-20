@@ -1,13 +1,10 @@
 'use client'
 
 import { Fragment, useCallback, useContext, useEffect, useMemo, useState } from 'react'
-
-import { MEDIA, ColorSchemes, disableAnimation, getSystemTheme } from './utils'
-
+import { ThemeProviderProps } from './interface'
 import { ThemeContext } from './ThemeContext'
 import ThemeScript from './ThemeScript'
-
-import { ThemeProviderProps } from './interface'
+import { ColorSchemes, disableAnimation, getSystemTheme, MEDIA } from './utils'
 
 export const ThemeProvider = (props: ThemeProviderProps) => {
   const context = useContext(ThemeContext)
