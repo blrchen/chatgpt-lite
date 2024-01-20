@@ -1,15 +1,15 @@
 'use client'
 
-import { usePathname } from 'next/navigation'
-import NextLink from 'next/link'
-import { Flex, Heading, IconButton, Select, Tooltip } from '@radix-ui/themes'
-import { HamburgerMenuIcon } from '@radix-ui/react-icons'
-import cs from 'classnames'
-import { Link } from './Link'
-import { FaAdjust, FaMoon, FaRegSun } from 'react-icons/fa'
-import { HeaderUser } from './HeaderUser'
-import { useTheme } from './Themes'
 import { useCallback, useState } from 'react'
+import { HamburgerMenuIcon } from '@radix-ui/react-icons'
+import { Avatar, Flex, Heading, IconButton, Select, Tooltip } from '@radix-ui/themes'
+import cs from 'classnames'
+import NextLink from 'next/link'
+import { usePathname } from 'next/navigation'
+import { FaAdjust, FaGithub, FaMoon, FaRegSun } from 'react-icons/fa'
+import { Link } from './Link'
+import { useTheme } from './Themes'
+
 export interface HeaderProps {
   children?: React.ReactNode
   gitHubLink?: string
@@ -32,10 +32,21 @@ export const Header = ({ children, gitHubLink, ghost }: HeaderProps) => {
     >
       <Flex align="center" gap="3">
         <NextLink href="/">
-          <Heading as="h2">ChatGPTLite</Heading>
+          <Heading as="h2" size="3" style={{ maxWidth: 200 }}>
+            ChatGPT Lite
+          </Heading>
         </NextLink>
         <Flex align="center" gap="3" className="ml-auto">
-          <HeaderUser />
+          <Avatar
+            color="gray"
+            size="2"
+            radius="full"
+            fallback={
+              <Link href="https://github.com/blrchen/chatgpt-lite">
+                <FaGithub />
+              </Link>
+            }
+          />
           <Select.Root value={theme} onValueChange={setTheme}>
             <Select.Trigger radius="full" />
             <Select.Content>

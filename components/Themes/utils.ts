@@ -25,6 +25,5 @@ export const disableAnimation = () => {
 export const getSystemTheme = (e?: MediaQueryList | MediaQueryListEvent) => {
   if (!e) e = window.matchMedia(MEDIA)
   const isDark = e.matches
-  const systemTheme = isDark ? 'dark' : 'light'
-  return systemTheme
+  return isDark ? 'dark' : 'light'
 }

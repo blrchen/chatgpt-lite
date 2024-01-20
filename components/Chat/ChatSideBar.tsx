@@ -1,17 +1,19 @@
 'use client'
 
-import { Box, Flex, IconButton, ScrollArea, Text } from '@radix-ui/themes'
 import React, { useContext } from 'react'
+import { Box, Flex, IconButton, ScrollArea, Text } from '@radix-ui/themes'
 import cs from 'classnames'
-import { SiOpenai } from 'react-icons/si'
 import { AiOutlineCloseCircle } from 'react-icons/ai'
+import { BiMessageDetail } from 'react-icons/bi'
+import { FiPlus } from 'react-icons/fi'
+import { RiRobot2Line } from 'react-icons/ri'
 import ChatContext from './chatContext'
 
 import './index.scss'
 
-export const ChatSiderBar = () => {
+export const ChatSideBar = () => {
   const {
-    currentChat,
+    currentChatRef,
     chatList,
     DefaultPersonas,
     toggleSidebar,
@@ -22,14 +24,14 @@ export const ChatSiderBar = () => {
   } = useContext(ChatContext)
 
   return (
-    <Flex direction="column" className={cs('chart-sider-bar', { show: toggleSidebar })}>
+    <Flex direction="column" className={cs('chart-side-bar', { show: toggleSidebar })}>
       <Flex className="p-2 h-full overflow-hidden w-64" direction="column" gap="3">
         <Box
           width="auto"
           onClick={() => onCreateChat?.(DefaultPersonas[0])}
           className="bg-token-surface-primary active:scale-95 "
         >
-          <SiOpenai className="h-5 w-5" />
+          <FiPlus className="h-4 w-4" />
           <Text>New Chat</Text>
         </Box>
         <ScrollArea className="flex-1" type="auto" scrollbars="vertical">
@@ -39,13 +41,16 @@ export const ChatSiderBar = () => {
                 key={chat.id}
                 width="auto"
                 className={cs('bg-token-surface active:scale-95 truncate', {
-                  active: currentChat?.id === chat.id
+                  active: currentChatRef?.current?.id === chat.id
                 })}
                 onClick={() => onChangeChat?.(chat)}
               >
-                <Text as="p" className="truncate">
-                  {chat.persona?.name}
-                </Text>
+                <Flex gap="2" align="center">
+                  <BiMessageDetail className="h-4 w-4" />
+                  <Text as="p" className="truncate">
+                    {chat.persona?.name}
+                  </Text>
+                </Flex>
                 <IconButton
                   size="2"
                   variant="ghost"
@@ -67,6 +72,7 @@ export const ChatSiderBar = () => {
           onClick={() => onOpenPersonaPanel?.('chat')}
           className="bg-token-surface-primary active:scale-95 "
         >
+          <RiRobot2Line className="h-4 w-4" />
           <Text>Persona Store</Text>
         </Box>
       </Flex>
@@ -74,4 +80,4 @@ export const ChatSiderBar = () => {
   )
 }
 
-export default ChatSiderBar
+export default ChatSideBar

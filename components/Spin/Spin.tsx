@@ -1,19 +1,17 @@
 'use client'
 
-import React, { ReactElement, useState, useEffect, useCallback } from 'react'
-import { debounce } from 'lodash-es'
+import React, { ReactElement, useCallback, useEffect, useState } from 'react'
+import { Text } from '@radix-ui/themes'
 import cs from 'classnames'
-import { Box, Text } from '@radix-ui/themes'
-import { SpinProps } from './interface'
-
+import { debounce } from 'lodash-es'
 import { AiOutlineLoading3Quarters } from 'react-icons/ai'
 import DotLoading from './DotLoading'
+import { SpinProps } from './interface'
+import './index.scss'
 
 export function isEmptyReactNode(node: any): boolean {
   return !node && (node === null || node === undefined || node === '' || node === false)
 }
-
-import './index.scss'
 
 const Spin = (props: SpinProps, ref: any) => {
   const {

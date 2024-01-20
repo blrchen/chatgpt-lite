@@ -8,7 +8,7 @@ export interface SpinProps {
   className?: string | string[]
   children?: ReactNode
   /**
-   * Whether is loading status (Only works when `Spin` has children))
+   * Whether is loading status (Only works when `Spin` has children)
    */
   loading?: boolean
   /**

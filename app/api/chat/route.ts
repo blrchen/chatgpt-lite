@@ -1,9 +1,11 @@
 import { createParser, ParsedEvent, ReconnectInterval } from 'eventsource-parser'
 import { NextRequest, NextResponse } from 'next/server'
+
 export interface Message {
   role: string
   content: string
 }
+
 export async function POST(req: NextRequest) {
   try {
     const { prompt, messages, input } = (await req.json()) as {
@@ -23,6 +25,7 @@ export async function POST(req: NextRequest) {
       headers: { 'Content-Type': 'text/event-stream' }
     })
   } catch (error) {
+    console.error(error)
     return NextResponse.json(
       { success: false, error: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
@@ -39,12 +42,12 @@ const getApiConfig = () => {
   let model: string
   if (useAzureOpenAI) {
     let apiBaseUrl = process.env.AZURE_OPENAI_API_BASE_URL
-    const version = '2023-05-15'
+    const apiVersion = '2023-05-15'
     const deployment = process.env.AZURE_OPENAI_DEPLOYMENT || ''
     if (apiBaseUrl && apiBaseUrl.endsWith('/')) {
       apiBaseUrl = apiBaseUrl.slice(0, -1)
     }
-    apiUrl = `${apiBaseUrl}/openai/deployments/${deployment}/chat/completions?api-version=${version}`
+    apiUrl = `${apiBaseUrl}/openai/deployments/${deployment}/chat/completions?api-version=${apiVersion}`
     apiKey = process.env.AZURE_OPENAI_API_KEY || ''
     model = '' // Azure Open AI always ignores the model and decides based on the deployment name passed through.
   } else {
@@ -90,7 +93,7 @@ const getOpenAIStream = async (
   if (res.status !== 200) {
     const statusText = res.statusText
     const responseBody = await res.text()
-    console.error(responseBody)
+    console.error(`OpenAI API response error: ${responseBody}`)
     throw new Error(
       `The OpenAI API has encountered an error with a status code of ${res.status} ${statusText}: ${responseBody}`
     )

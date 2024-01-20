@@ -1,8 +1,8 @@
+import { Analytics } from '@vercel/analytics/react'
 import { Inter } from 'next/font/google'
-import ThemesProvider from '@/providers/ThemesProvider'
-import { Toaster } from '@/components'
+import { Toaster } from 'react-hot-toast'
 import { Header } from '@/components/Header'
-
+import ThemesProvider from '@/providers/ThemesProvider'
 import '@/styles/globals.scss'
 import '@/styles/theme-config.css'
 
@@ -30,6 +30,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {children}
           <Toaster />
         </ThemesProvider>
+        <Analytics />
       </body>
     </html>
   )

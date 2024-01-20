@@ -16,10 +16,6 @@ const config: Config = {
     }
   },
   daisyui: {},
-  plugins: [
-    require('postcss-import'),
-    require('@tailwindcss/typography'),
-    require('@tailwindcss/line-clamp')
-  ]
+  plugins: [require('postcss-import'), require('@tailwindcss/typography')]
 }
 export default config

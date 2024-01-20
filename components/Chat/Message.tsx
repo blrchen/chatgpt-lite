@@ -1,11 +1,9 @@
 'use client'
 
-import { useContext } from 'react'
 import { Avatar, Flex } from '@radix-ui/themes'
-import { SiOpenai } from 'react-icons/si'
 import { HiUser } from 'react-icons/hi'
+import { SiOpenai } from 'react-icons/si'
 import { Markdown } from '@/components'
-import ChatContext from './chatContext'
 import { ChatMessage } from './interface'
 
 export interface MessageProps {
@@ -13,7 +11,6 @@ export interface MessageProps {
 }
 
 const Message = (props: MessageProps) => {
-  const { currentChat } = useContext(ChatContext)
   const { role, content } = props.message
   const isUser = role === 'user'
 
@@ -25,9 +22,21 @@ const Message = (props: MessageProps) => {
         size="2"
         radius="full"
       />
-      <Flex direction="column" gap="2" className="flex-1 pt-1 break-all">
-        <Markdown>{content}</Markdown>
-      </Flex>
+      <div className="flex-1 pt-1 break-all">
+        {isUser ? (
+          <div
+            className="userMessage"
+            dangerouslySetInnerHTML={{
+              __html: content.replace(
+                /<(?!\/?br\/?.+?>|\/?img|\/?table|\/?thead|\/?tbody|\/?tr|\/?td|\/?th.+?>)[^<>]*>/gi,
+                ''
+              )
+            }}
+          ></div>
+        ) : (
+          <Markdown>{content}</Markdown>
+        )}
+      </div>
     </Flex>
   )
 }
