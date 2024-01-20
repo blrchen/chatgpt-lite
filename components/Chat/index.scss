@@ -2,10 +2,17 @@
   .rt-TextAreaInput {
     height: 50px;
     @apply py-3 px-4 pr-24;
+    img {
+      @apply max-w-md max-md:max-w-full;
+    }
+    table {
+      table-layout: fixed;
+      width: 100%;
+    }
   }
 }
 
-.chart-sider-bar {
+.chart-side-bar {
   @apply overflow-hidden w-64 z-10;
 
   background-color: var(--color-background);
@@ -44,5 +51,15 @@
 
   &:hover {
     background-color: var(--accent-a3);
+  }
+}
+
+.userMessage {
+  table {
+    @apply border-collapse border  border-slate-400;
+    th,
+    td {
+      @apply border  border-slate-300;
+    }
   }
 }

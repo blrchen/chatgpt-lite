@@ -1,8 +1,7 @@
 import { Inter } from 'next/font/google'
-import ThemesProvider from '@/providers/ThemesProvider'
-import { Toaster } from '@/components'
+import { Toaster } from 'react-hot-toast'
 import { Header } from '@/components/Header'
-
+import ThemesProvider from '@/providers/ThemesProvider'
 import '@/styles/globals.scss'
 import '@/styles/theme-config.css'
 

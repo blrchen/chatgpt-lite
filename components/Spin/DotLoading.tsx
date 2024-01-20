@@ -1,5 +1,5 @@
+import React, { CSSProperties } from 'react'
 import { isNumber } from 'lodash-es'
-import React, { CSSProperties, useContext } from 'react'
 
 export interface DotProps {
   size?: CSSProperties['fontSize']

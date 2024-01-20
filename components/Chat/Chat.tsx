@@ -1,17 +1,28 @@
 'use client'
 
-import { forwardRef, useContext, useEffect, useImperativeHandle, useRef, useState } from 'react'
-
-import { Flex, Heading, IconButton, ScrollArea, TextArea } from '@radix-ui/themes'
-import { FiSend } from 'react-icons/fi'
-import { AiOutlineClear, AiOutlineLoading3Quarters, AiOutlineUnorderedList } from 'react-icons/ai'
+import {
+  forwardRef,
+  useCallback,
+  useContext,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState
+} from 'react'
+import { Flex, Heading, IconButton, ScrollArea } from '@radix-ui/themes'
 import clipboard from 'clipboard'
-import { useToast } from '@/components'
-import { ChatMessage, Chat } from './interface'
+import ContentEditable from 'react-contenteditable'
+import toast from 'react-hot-toast'
+import { AiOutlineClear, AiOutlineLoading3Quarters, AiOutlineUnorderedList } from 'react-icons/ai'
+import { FiSend } from 'react-icons/fi'
 import ChatContext from './chatContext'
+import { Chat, ChatMessage } from './interface'
 import Message from './Message'
 
 import './index.scss'
+
+const HTML_REGULAR =
+  /<(?!img|table|\/table|thead|\/thead|tbody|\/tbody|tr|\/tr|td|\/td|th|\/th|br|\/br).*?>/gi
 
 export interface ChatProps {}
 
@@ -22,19 +33,13 @@ export interface ChatGPInstance {
 }
 
 const postChatOrQuestion = async (chat: Chat, messages: any[], input: string) => {
-  const url = chat.persona?.key ? '/api/document/question' : '/api/chat'
+  const url = '/api/chat'
 
-  const data = chat.persona?.key
-    ? {
-        key: chat.persona?.key,
-        messages: [...messages!],
-        question: input
-      }
-    : {
-        prompt: chat?.persona?.prompt,
-        messages: [...messages!],
-        input
-      }
+  const data = {
+    prompt: chat?.persona?.prompt,
+    messages: [...messages!],
+    input
+  }
 
   return await fetch(url, {
     method: 'POST',
@@ -46,123 +51,118 @@ const postChatOrQuestion = async (chat: Chat, messages: any[], input: string) =>
 }
 
 const Chat = (props: ChatProps, ref: any) => {
-  const { toast } = useToast()
-  const toastRef = useRef<any>(null)
-  const { debug, currentChat, toggleSidebar, saveMessages, onToggleSidebar } =
+  const { debug, currentChatRef, saveMessages, onToggleSidebar, forceUpdate } =
     useContext(ChatContext)
 
   const [isLoading, setIsLoading] = useState(false)
 
   const conversationRef = useRef<ChatMessage[]>()
 
-  const [conversation, setConversation] = useState<ChatMessage[]>([])
-
   const [message, setMessage] = useState('')
 
   const [currentMessage, setCurrentMessage] = useState<string>('')
 
-  const textAreaRef = useRef<HTMLTextAreaElement>(null)
+  const textAreaRef = useRef<HTMLElement>(null)
+
+  const conversation = useRef<ChatMessage[]>([])
 
   const bottomOfChatRef = useRef<HTMLDivElement>(null)
+  const sendMessage = useCallback(
+    async (e: any) => {
+      if (!isLoading) {
+        e.preventDefault()
+        const input = textAreaRef.current?.innerHTML?.replace(HTML_REGULAR, '') || ''
 
-  const sendMessage = async (e: any) => {
-    e.preventDefault()
-    const input = textAreaRef.current?.value || ''
-
-    if (input.length < 1) {
-      toast({
-        title: 'Error',
-        description: 'Please enter a message.'
-      })
-      return
-    }
-    setMessage('')
-    setIsLoading(true)
-    setConversation?.([...conversation!, { content: input, role: 'user' }])
-
-    try {
-      const response = await postChatOrQuestion(currentChat!, conversation, input)
-
-      if (response.ok) {
-        const data = response.body
-
-        if (!data) {
-          throw new Error('No data')
+        if (input.length < 1) {
+          toast.error('Please type a message to continue.')
+          return
         }
 
-        const reader = data.getReader()
-        const decoder = new TextDecoder('utf-8')
-        let done = false
-        let resultContent = ''
+        const message = [...conversation.current]
+        conversation.current = [...conversation.current, { content: input, role: 'user' }]
+        setMessage('')
+        setIsLoading(true)
+        try {
+          const response = await postChatOrQuestion(currentChatRef?.current!, message, input)
 
-        while (!done) {
-          try {
-            const { value, done: readerDone } = await reader.read()
-            const char = decoder.decode(value)
-            if (char) {
-              setCurrentMessage((state) => {
-                if (debug) {
-                  console.log({ char })
-                }
-                resultContent = state + char
-                return resultContent
-              })
+          if (response.ok) {
+            const data = response.body
+
+            if (!data) {
+              throw new Error('No data')
             }
-            done = readerDone
-          } catch {
-            done = true
+
+            const reader = data.getReader()
+            const decoder = new TextDecoder('utf-8')
+            let done = false
+            let resultContent = ''
+
+            while (!done) {
+              try {
+                const { value, done: readerDone } = await reader.read()
+                const char = decoder.decode(value)
+                if (char) {
+                  setCurrentMessage((state) => {
+                    if (debug) {
+                      console.log({ char })
+                    }
+                    resultContent = state + char
+                    return resultContent
+                  })
+                }
+                done = readerDone
+              } catch {
+                done = true
+              }
+            }
+            // The delay of timeout can not be 0 as it will cause the message to not be rendered in racing condition
+            setTimeout(() => {
+              if (debug) {
+                console.log({ resultContent })
+              }
+              conversation.current = [
+                ...conversation.current,
+                { content: resultContent, role: 'assistant' }
+              ]
+
+              setCurrentMessage('')
+            }, 1)
+          } else {
+            const result = await response.json()
+            if (response.status === 401) {
+              conversation.current.pop()
+              location.href =
+                result.redirect +
+                `?callbackUrl=${encodeURIComponent(location.pathname + location.search)}`
+            } else {
+              toast.error(result.error)
+            }
           }
-        }
-        // The delay of timeout can not be 0 as it will cause the message to not be rendered in racing condition
-        setTimeout(() => {
-          if (debug) {
-            console.log({ resultContent })
-          }
-          setConversation?.([
-            ...conversation!,
-            { content: input, role: 'user' },
-            { content: resultContent, role: 'assistant' }
-          ])
-          setCurrentMessage('')
-        }, 1)
-      } else {
-        const reuslt = await response.json()
-        if (response.status === 401) {
-          setConversation?.((state) => {
-            state.pop()
-            return [...state]
-          })
-          location.href =
-            reuslt.redirect +
-            `?callbackUrl=${encodeURIComponent(location.pathname + location.search)}`
-        } else {
-          toast({
-            title: 'Error',
-            description: reuslt.error
-          })
+
+          setIsLoading(false)
+        } catch (error: any) {
+          console.error(error)
+          toast.error(error.message)
+          setIsLoading(false)
         }
       }
+    },
+    [currentChatRef, debug, isLoading]
+  )
 
-      setIsLoading(false)
-    } catch (error: any) {
-      console.error(error)
-      toast({
-        title: 'Error',
-        description: error.message
-      })
-      setIsLoading(false)
-    }
-  }
-
-  const handleKeypress = (e: any) => {
-    if (e.keyCode == 13 && !e.shiftKey) {
-      sendMessage(e)
-      e.preventDefault()
-    }
-  }
+  const handleKeypress = useCallback(
+    (e: any) => {
+      if (e.keyCode == 13 && !e.shiftKey) {
+        sendMessage(e)
+        e.preventDefault()
+      }
+    },
+    [sendMessage]
+  )
 
   const clearMessages = () => {
-    setConversation([])
+    conversation.current = []
+    forceUpdate?.()
   }
 
   useEffect(() => {
@@ -179,11 +179,11 @@ const Chat = (props: ChatProps, ref: any) => {
   }, [conversation, currentMessage])
 
   useEffect(() => {
-    conversationRef.current = conversation
-    if (currentChat?.id) {
-      saveMessages?.(conversation)
+    conversationRef.current = conversation.current
+    if (currentChatRef?.current?.id) {
+      saveMessages?.(conversation.current)
     }
-  }, [conversation, currentChat?.id, saveMessages])
+  }, [currentChatRef, conversation.current, saveMessages])
 
   useEffect(() => {
     if (!isLoading) {
@@ -194,7 +194,8 @@ const Chat = (props: ChatProps, ref: any) => {
   useImperativeHandle(ref, () => {
     return {
       setConversation(messages: ChatMessage[]) {
-        setConversation(messages)
+        conversation.current = messages
+        forceUpdate?.()
       },
       getConversation() {
         return conversationRef.current
@@ -218,7 +219,7 @@ const Chat = (props: ChatProps, ref: any) => {
         px="4"
         style={{ backgroundColor: 'var(--gray-a2)' }}
       >
-        <Heading size="4">{currentChat?.persona?.name || 'None'}</Heading>
+        <Heading size="4">{currentChatRef?.current?.persona?.name || 'None'}</Heading>
       </Flex>
       <ScrollArea
         className="flex-1 px-4"
@@ -226,30 +227,34 @@ const Chat = (props: ChatProps, ref: any) => {
         scrollbars="vertical"
         style={{ height: '100%' }}
       >
-        {conversation?.map((item, index) => <Message key={index} message={item} />)}
+        {conversation.current.map((item, index) => (
+          <Message key={index} message={item} />
+        ))}
         {currentMessage && <Message message={{ content: currentMessage, role: 'assistant' }} />}
         <div ref={bottomOfChatRef}></div>
       </ScrollArea>
       <div className="px-4 pb-3">
         <Flex align="end" justify="between" gap="3" className="relative">
-          <TextArea
-            ref={textAreaRef}
-            data-id="root"
-            variant="surface"
-            placeholder="Send a message..."
-            size="3"
-            style={{
-              minHeight: '24px',
-              maxHeight: '200px',
-              overflowY: 'auto'
-            }}
-            className="flex-1 rounded-3xl chat-textarea"
-            tabIndex={0}
-            value={message}
-            disabled={isLoading}
-            onChange={(e) => setMessage(e.target.value)}
-            onKeyDown={handleKeypress}
-          />
+          <div className="rt-TextAreaRoot rt-r-size-1 rt-variant-surface flex-1 rounded-3xl chat-textarea">
+            <ContentEditable
+              innerRef={textAreaRef}
+              style={{
+                minHeight: '24px',
+                maxHeight: '200px',
+                overflowY: 'auto'
+              }}
+              className="rt-TextAreaInput text-base"
+              html={message}
+              disabled={isLoading}
+              onChange={(e) => {
+                setMessage(e.target.value.replace(HTML_REGULAR, ''))
+              }}
+              onKeyDown={(e) => {
+                handleKeypress(e)
+              }}
+            />
+            <div className="rt-TextAreaChrome"></div>
+          </div>
           <Flex gap="3" className="absolute right-0 pr-4 bottom-2 pt">
             {isLoading && (
               <Flex

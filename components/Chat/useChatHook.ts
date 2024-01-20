@@ -1,14 +1,12 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
-// import toast from 'react-hot-toast'
+import { useCallback, useEffect, useReducer, useRef, useState } from 'react'
 import axios from 'axios'
+import { useSearchParams } from 'next/navigation'
+import toast from 'react-hot-toast'
 import { v4 as uuid } from 'uuid'
 import { ChatGPInstance } from './Chat'
-import { useSearchParams } from 'next/navigation'
-
-import { ChatMessage, Chat, Persona } from './interface'
-import { useToast } from '..'
+import { Chat, ChatMessage, Persona } from './interface'
 
 export const DefaultPersonas: Persona[] = [
   {
@@ -51,16 +49,17 @@ const uploadFiles = async (files: File[]) => {
 let isInit = false
 
 const useChatHook = () => {
-  const { toast } = useToast()
   const searchParams = useSearchParams()
 
   const debug = searchParams.get('debug') === 'true'
+
+  const [_, forceUpdate] = useReducer((x: number) => x + 1, 0)
 
   const messagesMap = useRef<Map<string, ChatMessage[]>>(new Map<string, ChatMessage[]>())
 
   const chatRef = useRef<ChatGPInstance>(null)
 
-  const [currentChat, setCurrentChat] = useState<Chat | undefined>(undefined)
+  const currentChatRef = useRef<Chat | undefined>(undefined)
 
   const [chatList, setChatList] = useState<Chat[]>([])
 
@@ -96,17 +95,15 @@ const useChatHook = () => {
     setIsOpenPersonaModal(false)
   }
 
-  const onChangeChat = useCallback(
-    (chat: Chat) => {
-      const oldMessages = chatRef.current?.getConversation() || []
-      const newMessages = messagesMap.current.get(chat.id) || []
-      chatRef.current?.setConversation(newMessages)
-      chatRef.current?.focus()
-      messagesMap.current.set(currentChat?.id!, oldMessages)
-      setCurrentChat(chat)
-    },
-    [currentChat?.id]
-  )
+  const onChangeChat = useCallback((chat: Chat) => {
+    const oldMessages = chatRef.current?.getConversation() || []
+    const newMessages = messagesMap.current.get(chat.id) || []
+    chatRef.current?.setConversation(newMessages)
+    chatRef.current?.focus()
+    messagesMap.current.set(currentChatRef.current?.id!, oldMessages)
+    currentChatRef.current = chat
+    forceUpdate()
+  }, [])
 
   const onCreateChat = useCallback(
     (persona: Persona) => {
@@ -134,8 +131,8 @@ const useChatHook = () => {
     const index = chatList.findIndex((item) => item.id === chat.id)
     chatList.splice(index, 1)
     setChatList([...chatList])
-    if (currentChat?.id === chat.id) {
-      setCurrentChat(chatList[0])
+    if (currentChatRef.current?.id === chat.id) {
+      currentChatRef.current = chatList[0]
     }
     if (chatList.length === 0) {
       onOpenPersonaPanel('chat')
@@ -159,10 +156,7 @@ const useChatHook = () => {
         persona.key = data.key
       } catch (e) {
         console.log(e)
-        toast({
-          title: 'Error',
-          description: 'Error uploading files'
-        })
+        toast.error('Error uploading files')
       } finally {
         setPersonaModalLoading(false)
       }
@@ -196,9 +190,9 @@ const useChatHook = () => {
 
   const saveMessages = (messages: ChatMessage[]) => {
     if (messages.length > 0) {
-      localStorage.setItem(`ms_${currentChat?.id}`, JSON.stringify(messages))
+      localStorage.setItem(`ms_${currentChatRef.current?.id}`, JSON.stringify(messages))
     } else {
-      localStorage.removeItem(`ms_${currentChat?.id}`)
+      localStorage.removeItem(`ms_${currentChatRef.current?.id}`)
     }
   }
 
@@ -227,17 +221,16 @@ const useChatHook = () => {
   }, [])
 
   useEffect(() => {
-    if (currentChat?.id) {
-      localStorage.setItem(StorageKeys.Chat_Current_ID, currentChat.id)
+    if (currentChatRef.current?.id) {
+      localStorage.setItem(StorageKeys.Chat_Current_ID, currentChatRef.current.id)
     }
-  }, [currentChat?.id])
+  }, [currentChatRef.current?.id])
 
   useEffect(() => {
     localStorage.setItem(StorageKeys.Chat_List, JSON.stringify(chatList))
   }, [chatList])
 
   useEffect(() => {
-    console.log('load persona from local storage')
     const loadedPersonas = JSON.parse(localStorage.getItem('Personas') || '[]') as Persona[]
     const updatedPersonas = loadedPersonas.map((persona) => {
       if (!persona.id) {
@@ -263,7 +256,7 @@ const useChatHook = () => {
     debug,
     DefaultPersonas,
     chatRef,
-    currentChat,
+    currentChatRef,
     chatList,
     personas,
     editPersona,
@@ -274,7 +267,6 @@ const useChatHook = () => {
     toggleSidebar,
     onOpenPersonaModal,
     onClosePersonaModal,
-    setCurrentChat,
     onCreateChat,
     onDeleteChat,
     onChangeChat,
@@ -284,7 +276,8 @@ const useChatHook = () => {
     saveMessages,
     onOpenPersonaPanel,
     onClosePersonaPanel,
-    onToggleSidebar
+    onToggleSidebar,
+    forceUpdate
   }
 }
 
