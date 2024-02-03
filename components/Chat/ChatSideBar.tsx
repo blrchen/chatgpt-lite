@@ -29,7 +29,7 @@ export const ChatSideBar = () => {
         <Box
           width="auto"
           onClick={() => onCreateChat?.(DefaultPersonas[0])}
-          className="bg-token-surface-primary active:scale-95 "
+          className="bg-token-surface-primary active:scale-95 cursor-pointer"
         >
           <FiPlus className="h-4 w-4" />
           <Text>New Chat</Text>
@@ -40,7 +40,7 @@ export const ChatSideBar = () => {
               <Box
                 key={chat.id}
                 width="auto"
-                className={cs('bg-token-surface active:scale-95 truncate', {
+                className={cs('bg-token-surface active:scale-95 truncate cursor-pointer', {
                   active: currentChatRef?.current?.id === chat.id
                 })}
                 onClick={() => onChangeChat?.(chat)}
@@ -53,6 +53,7 @@ export const ChatSideBar = () => {
                 </Flex>
                 <IconButton
                   size="2"
+                  className="cursor-pointer"
                   variant="ghost"
                   color="gray"
                   radius="full"
@@ -70,7 +71,7 @@ export const ChatSideBar = () => {
         <Box
           width="auto"
           onClick={() => onOpenPersonaPanel?.('chat')}
-          className="bg-token-surface-primary active:scale-95 "
+          className="bg-token-surface-primary active:scale-95 cursor-pointer"
         >
           <RiRobot2Line className="h-4 w-4" />
           <Text>Persona Store</Text>

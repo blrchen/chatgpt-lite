@@ -9,7 +9,7 @@ import {
   useRef,
   useState
 } from 'react'
-import { Flex, Heading, IconButton, ScrollArea } from '@radix-ui/themes'
+import { Flex, Heading, IconButton, ScrollArea, Tooltip } from '@radix-ui/themes'
 import clipboard from 'clipboard'
 import ContentEditable from 'react-contenteditable'
 import toast from 'react-hot-toast'
@@ -267,37 +267,42 @@ const Chat = (props: ChatProps, ref: any) => {
                 <AiOutlineLoading3Quarters className="animate-spin h-4 w-4" />
               </Flex>
             )}
-            <IconButton
-              variant="soft"
-              disabled={isLoading}
-              color="gray"
-              size="2"
-              className="rounded-xl"
-              onClick={sendMessage}
-            >
-              <FiSend className="h-4 w-4" />
-            </IconButton>
-            <IconButton
-              variant="soft"
-              color="gray"
-              size="2"
-              className="rounded-xl"
-              disabled={isLoading}
-              onClick={clearMessages}
-            >
-              <AiOutlineClear className="h-4 w-4" />
-            </IconButton>
-
-            <IconButton
-              variant="soft"
-              color="gray"
-              size="2"
-              className="rounded-xl md:hidden"
-              disabled={isLoading}
-              onClick={onToggleSidebar}
-            >
-              <AiOutlineUnorderedList className="h-4 w-4" />
-            </IconButton>
+            <Tooltip content={'Send Message'}>
+              <IconButton
+                variant="soft"
+                disabled={isLoading}
+                color="gray"
+                size="2"
+                className="rounded-xl cursor-pointer"
+                onClick={sendMessage}
+              >
+                <FiSend className="h-4 w-4" />
+              </IconButton>
+            </Tooltip>
+            <Tooltip content={'Clear Message'}>
+              <IconButton
+                variant="soft"
+                color="gray"
+                size="2"
+                className="rounded-xl cursor-pointer"
+                disabled={isLoading}
+                onClick={clearMessages}
+              >
+                <AiOutlineClear className="h-4 w-4" />
+              </IconButton>
+            </Tooltip>
+            <Tooltip content={'Toggle Sidebar'}>
+              <IconButton
+                variant="soft"
+                color="gray"
+                size="2"
+                className="rounded-xl md:hidden cursor-pointer"
+                disabled={isLoading}
+                onClick={onToggleSidebar}
+              >
+                <AiOutlineUnorderedList className="h-4 w-4" />
+              </IconButton>
+            </Tooltip>
           </Flex>
         </Flex>
       </div>
