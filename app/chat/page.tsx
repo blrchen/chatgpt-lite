@@ -1,10 +1,10 @@
 'use client'
-
+import { Suspense } from 'react'
 import { Flex } from '@radix-ui/themes'
 import { Chat, ChatContext, ChatSideBar, PersonaPanel, useChatHook } from '@/components'
 import PersonaModal from './PersonaModal'
 
-const ChatPage = () => {
+const ChatProvider = () => {
   const provider = useChatHook()
 
   return (
@@ -18,6 +18,14 @@ const ChatPage = () => {
       </Flex>
       <PersonaModal />
     </ChatContext.Provider>
+  )
+}
+
+const ChatPage = () => {
+  return (
+    <Suspense>
+      <ChatProvider />
+    </Suspense>
   )
 }
 

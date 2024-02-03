@@ -20,7 +20,7 @@ export interface MarkdownProps {
 export const Markdown = ({ className, children }: MarkdownProps) => {
   return (
     <ReactMarkdown
-      className="prose dark:prose-invert max-w-none"
+      className={cs('prose dark:prose-invert max-w-none', className)}
       remarkPlugins={[remarkParse, remarkMath, remarkRehype, remarkGfm]}
       rehypePlugins={[rehypeRaw, rehypeKatex, rehypeStringify]}
       components={{
@@ -30,7 +30,7 @@ export const Markdown = ({ className, children }: MarkdownProps) => {
           return match ? (
             <>
               <IconButton
-                className="absolute right-4 top-4 copy-btn"
+                className="absolute right-4 top-4 copy-btn cursor-pointer"
                 variant="solid"
                 data-clipboard-text={children}
               >
