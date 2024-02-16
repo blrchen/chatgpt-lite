@@ -37,9 +37,9 @@ const getApiConfig = () => {
   const useAzureOpenAI =
     process.env.AZURE_OPENAI_API_BASE_URL && process.env.AZURE_OPENAI_API_BASE_URL.length > 0
 
-  let apiUrl: string
+  // let apiUrl: string
   let apiKey: string
-  let model: string
+  // let model: string
   if (useAzureOpenAI) {
     let apiBaseUrl = process.env.AZURE_OPENAI_API_BASE_URL
     const apiVersion = '2023-05-15'
@@ -47,19 +47,20 @@ const getApiConfig = () => {
     if (apiBaseUrl && apiBaseUrl.endsWith('/')) {
       apiBaseUrl = apiBaseUrl.slice(0, -1)
     }
-    apiUrl = `${apiBaseUrl}/openai/deployments/${deployment}/chat/completions?api-version=${apiVersion}`
+    // apiUrl = `${apiBaseUrl}/openai/deployments/${deployment}/chat/completions?api-version=${apiVersion}`
     apiKey = process.env.AZURE_OPENAI_API_KEY || ''
-    model = '' // Azure Open AI always ignores the model and decides based on the deployment name passed through.
+    // model = '' // Azure Open AI always ignores the model and decides based on the deployment name passed through.
   } else {
     let apiBaseUrl = process.env.OPENAI_API_BASE_URL || 'https://api.openai.com'
     if (apiBaseUrl && apiBaseUrl.endsWith('/')) {
       apiBaseUrl = apiBaseUrl.slice(0, -1)
     }
-    apiUrl = `${apiBaseUrl}/v1/chat/completions`
+    // apiUrl = `${apiBaseUrl}/v1/chat/completions`
     apiKey = process.env.OPENAI_API_KEY || ''
-    model = process.env.OPENAI_MODEL || 'gpt-3.5-turbo'
+    // model = process.env.OPENAI_MODEL || 'gpt-3.5-turbo'
   }
-
+  const model: string = '@cf/meta/llama-2-7b-chat-int8'
+  const apiUrl: string = 'https://osinv-api.frasercrichton.workers.dev/api/v1/chat'
   return { apiUrl, apiKey, model }
 }
 
@@ -74,8 +75,8 @@ const getOpenAIStream = async (
   const res = await fetch(apiUrl, {
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
-      'api-key': `${apiKey}`
+      // Authorization: `Bearer ${apiKey}`,
+      // 'api-key': `${apiKey}`
     },
     method: 'POST',
     body: JSON.stringify({
@@ -112,7 +113,13 @@ const getOpenAIStream = async (
 
           try {
             const json = JSON.parse(data)
-            const text = json.choices[0].delta.content
+
+              // ChatGPT format: const text = json.choices[0].delta.content
+          // WORAKERS AI Format
+          const jsonData = JSON.parse(data)
+          const text = jsonData.response
+      
+        //      const text = json.choices[0].delta.content
             const queue = encoder.encode(text)
             controller.enqueue(queue)
           } catch (e) {
