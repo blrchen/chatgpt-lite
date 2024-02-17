@@ -1,11 +1,8 @@
 {
   "$schema": "https://json.schemastore.org/eslintrc",
   "root": true,
-  "extends": [
-    "next/core-web-vitals",
-    "prettier"
-  ],
-  "plugins": ["import"],
+  "extends": ["next/core-web-vitals", "prettier", "plugin:tailwindcss/recommended"],
+  "plugins": ["import", "@typescript-eslint"],
   "rules": {
     "import/order": [
       "error",
@@ -26,10 +23,20 @@
         }
       }
     ],
-    "no-unused-vars": "warn"
+    "@typescript-eslint/no-unused-vars": [
+      "warn",
+      {
+        "vars": "all",
+        "varsIgnorePattern": "^_",
+        "args": "after-used",
+        "argsIgnorePattern": "^_"
+      }
+    ],
+    "react-hooks/exhaustive-deps": "off",
+    "tailwindcss/no-custom-classname": "off",
+    "tailwindcss/classnames-order": "off"
   },
-  "settings": {
-  },
+  "settings": {},
   "overrides": [
     {
       "files": ["*.ts", "*.tsx"],

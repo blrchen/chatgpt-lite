@@ -31,7 +31,7 @@ export const ChatSideBar = () => {
           onClick={() => onCreateChat?.(DefaultPersonas[0])}
           className="bg-token-surface-primary active:scale-95 cursor-pointer"
         >
-          <FiPlus className="h-4 w-4" />
+          <FiPlus className="size-4" />
           <Text>New Chat</Text>
         </Box>
         <ScrollArea className="flex-1" type="auto" scrollbars="vertical">
@@ -46,7 +46,7 @@ export const ChatSideBar = () => {
                 onClick={() => onChangeChat?.(chat)}
               >
                 <Flex gap="2" align="center">
-                  <BiMessageDetail className="h-4 w-4" />
+                  <BiMessageDetail className="size-4" />
                   <Text as="p" className="truncate">
                     {chat.persona?.name}
                   </Text>
@@ -62,7 +62,7 @@ export const ChatSideBar = () => {
                     onDeleteChat?.(chat)
                   }}
                 >
-                  <AiOutlineCloseCircle className="h-4 w-4" />
+                  <AiOutlineCloseCircle className="size-4" />
                 </IconButton>
               </Box>
             ))}
@@ -73,7 +73,7 @@ export const ChatSideBar = () => {
           onClick={() => onOpenPersonaPanel?.('chat')}
           className="bg-token-surface-primary active:scale-95 cursor-pointer"
         >
-          <RiRobot2Line className="h-4 w-4" />
+          <RiRobot2Line className="size-4" />
           <Text>Persona Store</Text>
         </Box>
       </Flex>

@@ -21,7 +21,7 @@ import { Persona } from './interface'
 
 export interface PersonaPanelProps {}
 
-const PersonaPanel = (props: PersonaPanelProps) => {
+const PersonaPanel = (_props: PersonaPanelProps) => {
   const {
     personaPanelType,
     DefaultPersonas,
@@ -83,10 +83,10 @@ const PersonaPanel = (props: PersonaPanelProps) => {
           radius="full"
           onClick={onClosePersonaPanel}
         >
-          <AiOutlineClose className="w-4 h-4" />
+          <AiOutlineClose className="size-4" />
         </IconButton>
       </Flex>
-      <Container size="3" className="flex-grow-0 px-4">
+      <Container size="3" className="grow-0 px-4">
         <Flex gap="4" py="5">
           <TextField.Root size="3" className="flex-1" radius="large">
             <TextField.Slot>
@@ -134,7 +134,7 @@ const PersonaPanel = (props: PersonaPanelProps) => {
                       onCreateChat?.(prompt)
                     }}
                   >
-                    <LuMessageSquarePlus className="h-4 w-4" />
+                    <LuMessageSquarePlus className="size-4" />
                   </IconButton>
                   <IconButton
                     size="2"
@@ -145,7 +145,7 @@ const PersonaPanel = (props: PersonaPanelProps) => {
                       onEditPersona?.(prompt)
                     }}
                   >
-                    <AiOutlineEdit className="h-4 w-4" />
+                    <AiOutlineEdit className="size-4" />
                   </IconButton>
                   <IconButton
                     size="2"
@@ -156,7 +156,7 @@ const PersonaPanel = (props: PersonaPanelProps) => {
                       onDeletePersona?.(prompt)
                     }}
                   >
-                    <AiOutlineDelete className="h-4 w-4" />
+                    <AiOutlineDelete className="size-4" />
                   </IconButton>
                 </Flex>
               </Flex>

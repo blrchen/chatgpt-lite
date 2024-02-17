@@ -1,3 +1,5 @@
+'use client'
+
 export * from './interface'
 export { default as Chat } from './Chat'
 export { default as ChatSideBar } from './ChatSideBar'
