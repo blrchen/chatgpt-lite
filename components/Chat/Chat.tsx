@@ -264,7 +264,7 @@ const Chat = (props: ChatProps, ref: any) => {
                 justify="center"
                 style={{ color: 'var(--accent-11)' }}
               >
-                <AiOutlineLoading3Quarters className="animate-spin h-4 w-4" />
+                <AiOutlineLoading3Quarters className="animate-spin size-4" />
               </Flex>
             )}
             <Tooltip content={'Send Message'}>
@@ -276,7 +276,7 @@ const Chat = (props: ChatProps, ref: any) => {
                 className="rounded-xl cursor-pointer"
                 onClick={sendMessage}
               >
-                <FiSend className="h-4 w-4" />
+                <FiSend className="size-4" />
               </IconButton>
             </Tooltip>
             <Tooltip content={'Clear Message'}>
@@ -288,7 +288,7 @@ const Chat = (props: ChatProps, ref: any) => {
                 disabled={isLoading}
                 onClick={clearMessages}
               >
-                <AiOutlineClear className="h-4 w-4" />
+                <AiOutlineClear className="size-4" />
               </IconButton>
             </Tooltip>
             <Tooltip content={'Toggle Sidebar'}>
@@ -300,7 +300,7 @@ const Chat = (props: ChatProps, ref: any) => {
                 disabled={isLoading}
                 onClick={onToggleSidebar}
               >
-                <AiOutlineUnorderedList className="h-4 w-4" />
+                <AiOutlineUnorderedList className="size-4" />
               </IconButton>
             </Tooltip>
           </Flex>

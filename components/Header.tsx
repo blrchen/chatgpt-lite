@@ -5,21 +5,13 @@ import { HamburgerMenuIcon } from '@radix-ui/react-icons'
 import { Avatar, Flex, Heading, IconButton, Select, Tooltip } from '@radix-ui/themes'
 import cs from 'classnames'
 import NextLink from 'next/link'
-import { usePathname } from 'next/navigation'
 import { FaAdjust, FaGithub, FaMoon, FaRegSun } from 'react-icons/fa'
 import { Link } from './Link'
 import { useTheme } from './Themes'
 
-export interface HeaderProps {
-  children?: React.ReactNode
-  gitHubLink?: string
-  ghost?: boolean
-}
-
-export const Header = ({ children, gitHubLink, ghost }: HeaderProps) => {
-  const pathname = usePathname()
+export const Header = () => {
   const { theme, setTheme } = useTheme()
-  const [show, setShow] = useState(false)
+  const [, setShow] = useState(false)
 
   const toggleNavBar = useCallback(() => {
     setShow((state) => !state)
@@ -32,7 +24,7 @@ export const Header = ({ children, gitHubLink, ghost }: HeaderProps) => {
     >
       <Flex align="center" gap="3">
         <NextLink href="/">
-          <Heading as="h2" size="3" style={{ maxWidth: 200 }}>
+          <Heading as="h2" size="4" style={{ maxWidth: 200 }}>
             ChatGPT Lite
           </Heading>
         </NextLink>
