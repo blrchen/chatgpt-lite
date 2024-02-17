@@ -25,7 +25,7 @@ export const Markdown = ({ className, children }: MarkdownProps) => {
       rehypePlugins={[rehypeRaw, rehypeKatex, rehypeStringify]}
       components={{
         code(props) {
-          const { children, className, node, ref, ...rest } = props
+          const { children, className, ref, ...rest } = props
           const match = /language-(\w+)/.exec(className || '')
           return match ? (
             <>
