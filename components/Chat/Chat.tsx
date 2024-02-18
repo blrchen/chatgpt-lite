@@ -10,7 +10,6 @@ import {
   useState
 } from 'react'
 import { Flex, Heading, IconButton, ScrollArea, Tooltip } from '@radix-ui/themes'
-import clipboard from 'clipboard'
 import ContentEditable from 'react-contenteditable'
 import toast from 'react-hot-toast'
 import { AiOutlineClear, AiOutlineLoading3Quarters, AiOutlineUnorderedList } from 'react-icons/ai'
@@ -205,10 +204,6 @@ const Chat = (props: ChatProps, ref: any) => {
       }
     }
   })
-
-  useEffect(() => {
-    new clipboard('.copy-btn').on('success', () => {})
-  }, [])
 
   return (
     <Flex direction="column" height="100%" className="relative" gap="3">

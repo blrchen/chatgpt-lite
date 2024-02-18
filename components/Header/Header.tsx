@@ -6,8 +6,8 @@ import { Avatar, Flex, Heading, IconButton, Select, Tooltip } from '@radix-ui/th
 import cs from 'classnames'
 import NextLink from 'next/link'
 import { FaAdjust, FaGithub, FaMoon, FaRegSun } from 'react-icons/fa'
-import { Link } from './Link'
-import { useTheme } from './Themes'
+import { Link } from '../Link'
+import { useTheme } from '../Themes'
 
 export const Header = () => {
   const { theme, setTheme } = useTheme()

@@ -424,33 +424,6 @@ body {
   @apply flex flex-col;
 }
 
-.table-fixed-header {
-  .rt-TableRootTable {
-    overflow: initial !important;
-  }
-
-  .rt-TableHeader {
-    --table-row-background-color: var(--gray-2) !important;
-    position: relative;
-    z-index: 1;
-    .rt-TableCell {
-      &:first-child {
-        border-top-left-radius: calc(var(--table-border-radius) - 1px);
-      }
-      &:last-child {
-        border-top-right-radius: calc(var(--table-border-radius) - 1px);
-      }
-    }
-  }
-
-  .react-loading-skeleton {
-    z-index: 0;
-  }
-  .rt-ScrollAreaScrollbar {
-    z-index: 2;
-  }
-}
-
 .navbar-collapse {
   @apply max-md:absolute  max-md:top-14 max-md:gap-0 max-md:left-0 max-md:right-0 max-md:px-1 max-md:flex-col max-md:items-start max-md:backdrop-blur-md max-md:bg-[--color-page-background] max-md:shadow-sm max-md:overflow-hidden;
   height: 0;
