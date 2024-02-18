@@ -8,12 +8,19 @@ interface LinkProps {
   className?: string
   color?: LinkOwnProps['color']
   children?: React.ReactNode
+  disabled?: boolean
+  highContrast?: boolean
 }
 
-export const Link = ({ href, className, children, color }: LinkProps) => {
+export const Link = ({ href, className, children, color, highContrast, disabled }: LinkProps) => {
   return (
-    <NextLink href={href} passHref legacyBehavior>
-      <RadixLink className={className} color={color}>
+    <NextLink href={href} passHref legacyBehavior aria-disabled={disabled}>
+      <RadixLink
+        className={className}
+        color={color}
+        aria-disabled={disabled}
+        highContrast={highContrast}
+      >
         {children}
       </RadixLink>
     </NextLink>
