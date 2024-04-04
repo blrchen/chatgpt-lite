@@ -42,7 +42,7 @@ const getApiConfig = () => {
   let model: string
   if (useAzureOpenAI) {
     let apiBaseUrl = process.env.AZURE_OPENAI_API_BASE_URL
-    const apiVersion = '2023-05-15'
+    const apiVersion = '2024-02-01'
     const deployment = process.env.AZURE_OPENAI_DEPLOYMENT || ''
     if (apiBaseUrl && apiBaseUrl.endsWith('/')) {
       apiBaseUrl = apiBaseUrl.slice(0, -1)
@@ -112,7 +112,7 @@ const getOpenAIStream = async (
 
           try {
             const json = JSON.parse(data)
-            const text = json.choices[0].delta.content
+            const text = json.choices[0]?.delta.content
             const queue = encoder.encode(text)
             controller.enqueue(queue)
           } catch (e) {

@@ -1,5 +1,4 @@
 import { Analytics } from '@vercel/analytics/react'
-import { Inter } from 'next/font/google'
 import { Toaster } from 'react-hot-toast'
 import { Header } from '@/components/Header'
 import ThemesProvider from '@/providers/ThemesProvider'
@@ -19,12 +18,10 @@ export const metadata = {
   }
 }
 
-const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
-
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
+      <body>
         <ThemesProvider>
           <Header />
           {children}
