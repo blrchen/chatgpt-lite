@@ -56,7 +56,7 @@ docker run -d -p 3000:3000 \
 
 ### Running Locally
 
-1. Install NodeJS 18.
+1. Install NodeJS 20.
 2. Clone the repository.
 3. Install dependencies with `npm install`.
 4. Copy `.env.example` to `.env.local` and update environment variables.
