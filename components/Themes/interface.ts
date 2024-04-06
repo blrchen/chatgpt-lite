@@ -22,7 +22,7 @@ export interface UseThemeProps {
   /**
    * If `enableSystem` is true and the active theme is "system", this returns whether the system preference resolved to "dark" or "light". Otherwise, identical to `theme`
    */
-  resolvedTheme?: string | undefined
+  resolvedTheme?: 'dark' | 'light'
   /**
    * If enableSystem is true, returns the System theme preference ("dark" or "light"), regardless what the active theme is
    */

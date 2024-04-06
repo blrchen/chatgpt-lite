@@ -1,7 +1,7 @@
 'use client'
 
 import { Fragment, useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import { ThemeProviderProps } from './interface'
+import { ThemeProviderProps, UseThemeProps } from './interface'
 import { ThemeContext } from './ThemeContext'
 import ThemeScript from './ThemeScript'
 import { ColorSchemes, disableAnimation, getSystemTheme, MEDIA } from './utils'
@@ -141,14 +141,15 @@ const Theme = ({
   }, [defaultTheme, storageKey])
 
   const providerValue = useMemo(
-    () => ({
-      theme,
-      setTheme,
-      forcedTheme,
-      resolvedTheme: theme === 'system' ? resolvedTheme : theme,
-      themes: enableSystem ? [...themes, 'system'] : themes,
-      systemTheme: (enableSystem ? resolvedTheme : undefined) as 'light' | 'dark' | undefined
-    }),
+    () =>
+      ({
+        theme,
+        setTheme,
+        forcedTheme,
+        resolvedTheme: theme === 'system' ? resolvedTheme : theme,
+        themes: enableSystem ? [...themes, 'system'] : themes,
+        systemTheme: (enableSystem ? resolvedTheme : undefined) as 'light' | 'dark' | undefined
+      }) as UseThemeProps,
     [theme, setTheme, forcedTheme, resolvedTheme, enableSystem, themes]
   )
 
