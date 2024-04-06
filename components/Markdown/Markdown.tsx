@@ -16,6 +16,8 @@ import remarkParse from 'remark-parse'
 import remarkRehype from 'remark-rehype'
 import { useCopyToClipboard } from '@/hooks/useCopyToClipboard'
 
+import './index.scss'
+
 export interface MarkdownProps {
   className?: string
   children: string

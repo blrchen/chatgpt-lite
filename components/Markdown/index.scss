@@ -1,0 +1,18 @@
+.prose {
+  img {
+    @apply max-w-3xl max-lg:max-w-full;
+  }
+
+  :where(pre):not(:where([class~='not-prose'], [class~='not-prose'] *)) {
+    position: relative;
+    background-color: rgb(30, 30, 30) !important;
+  }
+
+  :where(pre code):not(:where([class~='not-prose'], [class~='not-prose'] *)) {
+    @apply whitespace-pre-wrap #{!important};
+  }
+
+  :where(code[class~='highlight']) {
+    background-color: var(--accent-a5);
+  }
+}
