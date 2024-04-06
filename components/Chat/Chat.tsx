@@ -274,7 +274,7 @@ const Chat = (props: ChatProps, ref: any) => {
                 <FiSend className="size-4" />
               </IconButton>
             </Tooltip>
-            <Tooltip content={'Clear Message'}>
+            <Tooltip content={'Clear History'}>
               <IconButton
                 variant="soft"
                 color="gray"
