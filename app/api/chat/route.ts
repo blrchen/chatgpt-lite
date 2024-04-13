@@ -1,6 +1,8 @@
 import { createParser, ParsedEvent, ReconnectInterval } from 'eventsource-parser'
 import { NextRequest, NextResponse } from 'next/server'
 
+export const runtime = 'edge';
+
 export interface Message {
   role: string
   content: string
