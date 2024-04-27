@@ -13,6 +13,10 @@ WORKDIR /app
 COPY package.json package-lock.json* ./
 RUN npm ci
 
+# Ajout de la génération de Prisma
+COPY prisma ./prisma/
+RUN npx prisma generate
+
 # Rebuild the source code only when needed
 FROM base AS builder
 WORKDIR /app
