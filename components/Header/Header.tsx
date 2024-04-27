@@ -19,18 +19,18 @@ export const Header = () => {
 
   return (
     <header
-      className={cs('block shadow-sm sticky top-0 dark:shadow-gray-500 py-3 px-4 z-20')}
-      style={{ backgroundColor: 'var(--color-background)' }}
+      className={cs('block shadow-sm sticky top-0 dark:shadow-blue-500 py-3 px-4 z-20')}
+      style={{ backgroundColor: 'blue' }}
     >
       <Flex align="center" gap="3">
         <NextLink href="/">
           <Heading as="h2" size="4" style={{ maxWidth: 200 }}>
-            ChatGPT Lite
+            Odalys ChatGPT
           </Heading>
         </NextLink>
         <Flex align="center" gap="3" className="ml-auto">
           <Avatar
-            color="gray"
+            color="blue"
             size="2"
             radius="full"
             fallback={
