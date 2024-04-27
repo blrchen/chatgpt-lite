@@ -19,8 +19,8 @@ export const Header = () => {
 
   return (
     <header
-      className={cs('block shadow-sm sticky top-0 dark:shadow-blue-500 py-3 px-4 z-20')}
-      style={{ backgroundColor: 'blue' }}
+      className={cs('block shadow-sm sticky top-0 bg-[#8bb8e8] py-3 px-4 z-20 text-white')}
+      style={{ backgroundColor: 'var(--Odalys-secondary-background-color)' }}
     >
       <Flex align="center" gap="3">
         <NextLink href="/">
@@ -30,11 +30,11 @@ export const Header = () => {
         </NextLink>
         <Flex align="center" gap="3" className="ml-auto">
           <Avatar
-            color="blue"
+            color="gray"
             size="2"
             radius="full"
             fallback={
-              <Link href="https://github.com/blrchen/chatgpt-lite">
+              <Link href="https://github.com/odalys-ai/odalys-ai">
                 <FaGithub />
               </Link>
             }

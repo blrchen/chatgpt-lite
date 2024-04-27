@@ -7,10 +7,10 @@ import '@/styles/theme-config.css'
 
 export const metadata = {
   title: {
-    default: 'ChatGPT Lite',
+    default: 'Odalys ChatGPT ',
     template: `%s - ChatGPT Lite`
   },
-  description: 'AI assistant powered by ChatGPT',
+  description: 'AI assistant powered by ChatGPT for Odalys',
   icons: {
     icon: '/favicon.ico',
     shortcut: '/favicon-16x16.png',

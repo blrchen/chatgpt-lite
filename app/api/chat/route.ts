@@ -1,7 +1,7 @@
 import { createParser, ParsedEvent, ReconnectInterval } from 'eventsource-parser'
 import { NextRequest, NextResponse } from 'next/server'
 
-export const runtime = 'edge';
+export const runtime = 'edge'
 
 export interface Message {
   role: string
@@ -23,6 +23,7 @@ export async function POST(req: NextRequest) {
 
     const { apiUrl, apiKey, model } = getApiConfig()
     const stream = await getOpenAIStream(apiUrl, apiKey, model, messagesWithHistory)
+    // console.log('stream', stream)
     return new NextResponse(stream, {
       headers: { 'Content-Type': 'text/event-stream' }
     })
