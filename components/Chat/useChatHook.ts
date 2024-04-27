@@ -7,6 +7,7 @@ import toast from 'react-hot-toast'
 import { v4 as uuid } from 'uuid'
 import { ChatGPInstance } from './Chat'
 import { Chat, ChatMessage, Persona } from './interface'
+import uploadPrompt from './uploadPrompt'
 
 export const DefaultPersonas: Persona[] = [
   {
@@ -50,7 +51,7 @@ let isInit = false
 
 const useChatHook = () => {
   const searchParams = useSearchParams()
-
+  //@ts-ignore
   const debug = searchParams.get('debug') === 'true'
 
   const [_, forceUpdate] = useReducer((x: number) => x + 1, 0)
@@ -141,6 +142,12 @@ const useChatHook = () => {
 
   const onCreatePersona = async (values: any) => {
     const { type, name, prompt, files } = values
+    console.log('front end : onCreatePersona ----------------')
+    console.log('files', files)
+    console.log('prompt', prompt)
+    console.log('name', name)
+    console.log('type', type)
+    uploadPrompt(name, prompt)
     const persona: Persona = {
       id: uuid(),
       role: 'system',
@@ -152,6 +159,7 @@ const useChatHook = () => {
     if (type === 'document') {
       try {
         setPersonaModalLoading(true)
+
         const data = await uploadFiles(files)
         persona.key = data.key
       } catch (e) {
