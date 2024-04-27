@@ -14,7 +14,10 @@ COPY package.json package-lock.json* ./
 RUN npm ci
 
 # Ajout de la génération de Prisma
+ RUN npm install -g prisma
 COPY prisma ./prisma/
+   # Générez le client Prisma
+    RUN npx prisma generate
 RUN npx prisma generate
 
 # Rebuild the source code only when needed
