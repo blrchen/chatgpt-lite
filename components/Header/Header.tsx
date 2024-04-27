@@ -4,6 +4,7 @@ import { useCallback, useState } from 'react'
 import { HamburgerMenuIcon } from '@radix-ui/react-icons'
 import { Avatar, Flex, Heading, IconButton, Select, Tooltip } from '@radix-ui/themes'
 import cs from 'classnames'
+import Image from 'next/image'
 import NextLink from 'next/link'
 import { FaAdjust, FaGithub, FaMoon, FaRegSun } from 'react-icons/fa'
 import { Link } from '../Link'
@@ -34,7 +35,7 @@ export const Header = () => {
             size="2"
             radius="full"
             fallback={
-              <Link href="https://github.com/odalys-ai/odalys-ai">
+              <Link href="https://upload.wikimedia.org/wikipedia/commons/7/75/ODALYS_GROUPE_RVB.png">
                 <FaGithub />
               </Link>
             }
@@ -65,6 +66,9 @@ export const Header = () => {
             <HamburgerMenuIcon width="16" height="16" />
           </IconButton>
         </Tooltip>
+        <NextLink href="https://www.odalys-groupe.com/" passHref>
+          <Image src="/logo-Odalys.png" alt="Logo Odalys" width={100} height={50} />
+        </NextLink>
       </Flex>
     </header>
   )

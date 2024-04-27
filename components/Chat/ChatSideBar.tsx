@@ -74,7 +74,7 @@ export const ChatSideBar = () => {
           className="bg-token-surface-primary active:scale-95 cursor-pointer"
         >
           <RiRobot2Line className="size-4" />
-          <Text>Persona Store</Text>
+          <Text>Bibliothèque de prompts</Text>
         </Box>
       </Flex>
     </Flex>
