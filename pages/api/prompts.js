@@ -20,5 +20,9 @@ export default async function handler(req, res) {
     } catch (error) {
       res.status(500).json({ error: 'Erreur lors de la récupération des prompts' })
     }
+  } else {
+    // Méthode non autorisée
+    res.setHeader('Allow', ['GET', 'POST'])
+    res.status(405).end(`Méthode ${req.method} non autorisée`)
   }
 }
