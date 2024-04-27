@@ -1,5 +1,15 @@
 import PromptManager from '@/serveur/PromptManager/PromptManager'
 export default async function handler(req, res) {
+  // Définir les headers CORS pour autoriser les requêtes cross-origin
+  res.setHeader('Access-Control-Allow-Origin', '*') // Ajustez '*' pour restreindre les origines si nécessaire
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+
+  // Gérer les requêtes OPTIONS pour le preflight de CORS
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end()
+  }
+
   const promptManager = new PromptManager()
   if (req.method === 'POST') {
     // Ajouter un nouveau prompt
@@ -22,7 +32,7 @@ export default async function handler(req, res) {
     }
   } else {
     // Méthode non autorisée
-    res.setHeader('Allow', ['GET', 'POST'])
+    res.setHeader('Allow', ['GET', 'POST', 'OPTIONS'])
     res.status(405).end(`Méthode ${req.method} non autorisée`)
   }
 }
