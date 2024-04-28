@@ -12,9 +12,9 @@ export const metadata = {
   },
   description: 'AI assistant powered by ChatGPT for Odalys',
   icons: {
-    icon: '/favicon.ico',
-    shortcut: '/favicon-16x16.png',
-    apple: '/apple-touch-icon.png'
+    icon: '/favicon-96x96.webp',
+    shortcut: '/favicon-96x96.webp',
+    apple: '/favicon-96x96.webp'
   }
 }
 
