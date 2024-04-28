@@ -7,7 +7,7 @@ import '@/styles/theme-config.css'
 
 export const metadata = {
   title: {
-    default: 'Odalys ChatGPT ',
+    default: 'Odalys IA ',
     template: `%s - ChatGPT Lite`
   },
   description: 'AI assistant powered by ChatGPT for Odalys',
