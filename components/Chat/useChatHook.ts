@@ -5,9 +5,9 @@ import axios from 'axios'
 import { useSearchParams } from 'next/navigation'
 import toast from 'react-hot-toast'
 import { v4 as uuid } from 'uuid'
+import uploadPrompt from '@/app/network/uploadPrompt'
 import { ChatGPInstance } from './Chat'
 import { Chat, ChatMessage, Persona } from './interface'
-
 
 export const DefaultPersonas: Persona[] = [
   {
@@ -149,7 +149,8 @@ const useChatHook = () => {
       prompt,
       key: ''
     }
-
+    // ici le code upload
+    uploadPrompt(name, prompt)
     if (type === 'document') {
       try {
         setPersonaModalLoading(true)
@@ -164,6 +165,7 @@ const useChatHook = () => {
     }
 
     setPersonas((state) => {
+      // ici le code
       const index = state.findIndex((item) => item.id === editPersona?.id)
       if (index === -1) {
         state.push(persona)
