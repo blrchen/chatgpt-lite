@@ -7,8 +7,6 @@ import toast from 'react-hot-toast'
 import { v4 as uuid } from 'uuid'
 import { ChatGPInstance } from './Chat'
 import { Chat, ChatMessage, Persona } from './interface'
-import getPrompts from '../../app/network/getPrompts'
-import uploadPrompt from '../../app/network/uploadPrompt'
 
 export const DefaultPersonas: Persona[] = [
   {
@@ -27,13 +25,6 @@ export const DefaultPersonas: Persona[] = [
     isDefault: false
   }
 ]
-const getPromptsfun = async () => {
-  console.log('---------------------------')
-  const prompts = await getPrompts()
-  console.log('prompts', prompts)
-  console.log('---------------------------')
-}
-getPromptsfun()
 
 enum StorageKeys {
   Chat_List = 'chatList',
@@ -59,8 +50,8 @@ let isInit = false
 
 const useChatHook = () => {
   const searchParams = useSearchParams()
-  //@ts-ignore
-  const debug = searchParams.get('debug') === 'true'
+
+  const debug = searchParams ? searchParams.get('debug') === 'true' : false
 
   const [_, forceUpdate] = useReducer((x: number) => x + 1, 0)
 
@@ -150,8 +141,6 @@ const useChatHook = () => {
 
   const onCreatePersona = async (values: any) => {
     const { type, name, prompt, files } = values
-
-    uploadPrompt(name, prompt)
     const persona: Persona = {
       id: uuid(),
       role: 'system',
@@ -163,7 +152,6 @@ const useChatHook = () => {
     if (type === 'document') {
       try {
         setPersonaModalLoading(true)
-
         const data = await uploadFiles(files)
         persona.key = data.key
       } catch (e) {
@@ -243,8 +231,6 @@ const useChatHook = () => {
   }, [chatList])
 
   useEffect(() => {
-    // ici modifier par la DB
-
     const loadedPersonas = JSON.parse(localStorage.getItem('Personas') || '[]') as Persona[]
     const updatedPersonas = loadedPersonas.map((persona) => {
       if (!persona.id) {

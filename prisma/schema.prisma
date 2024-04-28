@@ -18,7 +18,8 @@ model Prompt {
   name     String
   prompt   String
   date      DateTime  @default(now())
-
+  userId    String?   @map("user_id")
+  user      User?     @relation(fields: [userId], references: [id])
 }
 model Chat {
   id        String      @id @map("_id")
@@ -31,7 +32,7 @@ model User {
   id      String   @id @map("_id")
   role    String
   name    String
-  prompt  String
+  prompt  Prompt[]
   chats   Chat[]
 }
 
