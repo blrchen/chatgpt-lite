@@ -17,6 +17,7 @@ import { debounce } from 'lodash-es'
 import { AiOutlineClose, AiOutlineDelete, AiOutlineEdit } from 'react-icons/ai'
 import { LuMessageSquarePlus } from 'react-icons/lu'
 import { ChatContext, Persona } from '@/components'
+import { getPrompts } from '../network/getPrompts'
 
 export interface PersonaPanelProps {}
 
@@ -32,6 +33,14 @@ const PersonaPanel = (_props: PersonaPanelProps) => {
     onOpenPersonaModal,
     onClosePersonaPanel
   } = useContext(ChatContext)
+  const fetchPrompts = async () => {
+    const data = await getPrompts()
+    setPrompts(data)
+  }
+  useEffect(() => {
+    fetchPrompts()
+  }, [])
+  const [prompts, setPrompts] = useState<Persona[]>([])
 
   const [promptList, setPromptList] = useState<Persona[]>([])
   const [searchText, setSearchText] = useState('')
@@ -56,8 +65,8 @@ const PersonaPanel = (_props: PersonaPanelProps) => {
   )
 
   useEffect(() => {
-    handleSearch(personaPanelType, [...DefaultPersonas, ...personas], searchText)
-  }, [personaPanelType, searchText, DefaultPersonas, personas, handleSearch])
+    handleSearch(personaPanelType, [...DefaultPersonas, ...personas, ...prompts], searchText)
+  }, [personaPanelType, searchText, DefaultPersonas, personas, prompts, handleSearch])
 
   return openPersonaPanel ? (
     <Flex

@@ -18,6 +18,7 @@ import ChatContext from './chatContext'
 import type { Chat, ChatMessage } from './interface'
 import Message from './Message'
 
+
 import './index.scss'
 
 const HTML_REGULAR =

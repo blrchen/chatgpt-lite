@@ -1,4 +1,4 @@
-const getPrompts = async (): Promise<any[]> => {
+export const getPrompts = async (): Promise<any[]> => {
   const response = await fetch('/api/prompts', {
     method: 'GET',
     headers: {

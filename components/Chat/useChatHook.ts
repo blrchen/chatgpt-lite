@@ -8,6 +8,7 @@ import { v4 as uuid } from 'uuid'
 import { ChatGPInstance } from './Chat'
 import { Chat, ChatMessage, Persona } from './interface'
 
+
 export const DefaultPersonas: Persona[] = [
   {
     id: 'chatgpt',

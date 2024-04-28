@@ -1,5 +1,6 @@
 import PromptManager from '@/serveur/PromptManager/PromptManager'
 export default async function handler(req, res) {
+  console.log('req ---------------')
   // Configuration des headers CORS
   res.setHeader('Access-Control-Allow-Credentials', true)
   res.setHeader('Access-Control-Allow-Origin', '*')
