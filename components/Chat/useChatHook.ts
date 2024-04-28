@@ -27,8 +27,13 @@ export const DefaultPersonas: Persona[] = [
     isDefault: false
   }
 ]
-const prompts = getPrompts()
-console.log('prompts', prompts)
+const getPromptsfun = async () => {
+  console.log('---------------------------')
+  const prompts = await getPrompts()
+  console.log('prompts', prompts)
+  console.log('---------------------------')
+}
+getPromptsfun()
 
 enum StorageKeys {
   Chat_List = 'chatList',
@@ -238,6 +243,8 @@ const useChatHook = () => {
   }, [chatList])
 
   useEffect(() => {
+    // ici modifier par la DB
+
     const loadedPersonas = JSON.parse(localStorage.getItem('Personas') || '[]') as Persona[]
     const updatedPersonas = loadedPersonas.map((persona) => {
       if (!persona.id) {

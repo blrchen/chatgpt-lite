@@ -20,19 +20,21 @@ export default async function handler(req, res) {
     if (req.method === 'POST') {
       // Ajouter un nouveau prompt
       const { name, prompt } = req.body
-      promptManager.savePrompt(name, prompt)
-      res.status(201).json(prompt)
+      const promptSend = await promptManager.savePrompt(name, prompt)
+      console.log('promptSend', promptSend)
+
+      return res.status(201).json(prompt)
     }
     if (req.method === 'GET') {
       // Récupérer tous les prompts
       console.log('in the get')
       const prompts = await promptManager.getPrompts()
       console.log('prompts', prompts)
-      res.status(200).json(prompts)
+      return res.status(200).json(prompts)
     } else {
       // Méthode non autorisée
       res.setHeader('Allow', ['GET', 'POST', 'OPTIONS'])
-      res.status(405).end(`Méthode ${req.method} non autorisée`)
+      return res.status(405).end(`Méthode ${req.method} non autorisée`)
     }
   } catch (error) {
     res.status(500).json({ error: `Erreur lors de la gestion de la méthode ${req.method}` })
