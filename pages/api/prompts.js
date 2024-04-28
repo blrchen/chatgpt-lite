@@ -8,15 +8,15 @@ export default async function handler(req, res) {
     'Access-Control-Allow-Headers',
     'Content-Type, Authorization, X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Date, X-Api-Version'
   )
-
+  console.log('req.method', req.method)
   // Gestion des requêtes OPTIONS pour le preflight de CORS
   if (req.method === 'OPTIONS') {
     return res.status(200).end()
   }
 
-  const promptManager = new PromptManager()
-
   try {
+    const promptManager = new PromptManager()
+
     if (req.method === 'POST') {
       // Ajouter un nouveau prompt
       const { name, prompt } = req.body
