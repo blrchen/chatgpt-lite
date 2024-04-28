@@ -1,5 +1,3 @@
-import PromptManager from '../../serveur/PromptManager/PromptManager'
-
 const uploadPrompt = async (name: string, prompt: string) => {
   const data = { name, prompt }
   const response = await fetch('/api/prompts', {

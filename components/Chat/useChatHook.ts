@@ -7,7 +7,8 @@ import toast from 'react-hot-toast'
 import { v4 as uuid } from 'uuid'
 import { ChatGPInstance } from './Chat'
 import { Chat, ChatMessage, Persona } from './interface'
-import uploadPrompt from './uploadPrompt'
+import getPrompts from '../../app/network/getPrompts'
+import uploadPrompt from '../../app/network/uploadPrompt'
 
 export const DefaultPersonas: Persona[] = [
   {
@@ -26,6 +27,8 @@ export const DefaultPersonas: Persona[] = [
     isDefault: false
   }
 ]
+const prompts = getPrompts()
+console.log('prompts', prompts)
 
 enum StorageKeys {
   Chat_List = 'chatList',
@@ -142,11 +145,7 @@ const useChatHook = () => {
 
   const onCreatePersona = async (values: any) => {
     const { type, name, prompt, files } = values
-    console.log('front end : onCreatePersona ----------------')
-    console.log('files', files)
-    console.log('prompt', prompt)
-    console.log('name', name)
-    console.log('type', type)
+
     uploadPrompt(name, prompt)
     const persona: Persona = {
       id: uuid(),

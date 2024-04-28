@@ -22,9 +22,12 @@ export default async function handler(req, res) {
       const { name, prompt } = req.body
       promptManager.savePrompt(name, prompt)
       res.status(201).json(prompt)
-    } else if (req.method === 'GET') {
+    }
+    if (req.method === 'GET') {
       // Récupérer tous les prompts
-      const prompts = await prisma.prompt.findMany()
+      console.log('in the get')
+      const prompts = await promptManager.getPrompts()
+      console.log('prompts', prompts)
       res.status(200).json(prompts)
     } else {
       // Méthode non autorisée
