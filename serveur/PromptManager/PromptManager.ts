@@ -22,7 +22,14 @@ class PromptManager {
     const response = await this.prisma.prompt.findMany()
     return response
   }
-
+  // create the delete methode
+  async deletePrompt(id: string) {
+    const deletePrompt = await this.prisma.prompt.delete({
+      where: { id }
+    })
+    console.log('deletePrompt in the prompt manager', deletePrompt)
+    return deletePrompt
+  }
   // // Méthode pour récupérer un prompt par ID
   // async getPromptById(id: string) {
   //   return await this.prisma.prompt.findUnique({

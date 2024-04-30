@@ -4,7 +4,7 @@ export default async function handler(req, res) {
   // Configuration des headers CORS
   res.setHeader('Access-Control-Allow-Credentials', true)
   res.setHeader('Access-Control-Allow-Origin', '*')
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, DELETE')
   res.setHeader(
     'Access-Control-Allow-Headers',
     'Content-Type, Authorization, X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Date, X-Api-Version'
@@ -22,16 +22,21 @@ export default async function handler(req, res) {
       // Ajouter un nouveau prompt
       const { name, prompt, brand } = req.body
       const promptSend = await promptManager.savePrompt(name, prompt, brand)
-      console.log('promptSend', promptSend)
-
-      return res.status(201).json(prompt)
+      return res.status(201).json(promptSend)
     }
     if (req.method === 'GET') {
       // Récupérer tous les prompts
-      console.log('in the get')
       const prompts = await promptManager.getPrompts()
-      console.log('prompts', prompts)
       return res.status(200).json(prompts)
+    }
+    // delete methode
+    if (req.method === 'DELETE') {
+      const { id } = req.body
+
+      const promptDelete = await promptManager.deletePrompt(id)
+      console.log('promptDelete', promptDelete)
+
+      return res.status(200).json(promptDelete)
     } else {
       // Méthode non autorisée
       res.setHeader('Allow', ['GET', 'POST', 'OPTIONS'])

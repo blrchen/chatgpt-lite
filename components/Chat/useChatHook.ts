@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react'
 import axios from 'axios'
 import { useSearchParams } from 'next/navigation'
-import toast from 'react-hot-toast'
 import { v4 as uuid } from 'uuid'
+import delPrompts from '@/app/network/delPrompts'
 import uploadPrompt from '@/app/network/uploadPrompt'
 import { ChatGPInstance } from './Chat'
 import { Chat, ChatMessage, Persona } from './interface'
@@ -142,7 +142,6 @@ const useChatHook = () => {
 
   const onCreatePersona = async (values: any) => {
     const { type, name, prompt, files, brand } = values
-    console.log('values ------------------', values)
     const persona: Persona = {
       id: uuid(),
       role: 'system',
@@ -151,28 +150,25 @@ const useChatHook = () => {
       key: '',
       brand: ''
     }
-    uploadPrompt(name, prompt, brand)
-    if (type === 'document') {
-      try {
-        setPersonaModalLoading(true)
-        const data = await uploadFiles(files)
-        persona.key = data.key
-      } catch (e) {
-        console.log(e)
-        toast.error('Error uploading files')
-      } finally {
-        setPersonaModalLoading(false)
-      }
-    }
+    const uploadPromptResponse = await uploadPrompt(name, prompt, brand)
+    // if (type === 'document') {
+    //   try {
+    //     setPersonaModalLoading(true)
+    //     const data = await uploadFiles(files)
+    //     persona.key = data.key
+    //     persona.brand = data.brand
+    //     uploadPromptResponse.id = data.id
+    //   } catch (e) {
+    //     console.log(e)
+    //     toast.error('Error uploading files')
+    //   } finally {
+    //     setPersonaModalLoading(false)
+    //   }
+    // }
 
     setPersonas((state) => {
-      // ici le code
-      const index = state.findIndex((item) => item.id === editPersona?.id)
-      if (index === -1) {
-        state.push(persona)
-      } else {
-        state.splice(index, 1, persona)
-      }
+      console.log('state', state)
+      state.push(uploadPromptResponse)
       return [...state]
     })
 
@@ -186,10 +182,21 @@ const useChatHook = () => {
 
   const onDeletePersona = (persona: Persona) => {
     setPersonas((state) => {
-      const index = state.findIndex((item) => item.id === persona.id)
-      state.splice(index, 1)
-      return [...state]
+      const newState = [...state]
+      const index = newState.findIndex((item) => item.id === persona.id)
+
+      if (index !== -1) {
+        newState.splice(index, 1)
+      }
+
+      return newState
     })
+
+    if (persona.id) {
+      delPrompts(persona.id)
+    }
+
+    console.log('Deleted persona:', persona)
   }
 
   const saveMessages = (messages: ChatMessage[]) => {
@@ -234,20 +241,25 @@ const useChatHook = () => {
     localStorage.setItem(StorageKeys.Chat_List, JSON.stringify(chatList))
   }, [chatList])
 
-  useEffect(() => {
-    const loadedPersonas = JSON.parse(localStorage.getItem('Personas') || '[]') as Persona[]
-    const updatedPersonas = loadedPersonas.map((persona) => {
-      if (!persona.id) {
-        persona.id = uuid()
-      }
-      return persona
-    })
-    setPersonas(updatedPersonas)
-  }, [])
+  //ici actualiser les persona depuis le local storage et leur donne un id si pas d'id
+  // useEffect(() => {
+  //   // const loadedPersonas = JSON.parse(localStorage.getItem('Personas') || '[]') as Persona[]
+  //   uploadPrompt().then((data) => {
+  //     console.log('data', data)
+  //   })
+  //   const updatedPersonas = loadedPersonas.map((persona) => {
+  //     // if (!persona.id) {
+  //     //   persona.id = uuid()
+  //     // }
+  //     return persona
+  //   })
+  //   console.log('updatedPersonas', loadedPersonas)
+  //   setPersonas(updatedPersonas)
+  // }, [])
 
-  useEffect(() => {
-    localStorage.setItem('Personas', JSON.stringify(personas))
-  }, [personas])
+  // useEffect(() => {
+  //   localStorage.setItem('Personas', JSON.stringify(personas))
+  // }, [personas])
 
   useEffect(() => {
     if (isInit && !openPersonaPanel && chatList.length === 0) {
