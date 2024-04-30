@@ -31,7 +31,8 @@ const PersonaPanel = (_props: PersonaPanelProps) => {
     onEditPersona,
     onCreateChat,
     onOpenPersonaModal,
-    onClosePersonaPanel
+    onClosePersonaPanel,
+    
   } = useContext(ChatContext)
   const fetchPrompts = async () => {
     const data = await getPrompts()

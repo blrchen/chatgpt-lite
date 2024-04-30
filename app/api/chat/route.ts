@@ -15,9 +15,7 @@ export async function POST(req: NextRequest) {
       messages: Message[]
       input: string
     }
-    console.log('prompt', prompt)
-    console.log('messages', messages)
-    console.log('input', input)
+
     const messagesWithHistory = [
       { content: prompt, role: 'system' },
       ...messages,

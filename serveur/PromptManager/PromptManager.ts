@@ -9,7 +9,7 @@ class PromptManager {
   }
 
   async savePrompt(name: string, prompt: string, brand: string) {
-    console.log('savePrompt', name, prompt, brand)
+  
     return await this.prisma.prompt.create({
       data: {
         name: name,
@@ -27,8 +27,14 @@ class PromptManager {
     const deletePrompt = await this.prisma.prompt.delete({
       where: { id }
     })
-    console.log('deletePrompt in the prompt manager', deletePrompt)
     return deletePrompt
+  }
+
+  async updatePrompt(id: string, name: string, prompt: string, brand: string) {
+    return await this.prisma.prompt.update({
+      where: { id },
+      data: { name, prompt, brand }
+    })
   }
   // // Méthode pour récupérer un prompt par ID
   // async getPromptById(id: string) {

@@ -1,15 +1,13 @@
 import PromptManager from '@/serveur/PromptManager/PromptManager'
 export default async function handler(req, res) {
-  console.log('req ---------------')
   // Configuration des headers CORS
   res.setHeader('Access-Control-Allow-Credentials', true)
   res.setHeader('Access-Control-Allow-Origin', '*')
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, DELETE')
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, DELETE, PUT')
   res.setHeader(
     'Access-Control-Allow-Headers',
     'Content-Type, Authorization, X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Date, X-Api-Version'
   )
-  console.log('req.method', req.method)
   // Gestion des requêtes OPTIONS pour le preflight de CORS
   if (req.method === 'OPTIONS') {
     return res.status(200).end()
@@ -34,9 +32,15 @@ export default async function handler(req, res) {
       const { id } = req.body
 
       const promptDelete = await promptManager.deletePrompt(id)
-      console.log('promptDelete', promptDelete)
 
       return res.status(200).json(promptDelete)
+    }
+    // put methode
+    if (req.method === 'PUT') {
+      const { id, name, prompt, brand } = req.body
+
+      const promptUpdate = await promptManager.updatePrompt(id, name, prompt, brand)
+      return res.status(200).json(promptUpdate)
     } else {
       // Méthode non autorisée
       res.setHeader('Allow', ['GET', 'POST', 'OPTIONS'])

@@ -8,15 +8,18 @@ const PersonaModal = () => {
     isOpenPersonaModal: open,
     editPersona: detail,
     onCreatePersona,
-    onClosePersonaModal
+    onClosePersonaModal,
+    onSubmitEditPersona
   } = useContext(ChatContext)
 
   const { register, handleSubmit, setValue, watch } = useForm()
 
-  const formSubmit = handleSubmit((values: any) => {
-    console.log('values', values)
-
-    onCreatePersona?.(values as Persona)
+  const formSubmit = handleSubmit(async (values: any) => {
+    if (detail?.id) {
+      onSubmitEditPersona?.(values as Persona)
+    } else {
+      onCreatePersona?.(values as Persona)
+    }
   })
 
   useEffect(() => {
@@ -24,6 +27,7 @@ const PersonaModal = () => {
       setValue('name', detail.name, { shouldTouch: true })
       setValue('prompt', detail.prompt, { shouldTouch: true })
       setValue('brand', detail.brand, { shouldTouch: true })
+      setValue('id', detail.id, { shouldTouch: true })
     }
   }, [detail, setValue])
 

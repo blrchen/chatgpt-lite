@@ -29,6 +29,7 @@ const ChatContext = createContext<{
   onClosePersonaPanel?: () => void
   onToggleSidebar?: () => void
   forceUpdate?: () => void
+  onSubmitEditPersona?: (persona: Persona) => void
 }>({
   personaPanelType: 'chat',
   DefaultPersonas: [],

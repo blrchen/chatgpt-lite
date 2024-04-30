@@ -5,6 +5,7 @@ import axios from 'axios'
 import { useSearchParams } from 'next/navigation'
 import { v4 as uuid } from 'uuid'
 import delPrompts from '@/app/network/delPrompts'
+import updatePrompt from '@/app/network/updatePrompt'
 import uploadPrompt from '@/app/network/uploadPrompt'
 import { ChatGPInstance } from './Chat'
 import { Chat, ChatMessage, Persona } from './interface'
@@ -151,23 +152,8 @@ const useChatHook = () => {
       brand: ''
     }
     const uploadPromptResponse = await uploadPrompt(name, prompt, brand)
-    // if (type === 'document') {
-    //   try {
-    //     setPersonaModalLoading(true)
-    //     const data = await uploadFiles(files)
-    //     persona.key = data.key
-    //     persona.brand = data.brand
-    //     uploadPromptResponse.id = data.id
-    //   } catch (e) {
-    //     console.log(e)
-    //     toast.error('Error uploading files')
-    //   } finally {
-    //     setPersonaModalLoading(false)
-    //   }
-    // }
 
     setPersonas((state) => {
-      console.log('state', state)
       state.push(uploadPromptResponse)
       return [...state]
     })
@@ -176,8 +162,25 @@ const useChatHook = () => {
   }
 
   const onEditPersona = async (persona: Persona) => {
+    if (!persona.id || !persona.name || !persona.prompt || !persona.brand) return
+
     setEditPersona(persona)
     onOpenPersonaModal()
+  }
+  const onSubmitEditPersona = async (values: any) => {
+    const updatedPersona = await updatePrompt(values.id, values.name, values.prompt, values.brand)
+
+    // Mettre à jour la liste des personas avec la version modifié
+    setPersonas((state) => {
+      state.splice(
+        state.findIndex((p) => p.id === updatedPersona.id),
+        1,
+        updatedPersona
+      )
+      return [...state]
+    })
+    setEditPersona(updatedPersona)
+    onClosePersonaModal()
   }
 
   const onDeletePersona = (persona: Persona) => {
@@ -257,9 +260,7 @@ const useChatHook = () => {
   //   setPersonas(updatedPersonas)
   // }, [])
 
-  // useEffect(() => {
-  //   localStorage.setItem('Personas', JSON.stringify(personas))
-  // }, [personas])
+  useEffect(() => {}, [personas])
 
   useEffect(() => {
     if (isInit && !openPersonaPanel && chatList.length === 0) {
@@ -289,6 +290,7 @@ const useChatHook = () => {
     onCreatePersona,
     onDeletePersona,
     onEditPersona,
+    onSubmitEditPersona,
     saveMessages,
     onOpenPersonaPanel,
     onClosePersonaPanel,
