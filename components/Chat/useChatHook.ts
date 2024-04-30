@@ -141,16 +141,17 @@ const useChatHook = () => {
   }
 
   const onCreatePersona = async (values: any) => {
-    const { type, name, prompt, files } = values
+    const { type, name, prompt, files, brand } = values
+    console.log('values ------------------', values)
     const persona: Persona = {
       id: uuid(),
       role: 'system',
       name,
       prompt,
-      key: ''
+      key: '',
+      brand: ''
     }
-    // ici le code upload
-    uploadPrompt(name, prompt)
+    uploadPrompt(name, prompt, brand)
     if (type === 'document') {
       try {
         setPersonaModalLoading(true)

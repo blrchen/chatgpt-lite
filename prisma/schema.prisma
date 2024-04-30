@@ -17,6 +17,7 @@ model Prompt {
   id        String    @id @default(auto()) @map("_id") @db.ObjectId
   name     String
   prompt   String
+  brand    String?
   date      DateTime  @default(now())
   userId    String?   @map("user_id")
   user      User?     @relation(fields: [userId], references: [id])

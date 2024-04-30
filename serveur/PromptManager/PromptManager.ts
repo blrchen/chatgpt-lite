@@ -8,17 +8,19 @@ class PromptManager {
     this.prisma = new PrismaClient()
   }
 
-  // }
-  async savePrompt(name: string, prompt: string) {
+  async savePrompt(name: string, prompt: string, brand: string) {
+    console.log('savePrompt', name, prompt, brand)
     return await this.prisma.prompt.create({
       data: {
         name: name,
-        prompt: prompt
+        prompt: prompt,
+        brand: brand
       }
     })
   }
   async getPrompts() {
-    return await this.prisma.prompt.findMany()
+    const response = await this.prisma.prompt.findMany()
+    return response
   }
 
   // // Méthode pour récupérer un prompt par ID

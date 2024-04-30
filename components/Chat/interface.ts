@@ -11,6 +11,7 @@ export interface Persona {
   prompt?: string
   key?: string
   isDefault?: boolean
+  brand?: string
 }
 
 export interface Chat {

@@ -1,5 +1,7 @@
-const uploadPrompt = async (name: string, prompt: string) => {
-  const data = { name, prompt }
+const uploadPrompt = async (name: string, prompt: string, brand: string) => {
+  console.log('uploadPrompt----------------------->>>>>>>>>>>>>>', brand)
+  const data = { name, prompt, brand }
+  console.log('data --------->>>>>>>>>>>', data)
   const response = await fetch('/api/prompts', {
     method: 'POST',
     headers: {
@@ -10,7 +12,7 @@ const uploadPrompt = async (name: string, prompt: string) => {
     },
     body: JSON.stringify(data)
   })
-  console.log('response', response)
+  console.log('response', JSON.stringify(data))
   if (!response.ok) {
     throw new Error('Erreur lors de la sauvegarde du prompt')
   }

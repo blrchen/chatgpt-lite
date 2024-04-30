@@ -53,6 +53,7 @@ const getApiConfig = () => {
       apiBaseUrl = apiBaseUrl.slice(0, -1)
     }
     apiUrl = `${apiBaseUrl}/openai/deployments/${deployment}/chat/completions?api-version=${apiVersion}`
+    // ici ajouter une logic pour aller chercher la clées dans la base de données ou dans le localStorage
     apiKey = process.env.AZURE_OPENAI_API_KEY || ''
     model = '' // Azure Open AI always ignores the model and decides based on the deployment name passed through.
   } else {
