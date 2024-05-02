@@ -18,7 +18,6 @@ import ChatContext from './chatContext'
 import type { Chat, ChatMessage } from './interface'
 import Message from './Message'
 
-
 import './index.scss'
 
 const HTML_REGULAR =
@@ -34,11 +33,13 @@ export interface ChatGPInstance {
 
 const postChatOrQuestion = async (chat: Chat, messages: any[], input: string) => {
   const url = '/api/chat'
+  const apiKey = localStorage.getItem('apiKey') || '' // Récupérer la clé API du localStorage
 
   const data = {
     prompt: chat?.persona?.prompt,
     messages: [...messages!],
-    input
+    input,
+    apiKey
   }
 
   return await fetch(url, {

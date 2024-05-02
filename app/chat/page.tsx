@@ -1,5 +1,5 @@
 'use client'
-import { Suspense } from 'react'
+import { Suspense, useState, useEffect } from 'react'
 import { Flex } from '@radix-ui/themes'
 import { Chat, ChatContext, ChatSideBar, useChatHook } from '@/components'
 import PersonaModal from './PersonaModal'
@@ -23,8 +23,24 @@ const ChatProvider = () => {
 }
 
 const ChatPage = () => {
+  const [apiKey, setApiKey] = useState('')
+
+  useEffect(() => {
+    // Ce code ne s'exécutera que côté client
+    const storedApiKey = localStorage.getItem('apiKey') || ''
+    if (storedApiKey) {
+      setApiKey(storedApiKey)
+    } else {
+      const userApiKey = prompt('Veuillez entrer votre clé API :')
+      if (userApiKey) {
+        localStorage.setItem('apiKey', userApiKey)
+        setApiKey(userApiKey)
+      }
+    }
+  }, [])
+
   return (
-    <Suspense>
+    <Suspense fallback={<div>Chargement...</div>}>
       <ChatProvider />
     </Suspense>
   )

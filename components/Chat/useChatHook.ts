@@ -222,7 +222,6 @@ const useChatHook = () => {
         const messages = JSON.parse(localStorage.getItem(`ms_${chat?.id}`) || '[]') as ChatMessage[]
         messagesMap.current.set(chat.id!, messages)
       })
-
       onChangeChat(currentChat || chatList[0])
     } else {
       onCreateChat(DefaultPersonas[0])
@@ -295,7 +294,8 @@ const useChatHook = () => {
     onOpenPersonaPanel,
     onClosePersonaPanel,
     onToggleSidebar,
-    forceUpdate
+    forceUpdate,
+    setOpenPersonaPanel
   }
 }
 
