@@ -21,6 +21,7 @@
     "clipboard": "^2.0.11",
     "delay": "^6.0.0",
     "eventsource-parser": "^1.1.1",
+    "framer-motion": "^11.1.7",
     "lodash": "^4.17.21",
     "lodash-es": "^4.17.21",
     "mongodb": "^6.5.0",

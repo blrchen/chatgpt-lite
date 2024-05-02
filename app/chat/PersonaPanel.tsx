@@ -13,16 +13,11 @@ import {
   Text,
   TextField
 } from '@radix-ui/themes'
+import { motion, AnimatePresence } from 'framer-motion'
 import _ from 'lodash'
 import { debounce } from 'lodash-es'
 import Image from 'next/image'
-import {
-  AiOutlineClose,
-  AiOutlineDelete,
-  AiOutlineEdit,
-  AiOutlineUp,
-  AiOutlineDown
-} from 'react-icons/ai'
+import { AiOutlineClose, AiOutlineDelete, AiOutlineEdit } from 'react-icons/ai'
 import { LuMessageSquarePlus } from 'react-icons/lu'
 import { ChatContext, Persona } from '@/components'
 import { getPrompts } from '../network/getPrompts'
@@ -43,69 +38,119 @@ const PersonaPanel = (_props: PersonaPanelProps) => {
   } = useContext(ChatContext)
   const [promptList, setPromptList] = useState<Persona[]>([])
   const [searchText, setSearchText] = useState('')
-  const [brands, setBrands] = useState<(string | undefined)[]>([])
-  const [expandedBrand, setExpandedBrand] = useState<string | null>(null)
+  const [selectedBrand, setSelectedBrand] = useState<string | null>(null)
 
   const fetchPrompts = async () => {
     const data = await getPrompts()
-    setPrompts(data)
-    getBrand(data)
-    console.log(brands)
+    setPromptList(data)
   }
   useEffect(() => {
     fetchPrompts()
   }, [])
-  const [prompts, setPrompts] = useState<Persona[]>([])
-  const toggleAccordion = (brand: string) => {
-    setExpandedBrand(expandedBrand === brand ? null : brand)
+
+  interface Brand {
+    name: string
+    logo: string
+    dbName: string
+    color: string
+    description: string
+    url: string
   }
-  // Création d'un tableau contenant uniquement les marques uniques des prompts
-  const SolidBrand = [
-    {
-      name: 'SGIT',
-      logo: '/logoSGIT.svg',
-      dbName: 'sgit'
-    },
+
+  const SolidBrand: Brand[] = [
     {
       name: 'Odalys Vacances',
-      logo: '/logo-Odalys.png',
-      dbName: 'odalysVacances'
+      logo: '/ODALYS-VACANCES-BLANC2.png',
+      dbName: 'odalysVacances',
+      color: '#3498DB',
+      description: 'Résidences loisirs',
+      url: 'https://www.odalys-vacances.com/'
+    },
+    {
+      name: 'Odalys City',
+      logo: '/ODALYS-CITY-BLANC.png',
+      dbName: 'odalysCity',
+      color: '#E74C3C',
+      description: 'Résidences affaires',
+      url: 'https://www.odalys-vacances.com/location-ville/'
+    },
+    {
+      name: 'Odalys Campus',
+      logo: '/ODALYS-CAMPUS-BLANC.png',
+      dbName: 'odalysCampus',
+      color: '#9B59B6',
+      description: 'Résidences étudiantes',
+      url: 'https://www.odalys-campus.com'
+    },
+    {
+      name: 'Flower Campings',
+      logo: '/Flower_Campings.png',
+      dbName: 'flowerCampings',
+      color: '#2ECC71',
+      description: 'Hôtellerie de Plein Air',
+      url: 'https://www.flowercampings.com/'
     },
     {
       name: 'Happy Senior',
-      logo: 'logoHP.svg',
-      dbName: 'happySenior'
+      logo: '/logo-happy-senior.png',
+      dbName: 'happySenior',
+      color: '#F1C40F',
+      description: 'Résidences seniors',
+      url: 'https://residencehappysenior.fr/'
+    },
+    {
+      name: 'SGIT Gestion',
+      logo: '/Logo-SGIT-couleurs.jpg',
+      dbName: 'sgitGestion',
+      color: '#34495E',
+      description: 'Gestion de copropriété',
+      url: 'https://www.sgitgestion.com/'
+    },
+    {
+      name: 'Odalys Invest',
+      logo: '/ODALYS-INVEST-BLANC.png',
+      dbName: 'odalysInvest',
+      color: '#16A085',
+      description: 'Investissement immobilier',
+      url: 'https://www.odalys-invest.com/'
+    },
+    {
+      name: 'Odalys Plein Air',
+      logo: '/ODALYS-PLEIN-AIR-blanc.png',
+      dbName: 'odalysPleinAir',
+      color: '#2980B9',
+      description: 'Vente de mobil-homes résidentiels',
+      url: 'https://www.odalys-pleinair.com/'
+    },
+    {
+      name: 'La Conciergerie by Odalys',
+      logo: '/logo-conciergerie.png',
+      dbName: 'laConciergerieByOdalys',
+      color: '#8E44AD',
+      description: 'Service de gestion de locations',
+      url: 'https://www.laconciergerie-odalys.com/'
+    },
+    {
+      name: 'Odalys evenements et groupes',
+      logo: '/ODALYS-EVENEMENTS&GROUPES-BLANC.png',
+      dbName: 'odalysEvenementsEtGroupes',
+      color: '#2C3E50', // Bleu foncé
+      description: 'Organisation d’événements et gestion de groupes',
+      url: 'https://www.odalys-evenements-groupes.com/' // URL fictive, remplacez par l'URL réelle si disponible
+    },
+    {
+      name: 'Odalys Groupe',
+      logo: '/ODALYS-GROUPE-BLANC.png',
+      dbName: 'odalysGroupe',
+      color: '#2C3E50', // Bleu foncé
+      description: 'Organisation d’événements et gestion de groupes',
+      url: 'https://www.odalys-evenements-groupes.com/' // URL fictive, remplacez par l'URL réelle si disponible
     }
   ]
 
-  const getBrand = (promptList: Persona[]) => {
-    const brandsliste = promptList.map((item) => item.brand)
-
-    const uniqueBrands = _.uniq(brandsliste)
-    setBrands(uniqueBrands)
+  const handleBrandClick = (brandName: string) => {
+    setSelectedBrand(brandName === selectedBrand ? null : brandName)
   }
-  const handleSearch = useCallback(
-    debounce((type: string, list: Persona[], searchText: string) => {
-      setPromptList(
-        list.filter((item) => {
-          if (type === 'chat') {
-            return (
-              !item.key && (item.prompt?.includes(searchText) || item.name?.includes(searchText))
-            )
-          } else {
-            return (
-              item.key && (item.prompt?.includes(searchText) || item.name?.includes(searchText))
-            )
-          }
-        })
-      )
-    }, 350),
-    []
-  )
-
-  useEffect(() => {
-    handleSearch(personaPanelType, [...DefaultPersonas, ...personas, ...prompts], searchText)
-  }, [personaPanelType, searchText, DefaultPersonas, personas, prompts, handleSearch])
 
   return openPersonaPanel ? (
     <Flex
@@ -153,32 +198,55 @@ const PersonaPanel = (_props: PersonaPanelProps) => {
         </Flex>
       </Container>
       <ScrollArea className="flex-1" type="auto" scrollbars="vertical">
-        <Container size="3" className="px-4">
+        <Container className="px-4">
           <Flex direction="column" className="divide-y">
-            {/* Affichage des prompts triés par marque */}
-
-            {SolidBrand.map((brand) => (
-              <div key={brand.dbName}>
-                <Flex
-                  align="center"
-                  justify="between"
-                  className="mb-2 cursor-pointer"
-                  onClick={() => brand && toggleAccordion(brand.name)}
+            <Flex wrap="wrap" gap="3" justify="center">
+              {SolidBrand.map((brand) => (
+                <motion.div
+                  key={brand.dbName}
+                  initial={{ opacity: 0.7 }}
+                  animate={{ opacity: 1 }}
+                  whileHover={{ scale: 0.9 }}
+                  transition={{ duration: 0.3 }}
+                  onClick={() => handleBrandClick(brand.dbName)}
+                  style={{
+                    cursor: 'pointer',
+                    backgroundColor: brand.color,
+                    borderRadius: '10px',
+                    padding: '20px', // Increased padding for larger size
+                    width: '250px', // Fixed width for uniform size
+                    height: '250px', // Fixed height for uniform size
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
                 >
-                  <Image src={brand.logo} alt={brand.name} width={150} height={102} />
-
-                  <Text as="p" size="4" weight="bold">
+                  <Image src={brand.logo} alt={brand.name} width={100} height={100} />
+                  <Text size="3" style={{ color: 'white', marginTop: '10px' }}>
                     {brand.name}
                   </Text>
-                  {expandedBrand === brand.dbName ? (
-                    <AiOutlineUp className="ml-2 justify-end" />
-                  ) : (
-                    <AiOutlineDown className="ml-2 justify-end" />
-                  )}
-                </Flex>
-                {expandedBrand === brand.name &&
-                  promptList
-                    .filter((prompt) => prompt.brand === brand.dbName)
+                </motion.div>
+              ))}
+            </Flex>
+            {selectedBrand && (
+              <AnimatePresence>
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  style={{ marginTop: '20px' }}
+                >
+                  <Text
+                    as="p"
+                    size="5"
+                    weight="bold"
+                    style={{ textAlign: 'center', marginBottom: '10px' }}
+                  >
+                    Prompts for {selectedBrand}
+                  </Text>
+                  {promptList
+                    .filter((prompt) => prompt.brand === selectedBrand)
                     .map((prompt) => (
                       <Flex
                         key={prompt.id}
@@ -186,7 +254,10 @@ const PersonaPanel = (_props: PersonaPanelProps) => {
                         justify="between"
                         gap="3"
                         py="3"
-                        style={{ borderColor: 'var(--gray-a5)' }}
+                        style={{
+                          borderColor: 'var(--gray-a5)',
+                          borderBottom: '1px solid var(--gray-a5)'
+                        }}
                       >
                         <Box width="100%">
                           <Text as="p" size="3" weight="bold" className="mb-2">
@@ -232,8 +303,9 @@ const PersonaPanel = (_props: PersonaPanelProps) => {
                         </Flex>
                       </Flex>
                     ))}
-              </div>
-            ))}
+                </motion.div>
+              </AnimatePresence>
+            )}
           </Flex>
         </Container>
       </ScrollArea>
