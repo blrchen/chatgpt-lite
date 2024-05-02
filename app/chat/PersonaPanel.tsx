@@ -48,6 +48,15 @@ const PersonaPanel = (_props: PersonaPanelProps) => {
     fetchPrompts()
   }, [])
 
+  useEffect(() => {
+    if (selectedBrand) {
+      const promptsSection = document.getElementById('prompts-section')
+      if (promptsSection) {
+        promptsSection.scrollIntoView({ behavior: 'smooth' })
+      }
+    }
+  }, [selectedBrand])
+
   interface Brand {
     name: string
     logo: string
@@ -62,7 +71,7 @@ const PersonaPanel = (_props: PersonaPanelProps) => {
       name: 'Odalys Vacances',
       logo: '/ODALYS-VACANCES-BLANC2.png',
       dbName: 'odalysVacances',
-      color: '#3498DB',
+      color: '#08429F',
       description: 'Résidences loisirs',
       url: 'https://www.odalys-vacances.com/'
     },
@@ -70,7 +79,7 @@ const PersonaPanel = (_props: PersonaPanelProps) => {
       name: 'Odalys City',
       logo: '/ODALYS-CITY-BLANC.png',
       dbName: 'odalysCity',
-      color: '#E74C3C',
+      color: '#66564D',
       description: 'Résidences affaires',
       url: 'https://www.odalys-vacances.com/location-ville/'
     },
@@ -78,23 +87,23 @@ const PersonaPanel = (_props: PersonaPanelProps) => {
       name: 'Odalys Campus',
       logo: '/ODALYS-CAMPUS-BLANC.png',
       dbName: 'odalysCampus',
-      color: '#9B59B6',
+      color: '#DC4927',
       description: 'Résidences étudiantes',
       url: 'https://www.odalys-campus.com'
     },
     {
       name: 'Flower Campings',
-      logo: '/Flower_Campings.png',
+      logo: '/FC.png',
       dbName: 'flowerCampings',
-      color: '#2ECC71',
+      color: '#08518F',
       description: 'Hôtellerie de Plein Air',
       url: 'https://www.flowercampings.com/'
     },
     {
       name: 'Happy Senior',
-      logo: '/logo-happy-senior.png',
+      logo: '/RHS.png',
       dbName: 'happySenior',
-      color: '#F1C40F',
+      color: '#E57B45',
       description: 'Résidences seniors',
       url: 'https://residencehappysenior.fr/'
     },
@@ -102,7 +111,7 @@ const PersonaPanel = (_props: PersonaPanelProps) => {
       name: 'SGIT Gestion',
       logo: '/Logo-SGIT-couleurs.jpg',
       dbName: 'sgitGestion',
-      color: '#34495E',
+      color: '#11514F',
       description: 'Gestion de copropriété',
       url: 'https://www.sgitgestion.com/'
     },
@@ -110,7 +119,7 @@ const PersonaPanel = (_props: PersonaPanelProps) => {
       name: 'Odalys Invest',
       logo: '/ODALYS-INVEST-BLANC.png',
       dbName: 'odalysInvest',
-      color: '#16A085',
+      color: '#05449B',
       description: 'Investissement immobilier',
       url: 'https://www.odalys-invest.com/'
     },
@@ -126,7 +135,7 @@ const PersonaPanel = (_props: PersonaPanelProps) => {
       name: 'La Conciergerie by Odalys',
       logo: '/logo-conciergerie.png',
       dbName: 'laConciergerieByOdalys',
-      color: '#8E44AD',
+      color: '#022C6F',
       description: 'Service de gestion de locations',
       url: 'https://www.laconciergerie-odalys.com/'
     },
@@ -134,7 +143,7 @@ const PersonaPanel = (_props: PersonaPanelProps) => {
       name: 'Odalys evenements et groupes',
       logo: '/ODALYS-EVENEMENTS&GROUPES-BLANC.png',
       dbName: 'odalysEvenementsEtGroupes',
-      color: '#2C3E50', // Bleu foncé
+      color: '#B64521', // Bleu foncé
       description: 'Organisation d’événements et gestion de groupes',
       url: 'https://www.odalys-evenements-groupes.com/' // URL fictive, remplacez par l'URL réelle si disponible
     },
@@ -142,7 +151,7 @@ const PersonaPanel = (_props: PersonaPanelProps) => {
       name: 'Odalys Groupe',
       logo: '/ODALYS-GROUPE-BLANC.png',
       dbName: 'odalysGroupe',
-      color: '#2C3E50', // Bleu foncé
+      color: '#012D72', // Bleu foncé
       description: 'Organisation d’événements et gestion de groupes',
       url: 'https://www.odalys-evenements-groupes.com/' // URL fictive, remplacez par l'URL réelle si disponible
     }
@@ -150,6 +159,11 @@ const PersonaPanel = (_props: PersonaPanelProps) => {
 
   const handleBrandClick = (brandName: string) => {
     setSelectedBrand(brandName === selectedBrand ? null : brandName)
+    // Scroll to the prompts section when a brand is selected
+    const promptsSection = document.getElementById('prompts-section')
+    if (promptsSection) {
+      promptsSection.scrollIntoView({ behavior: 'smooth' })
+    }
   }
 
   return openPersonaPanel ? (
@@ -232,6 +246,7 @@ const PersonaPanel = (_props: PersonaPanelProps) => {
             {selectedBrand && (
               <AnimatePresence>
                 <motion.div
+                  id="prompts-section" // Add an ID for the section
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
@@ -241,7 +256,15 @@ const PersonaPanel = (_props: PersonaPanelProps) => {
                     as="p"
                     size="5"
                     weight="bold"
-                    style={{ textAlign: 'center', marginBottom: '10px' }}
+                    style={{
+                      textAlign: 'center',
+                      marginBottom: '15px',
+                      marginTop: '15px',
+                      backgroundColor:
+                        SolidBrand.find((brand) => brand.dbName === selectedBrand)?.color ||
+                        'var(--gray-a5)',
+                      color: 'white'
+                    }}
                   >
                     Prompts for {selectedBrand}
                   </Text>
@@ -255,7 +278,6 @@ const PersonaPanel = (_props: PersonaPanelProps) => {
                         gap="3"
                         py="3"
                         style={{
-                          borderColor: 'var(--gray-a5)',
                           borderBottom: '1px solid var(--gray-a5)'
                         }}
                       >
