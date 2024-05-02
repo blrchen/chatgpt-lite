@@ -53,6 +53,7 @@ const PersonaModal = () => {
               <Select.Content>
                 <Select.Item value="happySenior">Happy Senior</Select.Item>
                 <Select.Item value="odalysVacances">Odalys Vacances</Select.Item>
+                <Select.Item value="sgit">SGIT</Select.Item>
               </Select.Content>
             </Select.Root>
 
