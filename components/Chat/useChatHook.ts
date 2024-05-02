@@ -73,7 +73,7 @@ const useChatHook = () => {
 
   const [personaModalLoading, setPersonaModalLoading] = useState<boolean>(false)
 
-  const [openPersonaPanel, setOpenPersonaPanel] = useState<boolean>(false)
+  const [openPersonaPanel, setOpenPersonaPanel] = useState<boolean>(true)
 
   const [personaPanelType, setPersonaPanelType] = useState<string>('')
 
