@@ -222,9 +222,9 @@ const PersonaPanel = (_props: PersonaPanelProps) => {
                     justifyContent: 'center'
                   }}
                 >
-                  <Image src={brand.logo} alt={brand.name} width={100} height={100} />
+                  <Image src={brand.logo} alt={brand.name} width={150} height={150} />
                   <Text size="3" style={{ color: 'white', marginTop: '10px' }}>
-                    {brand.name}
+                    {/* {brand.name} */}
                   </Text>
                 </motion.div>
               ))}
