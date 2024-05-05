@@ -1,7 +1,7 @@
 import { createParser, ParsedEvent, ReconnectInterval } from 'eventsource-parser'
 import { NextRequest, NextResponse } from 'next/server'
 
-export const runtime = 'edge';
+export const runtime = 'edge'
 
 export interface Message {
   role: string
@@ -83,7 +83,7 @@ const getOpenAIStream = async (
     body: JSON.stringify({
       model: model,
       frequency_penalty: 0,
-      max_tokens: 2000,
+      max_tokens: 4000,
       messages: messages,
       presence_penalty: 0,
       stream: true,

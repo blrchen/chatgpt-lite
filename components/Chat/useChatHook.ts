@@ -131,6 +131,7 @@ const useChatHook = () => {
     const index = chatList.findIndex((item) => item.id === chat.id)
     chatList.splice(index, 1)
     setChatList([...chatList])
+    localStorage.removeItem(`ms_${chat.id}`)
     if (currentChatRef.current?.id === chat.id) {
       currentChatRef.current = chatList[0]
     }
