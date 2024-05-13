@@ -11,8 +11,8 @@ export interface Message {
 export async function POST(req: NextRequest) {
   try {
     const { prompt, messages, input } = (await req.json()) as {
-      prompt: string
       messages: Message[]
+      prompt: string
       input: string
     }
     const messagesWithHistory = [
