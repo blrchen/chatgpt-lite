@@ -7,10 +7,10 @@ import '@/styles/theme-config.css'
 
 export const metadata = {
   title: {
-    default: 'ChatGPT Lite',
-    template: `%s - ChatGPT Lite`
+    default: 'TurboChat',
+    template: `%s - TurboChat`
   },
-  description: 'AI assistant powered by ChatGPT',
+  description: 'AI assistant',
   icons: {
     icon: '/favicon.ico',
     shortcut: '/favicon-16x16.png',

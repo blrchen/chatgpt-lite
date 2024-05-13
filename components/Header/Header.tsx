@@ -2,11 +2,10 @@
 
 import { useCallback, useState } from 'react'
 import { HamburgerMenuIcon } from '@radix-ui/react-icons'
-import { Avatar, Flex, Heading, IconButton, Select, Tooltip } from '@radix-ui/themes'
+import { Flex, Heading, IconButton, Select, Tooltip } from '@radix-ui/themes'
 import cs from 'classnames'
 import NextLink from 'next/link'
-import { FaAdjust, FaGithub, FaMoon, FaRegSun } from 'react-icons/fa'
-import { Link } from '../Link'
+import { FaAdjust, FaMoon, FaRegSun } from 'react-icons/fa'
 import { useTheme } from '../Themes'
 
 export const Header = () => {
@@ -25,20 +24,10 @@ export const Header = () => {
       <Flex align="center" gap="3">
         <NextLink href="/">
           <Heading as="h2" size="4" style={{ maxWidth: 200 }}>
-            ChatGPT Lite
+            TurboChat
           </Heading>
         </NextLink>
         <Flex align="center" gap="3" className="ml-auto">
-          <Avatar
-            color="gray"
-            size="2"
-            radius="full"
-            fallback={
-              <Link href="https://github.com/blrchen/chatgpt-lite">
-                <FaGithub />
-              </Link>
-            }
-          />
           <Select.Root value={theme} onValueChange={setTheme}>
             <Select.Trigger radius="full" />
             <Select.Content>
@@ -59,7 +48,7 @@ export const Header = () => {
             size="3"
             variant="ghost"
             color="gray"
-            className="md:hidden"
+            className="hidden"
             onClick={toggleNavBar}
           >
             <HamburgerMenuIcon width="16" height="16" />
