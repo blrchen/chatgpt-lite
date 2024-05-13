@@ -47,7 +47,10 @@ export const ChatSideBar = () => {
                 className={cs('bg-token-surface active:scale-95 truncate cursor-pointer', {
                   active: currentChatRef?.current?.id === chat.id
                 })}
-                onClick={() => onChangeChat?.(chat)}
+                onClick={() => {
+                  onToggleSidebar?.()
+                  onChangeChat?.(chat)
+                }}
               >
                 <Flex gap="2" align="center">
                   <BiMessageDetail className="size-4" />
