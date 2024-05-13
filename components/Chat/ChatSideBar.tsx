@@ -20,7 +20,8 @@ export const ChatSideBar = () => {
     onDeleteChat,
     onChangeChat,
     onCreateChat,
-    onOpenPersonaPanel
+    onOpenPersonaPanel,
+    onToggleSidebar
   } = useContext(ChatContext)
 
   return (
@@ -28,7 +29,10 @@ export const ChatSideBar = () => {
       <Flex className="p-2 h-full overflow-hidden w-64" direction="column" gap="3">
         <Box
           width="auto"
-          onClick={() => onCreateChat?.(DefaultPersonas[0])}
+          onClick={() => {
+            onToggleSidebar?.()
+            onCreateChat?.(DefaultPersonas[0])
+          }}
           className="bg-token-surface-primary active:scale-95 cursor-pointer"
         >
           <FiPlus className="size-4" />
