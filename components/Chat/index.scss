@@ -52,6 +52,10 @@
   &:hover {
     background-color: var(--accent-a3);
   }
+
+  &.disabled {
+    pointer-events: none
+  }
 }
 
 .userMessage {

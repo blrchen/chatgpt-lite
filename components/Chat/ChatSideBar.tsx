@@ -17,6 +17,7 @@ export const ChatSideBar = () => {
     chatList,
     DefaultPersonas,
     toggleSidebar,
+    openPersonaPanel,
     onDeleteChat,
     onChangeChat,
     onCreateChat,
@@ -45,7 +46,8 @@ export const ChatSideBar = () => {
                 key={chat.id}
                 width="auto"
                 className={cs('bg-token-surface active:scale-95 truncate cursor-pointer', {
-                  active: currentChatRef?.current?.id === chat.id
+                  active: currentChatRef?.current?.id === chat.id,
+                  disabled: openPersonaPanel
                 })}
                 onClick={() => {
                   onToggleSidebar?.()
