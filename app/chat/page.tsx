@@ -26,7 +26,6 @@ const ChatPage = () => {
   const [apiKey, setApiKey] = useState('')
 
   useEffect(() => {
-    // Ce code ne s'exécutera que côté client
     const storedApiKey = localStorage.getItem('apiKey') || ''
     if (storedApiKey) {
       setApiKey(storedApiKey)

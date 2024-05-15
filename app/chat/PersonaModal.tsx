@@ -39,6 +39,21 @@ const PersonaModal = () => {
     // Update the value of 'brand' in the form
   }, [selectedBrand, setValue])
 
+  const allBrands = [
+    { value: "happySenior", label: "Happy Senior" },
+    { value: "odalysVacances", label: "Odalys Vacances" },
+    { value: "sgit", label: "SGIT" },
+    { value: "odalysCity", label: "Odalys City" },
+    { value: "odalysCampus", label: "Odalys Campus" },
+    { value: "flowerCampings", label: "Flower Campings" },
+    { value: "sgitGestion", label: "SGIT Gestion" },
+    { value: "odalysInvest", label: "Odalys Invest" },
+    { value: "odalysPleinAir", label: "Odalys Plein Air" },
+    { value: "laConciergerieByOdalys", label: "La Conciergerie by Odalys" },
+    { value: "odalysEvenementsEtGroupes", label: "Odalys Événements et Groupes" },
+    { value: "odalysGroupe", label: "Odalys Groupe" }
+  ];
+
   return (
     <Dialog.Root open={open!}>
       <Dialog.Content size="4">
@@ -51,9 +66,9 @@ const PersonaModal = () => {
             <Select.Root value={selectedBrand} onValueChange={(value) => setValue('brand', value)}>
               <Select.Trigger placeholder="Sélectionnez une marque" />
               <Select.Content>
-                <Select.Item value="happySenior">Happy Senior</Select.Item>
-                <Select.Item value="odalysVacances">Odalys Vacances</Select.Item>
-                <Select.Item value="sgit">SGIT</Select.Item>
+                {allBrands.map(brand => (
+                  <Select.Item key={brand.value} value={brand.value}>{brand.label}</Select.Item>
+                ))}
               </Select.Content>
             </Select.Root>
 

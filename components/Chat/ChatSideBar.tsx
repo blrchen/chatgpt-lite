@@ -20,7 +20,8 @@ export const ChatSideBar = () => {
     onDeleteChat,
     onChangeChat,
     onCreateChat,
-    onOpenPersonaPanel
+    onOpenPersonaPanel,
+    setOpenPersonaPanel
   } = useContext(ChatContext)
 
   return (
@@ -45,6 +46,7 @@ export const ChatSideBar = () => {
                 })}
                 onClick={() => {
                   onChangeChat?.(chat)
+                  setOpenPersonaPanel?.(false)
                 }}
               >
                 <Flex gap="2" align="center">
@@ -60,7 +62,7 @@ export const ChatSideBar = () => {
                   color="gray"
                   radius="full"
                   onClick={(e) => {
-                    e.stopPropagation()
+                    e.stopPropagation() // Empêche l'événement de clic de se propager au parent
                     onDeleteChat?.(chat)
                   }}
                 >
