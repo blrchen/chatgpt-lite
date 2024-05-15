@@ -9,6 +9,7 @@ export interface Persona {
   avatar?: string
   name?: string
   prompt?: string
+  displayPrompt?: string
   key?: string
   isDefault?: boolean
 }
