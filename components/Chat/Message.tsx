@@ -4,9 +4,9 @@ import { useCallback, useState } from 'react'
 import { Avatar, Flex, IconButton, Tooltip } from '@radix-ui/themes'
 import { FaRegCopy } from 'react-icons/fa'
 import { HiUser } from 'react-icons/hi'
-import { RiRobot2Line } from 'react-icons/ri'
 import { Markdown } from '@/components'
 import { useCopyToClipboard } from '@/hooks/useCopyToClipboard'
+import { BotIcon } from './BotIcon'
 import { ChatMessage } from './interface'
 
 export interface MessageProps {
@@ -30,7 +30,7 @@ const Message = (props: MessageProps) => {
   return (
     <Flex gap="4" className="mb-5">
       <Avatar
-        fallback={isUser ? <HiUser className="size-4" /> : <RiRobot2Line className="size-4" />}
+        fallback={isUser ? <HiUser className="size-4" /> : <BotIcon />}
         color={isUser ? undefined : 'green'}
         size="2"
         radius="full"
