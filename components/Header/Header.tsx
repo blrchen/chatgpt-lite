@@ -4,6 +4,7 @@ import { useCallback, useState } from 'react'
 import { HamburgerMenuIcon } from '@radix-ui/react-icons'
 import { Flex, Heading, IconButton, Select, Tooltip } from '@radix-ui/themes'
 import cs from 'classnames'
+import Image from 'next/image'
 import NextLink from 'next/link'
 import { FaAdjust, FaMoon, FaRegSun } from 'react-icons/fa'
 import { useTheme } from '../Themes'
@@ -16,6 +17,8 @@ export const Header = () => {
     setShow((state) => !state)
   }, [])
 
+  const logoUrl = theme === 'dark' ? '/logo.png' : '/logo-dark.png'
+
   return (
     <header
       className={cs('block shadow-sm sticky top-0 dark:shadow-gray-500 py-3 px-4 z-20')}
@@ -24,7 +27,7 @@ export const Header = () => {
       <Flex align="center" gap="3">
         <NextLink href="/">
           <Heading as="h2" size="4" style={{ maxWidth: 200 }}>
-            TurboChat
+            <Image width={111} height={38} src={logoUrl} alt="TurboChat" />
           </Heading>
         </NextLink>
         <Flex align="center" gap="3" className="ml-auto">
