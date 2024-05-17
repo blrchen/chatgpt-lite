@@ -107,6 +107,7 @@ const PersonaPanel = (_props: PersonaPanelProps) => {
       <ScrollArea className="flex-1" type="auto" scrollbars="vertical">
         <Container size="3" className="px-4">
           <Flex direction="column" className="divide-y">
+            {!promptList.length && 'No Personas found'}
             {promptList.map((prompt) => (
               <Flex
                 key={prompt.id}
