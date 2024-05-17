@@ -1,15 +1,50 @@
 'use client'
 
 import React, { useContext } from 'react'
-import { Box, Flex, IconButton, ScrollArea, Text } from '@radix-ui/themes'
+import { Avatar, Box, Flex, IconButton, ScrollArea, Text } from '@radix-ui/themes'
 import cs from 'classnames'
+import Image from 'next/image'
 import { AiOutlineCloseCircle } from 'react-icons/ai'
 import { BiMessageDetail } from 'react-icons/bi'
+import { FaPlus } from 'react-icons/fa6'
 import { FiPlus } from 'react-icons/fi'
 import { RiRobot2Line } from 'react-icons/ri'
 import ChatContext from './chatContext'
 
 import './index.scss'
+
+export const PersonaIcons = () => (
+  <div className="personaIcons">
+    <Image
+      src="/bot-icon.png"
+      alt="TurboChat"
+      width={19}
+      height={19}
+      className="rounded-full icon"
+    />
+    <Image
+      src="/persona/image-generator.png"
+      alt="TurboChat"
+      width={19}
+      height={19}
+      className="rounded-full icon"
+    />
+    <Image
+      src="/persona/youtube-scenarist.png"
+      alt="TurboChat"
+      width={19}
+      height={19}
+      className="rounded-full icon"
+    />
+    <Avatar
+        fallback={<FaPlus className="size-3" />}
+        color={undefined}
+        size="1"
+        radius="full"
+        className="rounded-full icon plus"
+      />
+  </div>
+)
 
 export const ChatSideBar = () => {
   const {
@@ -84,6 +119,7 @@ export const ChatSideBar = () => {
         >
           <RiRobot2Line className="size-4" />
           <Text>Persona Store</Text>
+          <PersonaIcons />
         </Box>
       </Flex>
     </Flex>

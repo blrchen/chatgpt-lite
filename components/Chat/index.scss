@@ -67,3 +67,19 @@
     }
   }
 }
+
+.personaIcons {
+  @apply flex;
+  margin-left: auto;
+
+  .icon {
+    margin-left: -5px;
+  }
+
+  .plus {
+    color: var(--accent-9-contrast);
+    background: var(--accent-4);
+    width: 19px;
+    height: 19px;
+  }
+}
