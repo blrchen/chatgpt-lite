@@ -9,6 +9,10 @@
       table-layout: fixed;
       width: 100%;
     }
+
+    &.placeholder {
+      color: var(--gray-10);
+    }
   }
 }
 

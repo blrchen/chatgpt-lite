@@ -10,6 +10,7 @@ import {
   useState
 } from 'react'
 import { Flex, Heading, IconButton, ScrollArea, Tooltip } from '@radix-ui/themes'
+import cs from 'classnames'
 import ContentEditable from 'react-contenteditable'
 import toast from 'react-hot-toast'
 import { AiOutlineClear, AiOutlineLoading3Quarters, AiOutlineUnorderedList } from 'react-icons/ai'
@@ -22,6 +23,8 @@ import './index.scss'
 
 const HTML_REGULAR =
   /<(?!img|table|\/table|thead|\/thead|tbody|\/tbody|tr|\/tr|td|\/td|th|\/th|br|\/br).*?>/gi
+
+const PLACEHOLDER_TEXT = 'Message Amigo'
 
 export interface ChatProps {}
 
@@ -238,8 +241,8 @@ const Chat = (props: ChatProps, ref: any) => {
                 maxHeight: '200px',
                 overflowY: 'auto'
               }}
-              className="rt-TextAreaInput text-base"
-              html={message}
+              className={cs('rt-TextAreaInput text-base', { placeholder: !message })}
+              html={message || PLACEHOLDER_TEXT}
               disabled={isLoading}
               onChange={(e) => {
                 setMessage(e.target.value.replace(HTML_REGULAR, ''))
