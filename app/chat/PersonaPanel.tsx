@@ -36,6 +36,8 @@ const PersonaPanel = (_props: PersonaPanelProps) => {
   const [promptList, setPromptList] = useState<Persona[]>([])
   const [searchText, setSearchText] = useState('')
 
+  const defaultPersonasIds = DefaultPersonas.map((item) => item.id)
+
   const handleSearch = useCallback(
     debounce((type: string, list: Persona[], searchText: string) => {
       setPromptList(
@@ -122,7 +124,7 @@ const PersonaPanel = (_props: PersonaPanelProps) => {
                     {prompt.name}
                   </Text>
                   <Text as="p" size="2" className="line-clamp-2">
-                    {prompt.prompt || ''}
+                    {defaultPersonasIds.includes(prompt.id) ? prompt.displayPrompt : prompt.prompt || ''}
                   </Text>
                 </Box>
                 <Flex gap="3">
@@ -136,28 +138,32 @@ const PersonaPanel = (_props: PersonaPanelProps) => {
                   >
                     <LuMessageSquarePlus className="size-4" />
                   </IconButton>
-                  <IconButton
-                    size="2"
-                    variant="soft"
-                    color="gray"
-                    radius="full"
-                    onClick={() => {
-                      onEditPersona?.(prompt)
-                    }}
-                  >
-                    <AiOutlineEdit className="size-4" />
-                  </IconButton>
-                  <IconButton
-                    size="2"
-                    variant="soft"
-                    color="crimson"
-                    radius="full"
-                    onClick={() => {
-                      onDeletePersona?.(prompt)
-                    }}
-                  >
-                    <AiOutlineDelete className="size-4" />
-                  </IconButton>
+                  {defaultPersonasIds.includes(prompt.id) ? null : (
+                  <>
+                    <IconButton
+                      size="2"
+                      variant="soft"
+                      color="gray"
+                      radius="full"
+                      onClick={() => {
+                        onEditPersona?.(prompt)
+                      }}
+                    >
+                      <AiOutlineEdit className="size-4" />
+                    </IconButton>
+                    <IconButton
+                      size="2"
+                      variant="soft"
+                      color="crimson"
+                      radius="full"
+                      onClick={() => {
+                        onDeletePersona?.(prompt)
+                      }}
+                    >
+                      <AiOutlineDelete className="size-4" />
+                    </IconButton>
+                  </>
+                  )}
                 </Flex>
               </Flex>
             ))}
