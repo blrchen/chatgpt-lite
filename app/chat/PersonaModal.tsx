@@ -21,13 +21,19 @@ const PersonaModal = () => {
     if (detail) {
       setValue('name', detail.name, { shouldTouch: true })
       setValue('prompt', detail.prompt, { shouldTouch: true })
+    } else {
+      setValue('name', '', { shouldTouch: true })
+      setValue('prompt', '', { shouldTouch: true })
     }
   }, [detail, setValue])
+
+
+  const title = detail ? 'Edit Persona' : 'Create Persona'
 
   return (
     <Dialog.Root open={open!}>
       <Dialog.Content size="4">
-        <Dialog.Title>Create or Edit Persona Prompt</Dialog.Title>
+        <Dialog.Title>{title}</Dialog.Title>
         <Dialog.Description size="2" mb="4"></Dialog.Description>
         <form onSubmit={formSubmit}>
           <Flex direction="column" gap="3">
