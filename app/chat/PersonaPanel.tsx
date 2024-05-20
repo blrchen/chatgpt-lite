@@ -13,6 +13,7 @@ import {
   Text,
   TextField
 } from '@radix-ui/themes'
+import cs from 'classnames'
 import { debounce } from 'lodash-es'
 import Image from 'next/image'
 import { AiOutlineClose, AiOutlineDelete, AiOutlineEdit } from 'react-icons/ai'
@@ -118,6 +119,12 @@ const PersonaPanel = (_props: PersonaPanelProps) => {
                 justify="between"
                 py="0"
                 mb="2"
+                onClick={() => {
+                  if (defaultPersonasIds.includes(prompt.id)) {
+                    onCreateChat?.(prompt)
+                  }
+                }}
+                className={cs({ 'cursor-pointer': defaultPersonasIds.includes(prompt.id) })}
               >
                 {prompt.avatar ? <Image
                   src={prompt.avatar}
