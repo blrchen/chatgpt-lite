@@ -32,7 +32,7 @@ const PersonaModal = () => {
 
   return (
     <Dialog.Root open={open!}>
-      <Dialog.Content size="4">
+      <Dialog.Content size="4" onEscapeKeyDown={onClosePersonaModal} onPointerDownOutside={onClosePersonaModal}>
         <Dialog.Title>{title}</Dialog.Title>
         <Dialog.Description size="2" mb="4"></Dialog.Description>
         <form onSubmit={formSubmit}>
