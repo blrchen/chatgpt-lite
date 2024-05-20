@@ -14,6 +14,7 @@ import {
   TextField
 } from '@radix-ui/themes'
 import { debounce } from 'lodash-es'
+import Image from 'next/image'
 import { AiOutlineClose, AiOutlineDelete, AiOutlineEdit } from 'react-icons/ai'
 import { LuMessageSquarePlus } from 'react-icons/lu'
 import { ChatContext, Persona } from '@/components'
@@ -58,7 +59,7 @@ const PersonaPanel = (_props: PersonaPanelProps) => {
   )
 
   useEffect(() => {
-    handleSearch(personaPanelType, [...DefaultPersonas, ...personas], searchText)
+    handleSearch(personaPanelType, [...DefaultPersonas.filter(({ isDefault }) => !isDefault), ...personas], searchText)
   }, [personaPanelType, searchText, DefaultPersonas, personas, handleSearch])
 
   return openPersonaPanel ? (
@@ -108,62 +109,78 @@ const PersonaPanel = (_props: PersonaPanelProps) => {
       </Container>
       <ScrollArea className="flex-1" type="auto" scrollbars="vertical">
         <Container size="3" className="px-4">
-          <Flex direction="column" className="divide-y">
+          <Flex direction="column">
             {!promptList.length && 'No Personas found'}
             {promptList.map((prompt) => (
               <Flex
                 key={prompt.id}
-                align="center"
+                align="stretch"
                 justify="between"
-                gap="3"
-                py="3"
-                style={{ borderColor: 'var(--gray-a5)' }}
+                py="0"
+                mb="2"
               >
-                <Box width="100%">
-                  <Text as="p" size="3" weight="bold" className="mb-2">
-                    {prompt.name}
-                  </Text>
-                  <Text as="p" size="2" className="line-clamp-2">
-                    {defaultPersonasIds.includes(prompt.id) ? prompt.displayPrompt : prompt.prompt || ''}
-                  </Text>
-                </Box>
-                <Flex gap="3">
-                  <IconButton
-                    size="2"
-                    variant="soft"
-                    radius="full"
-                    onClick={() => {
-                      onCreateChat?.(prompt)
-                    }}
-                  >
-                    <LuMessageSquarePlus className="size-4" />
-                  </IconButton>
-                  {defaultPersonasIds.includes(prompt.id) ? null : (
-                  <>
+                {prompt.avatar ? <Image
+                  src={prompt.avatar}
+                  alt={prompt.name || ''}
+                  width={84}
+                  height={72}
+                  style={{ minWidth: '84px' }}
+                /> : <Box style={{ width: '84px', height: '72px', backgroundColor: 'var(--gray-4)' }} />
+              }
+                <Flex
+                  align="center"
+                  justify="between"
+                  gap="3"
+                  py="1"
+                  ml="5"
+                  style={{ borderBottom: '1px solid var(--gray-a5)', flexGrow: 1 }}
+                >
+                  <Box width="100%">
+                    <Text as="p" size="3" weight="bold" className="mb-2">
+                      {prompt.name}
+                    </Text>
+                    <Text as="p" size="2" className="line-clamp-2">
+                      {defaultPersonasIds.includes(prompt.id) ? prompt.displayPrompt : prompt.prompt || ''}
+                    </Text>
+                  </Box>
+                  <Flex gap="3">
                     <IconButton
                       size="2"
                       variant="soft"
-                      color="gray"
                       radius="full"
                       onClick={() => {
-                        onEditPersona?.(prompt)
+                        onCreateChat?.(prompt)
                       }}
                     >
-                      <AiOutlineEdit className="size-4" />
+                      <LuMessageSquarePlus className="size-4" />
                     </IconButton>
-                    <IconButton
-                      size="2"
-                      variant="soft"
-                      color="crimson"
-                      radius="full"
-                      onClick={() => {
-                        onDeletePersona?.(prompt)
-                      }}
-                    >
-                      <AiOutlineDelete className="size-4" />
-                    </IconButton>
-                  </>
-                  )}
+                    {defaultPersonasIds.includes(prompt.id) ? null : (
+                    <>
+                      <IconButton
+                        size="2"
+                        variant="soft"
+                        color="gray"
+                        radius="full"
+                        onClick={() => {
+                          onEditPersona?.(prompt)
+                        }}
+                      >
+                        <AiOutlineEdit className="size-4" />
+                      </IconButton>
+                      <IconButton
+                        size="2"
+                        variant="soft"
+                        color="crimson"
+                        radius="full"
+                        onClick={() => {
+                          onDeletePersona?.(prompt)
+                        }}
+                      >
+                        <AiOutlineDelete className="size-4" />
+                      </IconButton>
+                    </>
+                    )}
+                  </Flex>
                 </Flex>
               </Flex>
             ))}
