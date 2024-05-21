@@ -38,7 +38,7 @@ const postChatOrQuestion = async (chat: Chat, messages: any[], input: string) =>
   const url = '/api/chat'
 
   const data = {
-    prompt: chat?.persona?.prompt,
+    prompt: chat?.persona?.prompt?.replaceAll('{{request}}', input),
     messages: [...messages!],
     input
   }
