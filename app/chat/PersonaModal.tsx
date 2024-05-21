@@ -2,6 +2,7 @@ import React, { useContext, useEffect } from 'react'
 import { Button, Dialog, Flex, TextArea, TextField, Select } from '@radix-ui/themes'
 import { useForm } from 'react-hook-form'
 import { ChatContext, Persona } from '@/components'
+import Spinner from '@/components/spinner/spinner'
 
 const PersonaModal = () => {
   const {
@@ -9,15 +10,14 @@ const PersonaModal = () => {
     editPersona: detail,
     onCreatePersona,
     onClosePersonaModal,
-    onSubmitEditPersona
+    onSubmitEditPersona,
+    loading
   } = useContext(ChatContext)
 
   const { register, handleSubmit, setValue, watch } = useForm()
 
   const formSubmit = handleSubmit(async (values: any) => {
-    console.log('values-------------------', values)
     if (detail?.id) {
-      console.log('edit')
       onSubmitEditPersona?.(values as Persona)
     } else {
       onCreatePersona?.(values as Persona)
@@ -25,7 +25,6 @@ const PersonaModal = () => {
   })
 
   useEffect(() => {
-    console.log('detail-------------------', detail)
     if (detail) {
       setValue('name', detail.name, { shouldTouch: true })
       setValue('prompt', detail.prompt, { shouldTouch: true })
@@ -92,7 +91,7 @@ const PersonaModal = () => {
               </Button>
             </Dialog.Close>
             <Dialog.Close>
-              <Button variant="soft" type="submit">
+              <Button variant="soft" type="submit" disabled={loading}>
                 Save
               </Button>
             </Dialog.Close>

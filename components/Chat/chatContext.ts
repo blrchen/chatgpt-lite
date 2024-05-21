@@ -15,6 +15,9 @@ const ChatContext = createContext<{
   personaModalLoading?: boolean
   openPersonaPanel?: boolean
   toggleSidebar?: boolean
+  promptList?: Persona[]
+  loading?: boolean
+
   setOpenPersonaPanel?: (open: boolean) => void
   onOpenPersonaModal?: () => void
   onClosePersonaModal?: () => void
@@ -31,6 +34,8 @@ const ChatContext = createContext<{
   onToggleSidebar?: () => void
   forceUpdate?: () => void
   onSubmitEditPersona?: (persona: Persona) => void
+  fetchPrompts?: () => void
+  setPromptList?: (promptList: Persona[]) => void
 }>({
   personaPanelType: 'chat',
   DefaultPersonas: [],

@@ -9,6 +9,7 @@ import updatePrompt from '@/app/network/updatePrompt'
 import uploadPrompt from '@/app/network/uploadPrompt'
 import { ChatGPInstance } from './Chat'
 import { Chat, ChatMessage, Persona } from './interface'
+import { getPrompts } from '../../app/network/getPrompts'
 
 export const DefaultPersonas: Persona[] = [
   {
@@ -78,6 +79,8 @@ const useChatHook = () => {
   const [personaPanelType, setPersonaPanelType] = useState<string>('')
 
   const [toggleSidebar, setToggleSidebar] = useState<boolean>(false)
+  const [promptList, setPromptList] = useState<Persona[]>([])
+  const [loading, setLoading] = useState<boolean>(false)
 
   const onOpenPersonaPanel = (type: string = 'chat') => {
     setPersonaPanelType(type)
@@ -93,9 +96,9 @@ const useChatHook = () => {
   }
 
   const onClosePersonaModal = () => {
-    console.log('onClosePersonaModal---------')
     setEditPersona(undefined)
     setIsOpenPersonaModal(false)
+    setLoading(false)
   }
 
   const onChangeChat = useCallback((chat: Chat) => {
@@ -143,7 +146,7 @@ const useChatHook = () => {
   }
 
   const onCreatePersona = async (values: any) => {
-    const { type, name, prompt, files, brand } = values
+    const { name, prompt, brand } = values
     const persona: Persona = {
       id: uuid(),
       role: 'system',
@@ -152,13 +155,11 @@ const useChatHook = () => {
       key: '',
       brand: ''
     }
+    setLoading(true)
     const uploadPromptResponse = await uploadPrompt(name, prompt, brand)
 
-    setPersonas((state) => {
-      state.push(uploadPromptResponse)
-      return [...state]
-    })
-
+    // Mise à jour immédiate de l'état pour refléter le nouveau persona
+    setPersonas((prevState) => [...prevState, uploadPromptResponse])
     onClosePersonaModal()
   }
 
@@ -171,36 +172,25 @@ const useChatHook = () => {
   const onSubmitEditPersona = async (values: any) => {
     const updatedPersona = await updatePrompt(values.id, values.name, values.prompt, values.brand)
 
-    // Mettre à jour la liste des personas avec la version modifié
-    setPersonas((state) => {
-      state.splice(
-        state.findIndex((p) => p.id === updatedPersona.id),
-        1,
-        updatedPersona
-      )
-      return [...state]
+    // Mise à jour immédiate de l'état pour refléter les modifications
+    setPersonas((prevState) => {
+      return prevState.map((p) => (p.id === updatedPersona.id ? updatedPersona : p))
     })
-    setEditPersona(updatedPersona)
+
+    setEditPersona(undefined)
     onClosePersonaModal()
   }
 
   const onDeletePersona = (persona: Persona) => {
-    setPersonas((state) => {
-      const newState = [...state]
-      const index = newState.findIndex((item) => item.id === persona.id)
-
-      if (index !== -1) {
-        newState.splice(index, 1)
-      }
-
-      return newState
+    setLoading(true)
+    setPersonas((prevState) => {
+      return prevState.filter((p) => p.id !== persona.id)
     })
 
     if (persona.id) {
       delPrompts(persona.id)
     }
-
-    console.log('Deleted persona:', persona)
+    setLoading(false)
   }
 
   const saveMessages = (messages: ChatMessage[]) => {
@@ -209,6 +199,10 @@ const useChatHook = () => {
     } else {
       localStorage.removeItem(`ms_${currentChatRef.current?.id}`)
     }
+  }
+  const fetchPrompts = async () => {
+    const data = await getPrompts()
+    setPromptList(data)
   }
 
   useEffect(() => {
@@ -244,23 +238,38 @@ const useChatHook = () => {
     localStorage.setItem(StorageKeys.Chat_List, JSON.stringify(chatList))
   }, [chatList])
 
-  //ici actualiser les persona depuis le local storage et leur donne un id si pas d'id
-  // useEffect(() => {
-  //   // const loadedPersonas = JSON.parse(localStorage.getItem('Personas') || '[]') as Persona[]
-  //   uploadPrompt().then((data) => {
-  //     console.log('data', data)
-  //   })
-  //   const updatedPersonas = loadedPersonas.map((persona) => {
-  //     // if (!persona.id) {
-  //     //   persona.id = uuid()
-  //     // }
-  //     return persona
-  //   })
-  //   console.log('updatedPersonas', loadedPersonas)
-  //   setPersonas(updatedPersonas)
-  // }, [])
+  useEffect(() => {
+    const loadPersonas = async () => {
+      try {
+        // Charger les personas depuis le localStorage
+        const loadedPersonas = JSON.parse(localStorage.getItem('Personas') || '[]') as Persona[]
 
-  useEffect(() => {}, [personas])
+        // Si les personas n'ont pas d'ID, leur en attribuer un
+        const updatedPersonas = loadedPersonas.map((persona) => {
+          if (!persona.id) {
+            persona.id = uuid()
+          }
+          return persona
+        })
+
+        // Mettre à jour l'état des personas
+        setPersonas(updatedPersonas)
+      } catch (error) {
+        console.error('Erreur lors du chargement des personas:', error)
+      }
+    }
+
+    loadPersonas()
+  }, [])
+
+  useEffect(() => {
+    // we what to udate the persona
+    if (personas.length > 0 && editPersona) {
+      const index = personas.findIndex((p) => p.id === editPersona.id)
+      personas[index] = editPersona
+      setPersonas([...personas])
+    }
+  }, [personas, editPersona])
 
   useEffect(() => {
     if (isInit && !openPersonaPanel && chatList.length === 0) {
@@ -270,6 +279,7 @@ const useChatHook = () => {
   }, [chatList, openPersonaPanel, onCreateChat])
 
   return {
+    loading,
     debug,
     DefaultPersonas,
     chatRef,
@@ -282,6 +292,7 @@ const useChatHook = () => {
     openPersonaPanel,
     personaPanelType,
     toggleSidebar,
+    promptList,
     onOpenPersonaModal,
     onClosePersonaModal,
     onCreateChat,
@@ -296,7 +307,9 @@ const useChatHook = () => {
     onClosePersonaPanel,
     onToggleSidebar,
     forceUpdate,
-    setOpenPersonaPanel
+    setOpenPersonaPanel,
+    fetchPrompts,
+    setPromptList
   }
 }
 

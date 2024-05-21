@@ -15,15 +15,111 @@ import {
 } from '@radix-ui/themes'
 import { motion, AnimatePresence } from 'framer-motion'
 import _ from 'lodash'
-import { debounce } from 'lodash-es'
 import Image from 'next/image'
 import { AiOutlineClose, AiOutlineDelete, AiOutlineEdit } from 'react-icons/ai'
 import { LuMessageSquarePlus } from 'react-icons/lu'
 import { ChatContext, Persona } from '@/components'
-import { getPrompts } from '../network/getPrompts'
+import Spinner from '@/components/spinner/spinner'
 
 export interface PersonaPanelProps {}
-
+interface Brand {
+  name: string
+  logo: string
+  dbName: string
+  color: string
+  description: string
+  url: string
+}
+const SolidBrand: Brand[] = [
+  {
+    name: 'Odalys Vacances',
+    logo: '/ODALYS-VACANCES-BLANC2.png',
+    dbName: 'odalysVacances',
+    color: '#08429F',
+    description: 'Résidences loisirs',
+    url: 'https://www.odalys-vacances.com/'
+  },
+  {
+    name: 'Odalys City',
+    logo: '/ODALYS-CITY-BLANC.png',
+    dbName: 'odalysCity',
+    color: '#66564D',
+    description: 'Résidences affaires',
+    url: 'https://www.odalys-vacances.com/location-ville/'
+  },
+  {
+    name: 'Odalys Campus',
+    logo: '/ODALYS-CAMPUS-BLANC.png',
+    dbName: 'odalysCampus',
+    color: '#DC4927',
+    description: 'Résidences étudiantes',
+    url: 'https://www.odalys-campus.com'
+  },
+  {
+    name: 'Flower Campings',
+    logo: '/FC.png',
+    dbName: 'flowerCampings',
+    color: '#08518F',
+    description: 'Hôtellerie de Plein Air',
+    url: 'https://www.flowercampings.com/'
+  },
+  {
+    name: 'Happy Senior',
+    logo: '/RHS.png',
+    dbName: 'happySenior',
+    color: '#E57B45',
+    description: 'Résidences seniors',
+    url: 'https://residencehappysenior.fr/'
+  },
+  {
+    name: 'SGIT Gestion',
+    logo: '/Logo-SGIT-couleurs.jpg',
+    dbName: 'sgitGestion',
+    color: '#11514F',
+    description: 'Gestion de copropriété',
+    url: 'https://www.sgitgestion.com/'
+  },
+  {
+    name: 'Odalys Invest',
+    logo: '/ODALYS-INVEST-BLANC.png',
+    dbName: 'odalysInvest',
+    color: '#05449B',
+    description: 'Investissement immobilier',
+    url: 'https://www.odalys-invest.com/'
+  },
+  {
+    name: 'Odalys Plein Air',
+    logo: '/ODALYS-PLEIN-AIR-blanc.png',
+    dbName: 'odalysPleinAir',
+    color: '#2980B9',
+    description: 'Vente de mobil-homes résidentiels',
+    url: 'https://www.odalys-pleinair.com/'
+  },
+  {
+    name: 'La Conciergerie by Odalys',
+    logo: '/logo-conciergerie.png',
+    dbName: 'laConciergerieByOdalys',
+    color: '#022C6F',
+    description: 'Service de gestion de locations',
+    url: 'https://www.laconciergerie-odalys.com/'
+  },
+  {
+    name: 'Odalys evenements et groupes',
+    logo: '/ODALYS-EVENEMENTS&GROUPES-BLANC.png',
+    dbName: 'odalysEvenementsEtGroupes',
+    color: '#B64521', // Bleu foncé
+    description: 'Organisation d’événements et gestion de groupes',
+    url: 'https://www.odalys-evenements-groupes.com/' // URL fictive, remplacez par l'URL réelle si disponible
+  },
+  {
+    name: 'Odalys Groupe',
+    logo: '/ODALYS-GROUPE-BLANC.png',
+    dbName: 'odalysGroupe',
+    color: '#012D72', // Bleu foncé
+    description: 'Organisation d’événements et gestion de groupes',
+    url: 'https://www.odalys-evenements-groupes.com/' // URL fictive, remplacez par l'URL réelle si disponible
+  }
+]
 const PersonaPanel = (_props: PersonaPanelProps) => {
   const {
     personaPanelType,
@@ -34,19 +130,37 @@ const PersonaPanel = (_props: PersonaPanelProps) => {
     onEditPersona,
     onCreateChat,
     onOpenPersonaModal,
-    onClosePersonaPanel
+    onClosePersonaPanel,
+    fetchPrompts,
+    promptList,
+    setPromptList,
+    loading
   } = useContext(ChatContext)
-  const [promptList, setPromptList] = useState<Persona[]>([])
   const [searchText, setSearchText] = useState('')
   const [selectedBrand, setSelectedBrand] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false) // Ajout de l'état pour le loader
 
-  const fetchPrompts = async () => {
-    const data = await getPrompts()
-    setPromptList(data)
+  // Modification de la fonction onDeletePersona pour gérer le loader
+  const handleDeletePersona = async (prompt: any) => {
+    setIsLoading(true) // Activer le loader
+    if (onDeletePersona) {
+      try {
+        onDeletePersona(prompt) // Supposer que onDeletePersona retourne une promesse
+      } finally {
+        setIsLoading(false) // Désactiver le loader après la suppression
+      }
+    }
   }
   useEffect(() => {
-    fetchPrompts()
+    setIsLoading(false) // Désactiver le loader après la suppression
+  }, [onDeletePersona])
+
+  useEffect(() => {
+    fetchPrompts?.()
   }, [])
+  useEffect(() => {
+    fetchPrompts?.()
+  }, [personas])
 
   useEffect(() => {
     if (selectedBrand) {
@@ -56,106 +170,6 @@ const PersonaPanel = (_props: PersonaPanelProps) => {
       }
     }
   }, [selectedBrand])
-
-  interface Brand {
-    name: string
-    logo: string
-    dbName: string
-    color: string
-    description: string
-    url: string
-  }
-
-  const SolidBrand: Brand[] = [
-    {
-      name: 'Odalys Vacances',
-      logo: '/ODALYS-VACANCES-BLANC2.png',
-      dbName: 'odalysVacances',
-      color: '#08429F',
-      description: 'Résidences loisirs',
-      url: 'https://www.odalys-vacances.com/'
-    },
-    {
-      name: 'Odalys City',
-      logo: '/ODALYS-CITY-BLANC.png',
-      dbName: 'odalysCity',
-      color: '#66564D',
-      description: 'Résidences affaires',
-      url: 'https://www.odalys-vacances.com/location-ville/'
-    },
-    {
-      name: 'Odalys Campus',
-      logo: '/ODALYS-CAMPUS-BLANC.png',
-      dbName: 'odalysCampus',
-      color: '#DC4927',
-      description: 'Résidences étudiantes',
-      url: 'https://www.odalys-campus.com'
-    },
-    {
-      name: 'Flower Campings',
-      logo: '/FC.png',
-      dbName: 'flowerCampings',
-      color: '#08518F',
-      description: 'Hôtellerie de Plein Air',
-      url: 'https://www.flowercampings.com/'
-    },
-    {
-      name: 'Happy Senior',
-      logo: '/RHS.png',
-      dbName: 'happySenior',
-      color: '#E57B45',
-      description: 'Résidences seniors',
-      url: 'https://residencehappysenior.fr/'
-    },
-    {
-      name: 'SGIT Gestion',
-      logo: '/Logo-SGIT-couleurs.jpg',
-      dbName: 'sgitGestion',
-      color: '#11514F',
-      description: 'Gestion de copropriété',
-      url: 'https://www.sgitgestion.com/'
-    },
-    {
-      name: 'Odalys Invest',
-      logo: '/ODALYS-INVEST-BLANC.png',
-      dbName: 'odalysInvest',
-      color: '#05449B',
-      description: 'Investissement immobilier',
-      url: 'https://www.odalys-invest.com/'
-    },
-    {
-      name: 'Odalys Plein Air',
-      logo: '/ODALYS-PLEIN-AIR-blanc.png',
-      dbName: 'odalysPleinAir',
-      color: '#2980B9',
-      description: 'Vente de mobil-homes résidentiels',
-      url: 'https://www.odalys-pleinair.com/'
-    },
-    {
-      name: 'La Conciergerie by Odalys',
-      logo: '/logo-conciergerie.png',
-      dbName: 'laConciergerieByOdalys',
-      color: '#022C6F',
-      description: 'Service de gestion de locations',
-      url: 'https://www.laconciergerie-odalys.com/'
-    },
-    {
-      name: 'Odalys evenements et groupes',
-      logo: '/ODALYS-EVENEMENTS&GROUPES-BLANC.png',
-      dbName: 'odalysEvenementsEtGroupes',
-      color: '#B64521', // Bleu foncé
-      description: 'Organisation d’événements et gestion de groupes',
-      url: 'https://www.odalys-evenements-groupes.com/' // URL fictive, remplacez par l'URL réelle si disponible
-    },
-    {
-      name: 'Odalys Groupe',
-      logo: '/ODALYS-GROUPE-BLANC.png',
-      dbName: 'odalysGroupe',
-      color: '#012D72', // Bleu foncé
-      description: 'Organisation d’événements et gestion de groupes',
-      url: 'https://www.odalys-evenements-groupes.com/' // URL fictive, remplacez par l'URL réelle si disponible
-    }
-  ]
 
   const handleBrandClick = (brandName: string) => {
     setSelectedBrand(brandName === selectedBrand ? null : brandName)
@@ -243,6 +257,7 @@ const PersonaPanel = (_props: PersonaPanelProps) => {
                 </motion.div>
               ))}
             </Flex>
+
             {selectedBrand && (
               <AnimatePresence>
                 <motion.div
@@ -269,7 +284,7 @@ const PersonaPanel = (_props: PersonaPanelProps) => {
                     Prompts for {selectedBrand}
                   </Text>
                   {promptList
-                    .filter((prompt) => prompt.brand === selectedBrand)
+                    ?.filter((prompt) => prompt.brand === selectedBrand)
                     .map((prompt) => (
                       <Flex
                         key={prompt.id}
@@ -281,6 +296,7 @@ const PersonaPanel = (_props: PersonaPanelProps) => {
                           borderBottom: '1px solid var(--gray-a5)'
                         }}
                       >
+                        {loading && <Spinner />}
                         <Box width="100%">
                           <Text as="p" size="3" weight="bold" className="mb-2">
                             {prompt.name}
@@ -297,6 +313,7 @@ const PersonaPanel = (_props: PersonaPanelProps) => {
                             onClick={() => {
                               onCreateChat?.(prompt)
                             }}
+                            disabled={loading}
                           >
                             <LuMessageSquarePlus className="size-4" />
                           </IconButton>
@@ -308,9 +325,11 @@ const PersonaPanel = (_props: PersonaPanelProps) => {
                             onClick={() => {
                               onEditPersona?.(prompt)
                             }}
+                            disabled={loading}
                           >
                             <AiOutlineEdit className="size-4" />
                           </IconButton>
+
                           <IconButton
                             size="2"
                             variant="soft"
@@ -319,6 +338,7 @@ const PersonaPanel = (_props: PersonaPanelProps) => {
                             onClick={() => {
                               onDeletePersona?.(prompt)
                             }}
+                            disabled={loading}
                           >
                             <AiOutlineDelete className="size-4" />
                           </IconButton>
