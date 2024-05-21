@@ -38,7 +38,6 @@ export async function POST(req: NextRequest) {
 }
 
 const getApiConfig = (apiKey: string) => {
-  console.log('apikey ', apiKey)
   const useAzureOpenAI =
     process.env.AZURE_OPENAI_API_BASE_URL && process.env.AZURE_OPENAI_API_BASE_URL.length > 0
 
@@ -59,7 +58,7 @@ const getApiConfig = (apiKey: string) => {
       apiBaseUrl = apiBaseUrl.slice(0, -1)
     }
     apiUrl = `${apiBaseUrl}/v1/chat/completions`
-    model = process.env.OPENAI_MODEL || 'gpt-3.5-turbo'
+    model = process.env.OPENAI_MODEL || 'gpt-4o'
   }
 
   return { apiUrl, apiKey, model }
