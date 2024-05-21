@@ -221,9 +221,11 @@ const useChatHook = () => {
     chatList.splice(index, 1)
     setChatList([...chatList])
     localStorage.removeItem(`ms_${chat.id}`)
+
     if (currentChatRef.current?.id === chat.id) {
       currentChatRef.current = chatList[0]
     }
+
     if (chatList.length === 0) {
       onOpenPersonaPanel('chat')
     }

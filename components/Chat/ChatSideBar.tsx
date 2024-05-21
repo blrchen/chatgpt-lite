@@ -10,6 +10,7 @@ import { FaPlus } from 'react-icons/fa6'
 import { FiPlus } from 'react-icons/fi'
 import { RiRobot2Line } from 'react-icons/ri'
 import ChatContext from './chatContext'
+import { DeleteChatAlert } from './DeleteChatAlert'
 
 import './index.scss'
 
@@ -95,19 +96,24 @@ export const ChatSideBar = () => {
                     {chat.persona?.name}
                   </Text>
                 </Flex>
-                <IconButton
-                  size="2"
-                  className="cursor-pointer"
-                  variant="ghost"
-                  color="gray"
-                  radius="full"
-                  onClick={(e) => {
+                <DeleteChatAlert
+                  onAction={(e) => {
                     e.stopPropagation()
                     onDeleteChat?.(chat)
                   }}
+                  onCancel={(e) => e.stopPropagation()}
                 >
-                  <AiOutlineCloseCircle className="size-4" />
-                </IconButton>
+                  <IconButton
+                    size="2"
+                    className="cursor-pointer"
+                    variant="ghost"
+                    color="gray"
+                    radius="full"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <AiOutlineCloseCircle className="size-4" />
+                  </IconButton>
+                </DeleteChatAlert>
               </Box>
             ))}
           </Flex>
