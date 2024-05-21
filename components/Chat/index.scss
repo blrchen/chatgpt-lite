@@ -12,6 +12,10 @@
 
     &.placeholder {
       color: var(--gray-10);
+
+      &::before {
+        content: 'Message Amigo';
+      }
     }
   }
 }

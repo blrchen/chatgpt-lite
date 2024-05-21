@@ -24,8 +24,6 @@ import './index.scss'
 const HTML_REGULAR =
   /<(?!img|table|\/table|thead|\/thead|tbody|\/tbody|tr|\/tr|td|\/td|th|\/th|br|\/br).*?>/gi
 
-const PLACEHOLDER_TEXT = 'Message Amigo'
-
 export interface ChatProps {}
 
 export interface ChatGPInstance {
@@ -242,7 +240,7 @@ const Chat = (props: ChatProps, ref: any) => {
                 overflowY: 'auto'
               }}
               className={cs('rt-TextAreaInput text-base', { placeholder: !message })}
-              html={message || PLACEHOLDER_TEXT}
+              html={message}
               disabled={isLoading}
               onChange={(e) => {
                 setMessage(e.target.value.replace(HTML_REGULAR, ''))
