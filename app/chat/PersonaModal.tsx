@@ -15,7 +15,9 @@ const PersonaModal = () => {
   const { register, handleSubmit, setValue, watch } = useForm()
 
   const formSubmit = handleSubmit(async (values: any) => {
+    console.log('values-------------------', values)
     if (detail?.id) {
+      console.log('edit')
       onSubmitEditPersona?.(values as Persona)
     } else {
       onCreatePersona?.(values as Persona)
@@ -23,11 +25,18 @@ const PersonaModal = () => {
   })
 
   useEffect(() => {
+    console.log('detail-------------------', detail)
     if (detail) {
       setValue('name', detail.name, { shouldTouch: true })
       setValue('prompt', detail.prompt, { shouldTouch: true })
       setValue('brand', detail.brand, { shouldTouch: true })
       setValue('id', detail.id, { shouldTouch: true })
+    }
+    if (!detail) {
+      setValue('name', '', { shouldTouch: true })
+      setValue('prompt', '', { shouldTouch: true })
+      setValue('brand', '', { shouldTouch: true })
+      setValue('id', '', { shouldTouch: true })
     }
   }, [detail, setValue])
 
@@ -40,19 +49,19 @@ const PersonaModal = () => {
   }, [selectedBrand, setValue])
 
   const allBrands = [
-    { value: "happySenior", label: "Happy Senior" },
-    { value: "odalysVacances", label: "Odalys Vacances" },
-    { value: "sgit", label: "SGIT" },
-    { value: "odalysCity", label: "Odalys City" },
-    { value: "odalysCampus", label: "Odalys Campus" },
-    { value: "flowerCampings", label: "Flower Campings" },
-    { value: "sgitGestion", label: "SGIT Gestion" },
-    { value: "odalysInvest", label: "Odalys Invest" },
-    { value: "odalysPleinAir", label: "Odalys Plein Air" },
-    { value: "laConciergerieByOdalys", label: "La Conciergerie by Odalys" },
-    { value: "odalysEvenementsEtGroupes", label: "Odalys Événements et Groupes" },
-    { value: "odalysGroupe", label: "Odalys Groupe" }
-  ];
+    { value: 'happySenior', label: 'Happy Senior' },
+    { value: 'odalysVacances', label: 'Odalys Vacances' },
+    { value: 'sgit', label: 'SGIT' },
+    { value: 'odalysCity', label: 'Odalys City' },
+    { value: 'odalysCampus', label: 'Odalys Campus' },
+    { value: 'flowerCampings', label: 'Flower Campings' },
+    { value: 'sgitGestion', label: 'SGIT Gestion' },
+    { value: 'odalysInvest', label: 'Odalys Invest' },
+    { value: 'odalysPleinAir', label: 'Odalys Plein Air' },
+    { value: 'laConciergerieByOdalys', label: 'La Conciergerie by Odalys' },
+    { value: 'odalysEvenementsEtGroupes', label: 'Odalys Événements et Groupes' },
+    { value: 'odalysGroupe', label: 'Odalys Groupe' }
+  ]
 
   return (
     <Dialog.Root open={open!}>
@@ -66,8 +75,10 @@ const PersonaModal = () => {
             <Select.Root value={selectedBrand} onValueChange={(value) => setValue('brand', value)}>
               <Select.Trigger placeholder="Sélectionnez une marque" />
               <Select.Content>
-                {allBrands.map(brand => (
-                  <Select.Item key={brand.value} value={brand.value}>{brand.label}</Select.Item>
+                {allBrands.map((brand) => (
+                  <Select.Item key={brand.value} value={brand.value}>
+                    {brand.label}
+                  </Select.Item>
                 ))}
               </Select.Content>
             </Select.Root>

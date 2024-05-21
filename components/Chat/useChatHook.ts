@@ -93,6 +93,7 @@ const useChatHook = () => {
   }
 
   const onClosePersonaModal = () => {
+    console.log('onClosePersonaModal---------')
     setEditPersona(undefined)
     setIsOpenPersonaModal(false)
   }
