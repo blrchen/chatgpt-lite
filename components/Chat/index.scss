@@ -26,7 +26,7 @@
   background-color: var(--color-background);
   transition: 0.5s;
 
-  @apply max-md:absolute max-md:top-0 max-md:bottom-0   max-md:border-none max-md:w-0;
+  @apply max-md:absolute max-md:top-0 max-md:bottom-0   max-md:border-none max-md:-left-64;
 
   .rt-ScrollAreaViewport > div {
     display: block;
@@ -37,7 +37,7 @@
   }
 
   &.show {
-    @apply w-64;
+    @apply w-64 left-0;
   }
 }
 
