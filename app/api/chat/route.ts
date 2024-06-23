@@ -114,10 +114,15 @@ const getOpenAIStream = async (
 
           try {
             const json = JSON.parse(data)
-            const text = json.choices[0]?.delta.content
-            const queue = encoder.encode(text)
-            controller.enqueue(queue)
+            const text = json.choices[0]?.delta?.content
+            if (text !== undefined) {
+              const queue = encoder.encode(text)
+              controller.enqueue(queue)
+            } else {
+              console.error('Received undefined content:', json)
+            }
           } catch (e) {
+            console.error('Error parsing event data:', e)
             controller.error(e)
           }
         }
