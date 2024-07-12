@@ -19,6 +19,7 @@ export default async function handler(req, res) {
     if (req.method === 'POST') {
       // Ajouter un nouveau prompt
       const { name, prompt, brand } = req.body
+      console.log(name, prompt, brand)
       const promptSend = await promptManager.savePrompt(name, prompt, brand)
       return res.status(201).json(promptSend)
     }

@@ -71,10 +71,18 @@ const SolidBrand: Brand[] = [
     description: 'Résidences seniors',
     url: 'https://residencehappysenior.fr/'
   },
+  // {
+  //   name: 'SGIT Gestion',
+  //   logo: '/Logo-SGIT-couleurs.jpg',
+  //   dbName: 'sgitGestion',
+  //   color: '#11514F',
+  //   description: 'Gestion de copropriété',
+  //   url: 'https://www.sgitgestion.com/'
+  // },
   {
     name: 'SGIT',
     logo: '/Logo-SGIT-couleurs.jpg',
-    dbName: 'sgitGestion',
+    dbName: 'SGIT',
     color: '#11514F',
     description: 'Gestion de copropriété',
     url: 'https://www.sgitgestion.com/'
@@ -172,6 +180,7 @@ const PersonaPanel = (_props: PersonaPanelProps) => {
   }, [selectedBrand])
 
   const handleBrandClick = (brandName: string) => {
+    // Avoir pourquoi surment refacto pas trés intéresent
     setSelectedBrand(brandName === selectedBrand ? null : brandName)
     // Scroll to the prompts section when a brand is selected
     const promptsSection = document.getElementById('prompts-section')

@@ -155,8 +155,10 @@ const useChatHook = () => {
       key: '',
       brand: ''
     }
+
     setLoading(true)
     const uploadPromptResponse = await uploadPrompt(name, prompt, brand)
+    console.log('uploadPromptResponse', uploadPromptResponse)
 
     // Mise à jour immédiate de l'état pour refléter le nouveau persona
     setPersonas((prevState) => [...prevState, uploadPromptResponse])
@@ -182,15 +184,20 @@ const useChatHook = () => {
   }
 
   const onDeletePersona = (persona: Persona) => {
-    setLoading(true)
-    setPersonas((prevState) => {
-      return prevState.filter((p) => p.id !== persona.id)
-    })
+    // nous voulins afficher un popup de confirmation avant de supprimer le persona
+    // code pour afficher une popup de confirmation avant de supprimer le persona
 
-    if (persona.id) {
-      delPrompts(persona.id)
+    if (window.confirm('Are you sure you want to delete this persona?')) {
+      setLoading(true)
+      setPersonas((prevState) => {
+        return prevState.filter((p) => p.id !== persona.id)
+      })
+
+      if (persona.id) {
+        delPrompts(persona.id)
+      }
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   const saveMessages = (messages: ChatMessage[]) => {

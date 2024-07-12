@@ -50,11 +50,10 @@ const PersonaModal = () => {
   const allBrands = [
     { value: 'happySenior', label: 'Happy Senior' },
     { value: 'odalysVacances', label: 'Odalys Vacances' },
-    { value: 'sgit', label: 'SGIT' },
+    { value: 'SGIT', label: 'SGIT' },
     { value: 'odalysCity', label: 'Odalys City' },
     { value: 'odalysCampus', label: 'Odalys Campus' },
     { value: 'flowerCampings', label: 'Flower Campings' },
-    // { value: 'sgitGestion', label: 'SGIT Gestion' },
     { value: 'odalysInvest', label: 'Odalys Invest' },
     { value: 'odalysPleinAir', label: 'Odalys Plein Air' },
     { value: 'laConciergerieByOdalys', label: 'La Conciergerie by Odalys' },
