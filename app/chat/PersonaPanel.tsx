@@ -72,7 +72,7 @@ const SolidBrand: Brand[] = [
     url: 'https://residencehappysenior.fr/'
   },
   {
-    name: 'SGIT Gestion',
+    name: 'SGIT',
     logo: '/Logo-SGIT-couleurs.jpg',
     dbName: 'sgitGestion',
     color: '#11514F',

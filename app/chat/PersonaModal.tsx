@@ -54,7 +54,7 @@ const PersonaModal = () => {
     { value: 'odalysCity', label: 'Odalys City' },
     { value: 'odalysCampus', label: 'Odalys Campus' },
     { value: 'flowerCampings', label: 'Flower Campings' },
-    { value: 'sgitGestion', label: 'SGIT Gestion' },
+    // { value: 'sgitGestion', label: 'SGIT Gestion' },
     { value: 'odalysInvest', label: 'Odalys Invest' },
     { value: 'odalysPleinAir', label: 'Odalys Plein Air' },
     { value: 'laConciergerieByOdalys', label: 'La Conciergerie by Odalys' },
