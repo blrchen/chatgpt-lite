@@ -184,9 +184,6 @@ const useChatHook = () => {
   }
 
   const onDeletePersona = (persona: Persona) => {
-    // nous voulins afficher un popup de confirmation avant de supprimer le persona
-    // code pour afficher une popup de confirmation avant de supprimer le persona
-
     if (window.confirm('Are you sure you want to delete this persona?')) {
       setLoading(true)
       setPersonas((prevState) => {

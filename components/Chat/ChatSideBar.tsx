@@ -24,6 +24,13 @@ export const ChatSideBar = () => {
     setOpenPersonaPanel
   } = useContext(ChatContext)
 
+  const handlePromptLibraryClick = () => {
+    const chatCurentConv = chatList.find((chat) => chat?.id === currentChatRef?.current?.id)
+    if (chatCurentConv) onChangeChat?.(chatCurentConv)
+    console.log(chatCurentConv)
+    onOpenPersonaPanel?.('chat')
+  }
+
   return (
     <Flex direction="column" className={cs('chart-side-bar', { show: toggleSidebar })}>
       <Flex className="p-2 h-full overflow-hidden w-64" direction="column" gap="3">
@@ -74,7 +81,9 @@ export const ChatSideBar = () => {
         </ScrollArea>
         <Box
           width="auto"
-          onClick={() => onOpenPersonaPanel?.('chat')}
+          onClick={() => {
+            handlePromptLibraryClick()
+          }}
           className="bg-token-surface-primary active:scale-95 cursor-pointer"
         >
           <RiRobot2Line className="size-4" />
