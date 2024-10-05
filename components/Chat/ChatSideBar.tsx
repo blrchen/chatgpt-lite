@@ -24,7 +24,7 @@ export const ChatSideBar = () => {
   } = useContext(ChatContext)
 
   return (
-    <Flex direction="column" className={cs('chart-side-bar', { show: toggleSidebar })}>
+    <Flex direction="column" className={cs('chat-side-bar', { show: toggleSidebar })}>
       <Flex className="p-2 h-full overflow-hidden w-64" direction="column" gap="3">
         <Box
           width="auto"
@@ -34,7 +34,7 @@ export const ChatSideBar = () => {
           <FiPlus className="size-4" />
           <Text>New Chat</Text>
         </Box>
-        <ScrollArea className="flex-1" type="auto" scrollbars="vertical">
+        <ScrollArea className="flex-1 " style={{ width: '100%' }} type="auto">
           <Flex direction="column" gap="3">
             {chatList.map((chat) => (
               <Box
@@ -45,7 +45,7 @@ export const ChatSideBar = () => {
                 })}
                 onClick={() => onChangeChat?.(chat)}
               >
-                <Flex gap="2" align="center">
+                <Flex gap="2" align="center" className="overflow-hidden whitespace-nowrap">
                   <BiMessageDetail className="size-4" />
                   <Text as="p" className="truncate">
                     {chat.persona?.name}

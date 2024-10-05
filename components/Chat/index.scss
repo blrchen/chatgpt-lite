@@ -12,7 +12,7 @@
   }
 }
 
-.chart-side-bar {
+.chat-side-bar {
   @apply overflow-hidden w-64 z-10;
 
   background-color: var(--color-background);
@@ -22,6 +22,7 @@
 
   .rt-ScrollAreaViewport > div {
     display: block;
+    width: 100%;
   }
 
   > div {

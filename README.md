@@ -79,16 +79,16 @@ For OpenAI account:
 | Name                | Description                                                                                             | Default Value            |
 | ------------------- | ------------------------------------------------------------------------------------------------------- | ------------------------ |
 | OPENAI_API_BASE_URL | Use if you plan to use a reverse proxy for `api.openai.com`.                                            | `https://api.openai.com` |
-| OPENAI_API_KEY      | Secret key string obtained from the [OpenAI API website](https://platform.openai.com/account/api-keys). |
+| OPENAI_API_KEY      | Secret key string obtained from the [OpenAI API website](https://platform.openai.com/account/api-keys). |                          |
 | OPENAI_MODEL        | Model of GPT used                                                                                       | `gpt-3.5-turbo`          |
 
 For Azure OpenAI account:
 
-| Name                      | Description                                    |
-| ------------------------- | ---------------------------------------------- |
-| AZURE_OPENAI_API_BASE_URL | Endpoint (e.g., https://xxx.openai.azure.com). |
-| AZURE_OPENAI_API_KEY      | Key                                            |
-| AZURE_OPENAI_DEPLOYMENT   | Model deployment name                          |
+| Name                      | Description                                      |
+| ------------------------- | ------------------------------------------------ |
+| AZURE_OPENAI_API_BASE_URL | Endpoint (e.g., <https://xxx.openai.azure.com>). |
+| AZURE_OPENAI_API_KEY      | Key                                              |
+| AZURE_OPENAI_DEPLOYMENT   | Model deployment name                            |
 
 ## Contribution
 
