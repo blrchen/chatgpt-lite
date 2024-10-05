@@ -79,16 +79,16 @@ OpenAI账户环境变量：
 | 名称                | 描述                                                                               | 默认值                   |
 | ------------------- | ---------------------------------------------------------------------------------- | ------------------------ |
 | OPENAI_API_BASE_URL | 如需为`api.openai.com`使用反向代理，请使用此变量。                                 | `https://api.openai.com` |
-| OPENAI_API_KEY      | 从[OpenAI API网站](https://platform.openai.com/account/api-keys)获取的密钥字符串。 |
+| OPENAI_API_KEY      | 从[OpenAI API网站](https://platform.openai.com/account/api-keys)获取的密钥字符串。 |                          |
 | OPENAI_MODEL        | GPT模型                                                                            | `gpt-3.5-turbo`          |
 
 Azure OpenAI账户环境变量：
 
-| 名称                      | 描述                                       |
-| ------------------------- | ------------------------------------------ |
-| AZURE_OPENAI_API_BASE_URL | 端点（如，https://xxx.openai.azure.com）。 |
-| AZURE_OPENAI_API_KEY      | 密钥                                       |
-| AZURE_OPENAI_DEPLOYMENT   | 模型部署名称                               |
+| 名称                      | 描述                                         |
+| ------------------------- | -------------------------------------------- |
+| AZURE_OPENAI_API_BASE_URL | 端点（如，<https://xxx.openai.azure.com）。> |
+| AZURE_OPENAI_API_KEY      | 密钥                                         |
+| AZURE_OPENAI_DEPLOYMENT   | 模型部署名称                                 |
 
 ## 贡献
 
