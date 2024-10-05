@@ -31,7 +31,7 @@ const PersonaModal = () => {
         <Dialog.Description size="2" mb="4"></Dialog.Description>
         <form onSubmit={formSubmit}>
           <Flex direction="column" gap="3">
-            <TextField.Input placeholder="Name" {...register('name', { required: true })} />
+            <TextField.Root placeholder="Name" {...register('name', { required: true })} />
             <TextArea placeholder="Prompt" rows={7} {...register('prompt', { required: true })} />
           </Flex>
           <Flex gap="3" mt="4" justify="end">

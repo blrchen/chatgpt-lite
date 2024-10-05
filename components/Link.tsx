@@ -1,7 +1,8 @@
-import { GetPropDefTypes, Link as RadixLink, linkPropDefs } from '@radix-ui/themes'
+import { ComponentProps } from 'react'
+import { Link as RadixLink } from '@radix-ui/themes'
 import NextLink from 'next/link'
 
-type LinkOwnProps = GetPropDefTypes<typeof linkPropDefs>
+type LinkOwnProps = ComponentProps<typeof RadixLink>
 
 interface LinkProps {
   href: string

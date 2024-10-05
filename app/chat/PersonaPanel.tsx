@@ -65,7 +65,7 @@ const PersonaPanel = (_props: PersonaPanelProps) => {
       width="100%"
       height="100%"
       className="absolute top-0 z-10 flex-1"
-      style={{ backgroundColor: 'var(--color-page-background)' }}
+      style={{ backgroundColor: 'var(--color-background)' }}
     >
       <Flex
         justify="between"
@@ -87,17 +87,18 @@ const PersonaPanel = (_props: PersonaPanelProps) => {
       </Flex>
       <Container size="3" className="grow-0 px-4">
         <Flex gap="4" py="5">
-          <TextField.Root size="3" className="flex-1" radius="large">
+          <TextField.Root
+            size="3"
+            className="flex-1"
+            radius="large"
+            placeholder="Search Persona Template"
+            onChange={({ target }) => {
+              setSearchText(target.value)
+            }}
+          >
             <TextField.Slot>
               <MagnifyingGlassIcon height="16" width="16" />
             </TextField.Slot>
-            <TextField.Input
-              className="flex-1"
-              placeholder="Search Persona Template"
-              onChange={({ target }) => {
-                setSearchText(target.value)
-              }}
-            />
           </TextField.Root>
           <Button size="3" radius="large" variant="surface" onClick={onOpenPersonaModal}>
             Create
