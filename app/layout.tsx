@@ -7,8 +7,8 @@ import '@/styles/theme-config.css'
 
 export const metadata = {
   title: {
-    default: 'ChatGPT Lite',
-    template: `%s - ChatGPT Lite`
+    default: 'VIO Chatbot',
+    template: `%s - VIO Chatbot`
   },
   description: 'AI assistant powered by Grok',
   icons: {
