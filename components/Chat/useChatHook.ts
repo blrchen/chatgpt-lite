@@ -10,31 +10,39 @@ import { Chat, ChatMessage, Persona } from './interface'
 
 async function getVoucherData() {
   try {
-    const backendUrl = process.env.backendUrl;
-    const simplifiedVoucherList = await fetch(backendUrl + '/api/chatWithAI/getSimplifiedVoucherList', {
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+    console.log("backendUrl:", backendUrl);
+    
+    if (!backendUrl) {
+      throw new Error('Backend URL is not configured');
+    }
+
+    const simplifiedVoucherList = await fetch(`${backendUrl}/api/chatWithAI/getSimplifiedVoucherList`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
       }
     });
-    const simplifiedCountryList = await fetch(backendUrl + '/api/chatWithAI/getSimplifiedCountryList', {
+    console.log("simplifiedVoucherList:", simplifiedVoucherList);
+    const simplifiedCountryList = await fetch(`${backendUrl}/api/chatWithAI/getCountryList`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
       }
     });
-    if (!simplifiedVoucherList.ok) {
-      throw new Error('Failed to fetch voucher data');
+
+    if (!simplifiedVoucherList.ok || !simplifiedCountryList.ok) {
+      throw new Error('Failed to fetch data');
     }
 
     const voucherData = await simplifiedVoucherList.json();
     const countryData = await simplifiedCountryList.json();
 
     const basePrompt = "You are a chatbot specialized in providing and summarizing voucher data to clients. refer to voucher table ";
-
     const finalPrompt = basePrompt + (voucherData.message || '') + "refer to country table " + (countryData.message || '');
     return finalPrompt;
   } catch (error) {
+    console.error('Error in getVoucherData:', error);
     return "You are a data assistant specialized in analyzing and summarizing structured datasets.";
   }
 }
