@@ -21,10 +21,15 @@ export async function POST(req: NextRequest) {
       { content: input, role: 'user' }
     ]
 
-    // const { apiUrl, apiKey, model } = getApiConfig()
-    const apiUrl = process.env.apiUrl || 'https://api.x.ai/v1/chat/completions'
-    const apiKey = process.env.apiKey || 'xai-D2iTOdYYUhOtd6RfpdZA007cLh85KdF6WCGdUwV8I4Y8kYirBhkDV6kQeBHuCt2Y9iP4RsdHTVkqw21P'
-    const model = process.env.model || 'grok-beta'
+  //env file
+    const apiUrl = process.env.OPENAI_API_URL
+    const apiKey = process.env.OPENAI_API_KEY
+    const model = process.env.OPENAI_MODEL
+
+    if (!apiUrl || !apiKey || !model) {
+      throw new Error('Missing required API configuration')
+    }
+
     const stream = await getOpenAIStream(apiUrl, apiKey, model, messagesWithHistory)
     return new NextResponse(stream, {
       headers: { 'Content-Type': 'text/event-stream' }
@@ -37,36 +42,6 @@ export async function POST(req: NextRequest) {
     )
   }
 }
-
-// const getApiConfig = () => {
-//   const useAzureOpenAI =
-//     process.env.AZURE_OPENAI_API_BASE_URL && process.env.AZURE_OPENAI_API_BASE_URL.length > 0
-
-//   let apiUrl: string
-//   let apiKey: string
-//   let model: string
-//   if (useAzureOpenAI) {
-//     let apiBaseUrl = process.env.AZURE_OPENAI_API_BASE_URL
-//     const apiVersion = '2024-02-01'
-//     const deployment = process.env.AZURE_OPENAI_DEPLOYMENT || ''
-//     if (apiBaseUrl && apiBaseUrl.endsWith('/')) {
-//       apiBaseUrl = apiBaseUrl.slice(0, -1)
-//     }
-//     apiUrl = `${apiBaseUrl}/openai/deployments/${deployment}/chat/completions?api-version=${apiVersion}`
-//     apiKey = process.env.AZURE_OPENAI_API_KEY || ''
-//     model = '' // Azure Open AI always ignores the model and decides based on the deployment name passed through.
-//   } else {
-//     let apiBaseUrl = process.env.OPENAI_API_BASE_URL || 'https://api.openai.com'
-//     if (apiBaseUrl && apiBaseUrl.endsWith('/')) {
-//       apiBaseUrl = apiBaseUrl.slice(0, -1)
-//     }
-//     apiUrl = `${apiBaseUrl}/v1/chat/completions`
-//     apiKey = process.env.OPENAI_API_KEY || ''
-//     model = process.env.OPENAI_MODEL || 'gpt-3.5-turbo'
-//   }
-
-//   return { apiUrl, apiKey, model }
-// }
 
 const getOpenAIStream = async (
   apiUrl: string,
