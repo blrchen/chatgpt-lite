@@ -74,7 +74,7 @@ const PersonaPanel = (_props: PersonaPanelProps) => {
         px="4"
         style={{ backgroundColor: 'var(--gray-a2)' }}
       >
-        <Heading size="4">Persona Store </Heading>
+        <Heading size="4">Welcome to VIO Chatbot! Ask me anything about vouchers~ </Heading>
         <IconButton
           size="2"
           variant="ghost"
@@ -85,7 +85,7 @@ const PersonaPanel = (_props: PersonaPanelProps) => {
           <AiOutlineClose className="size-4" />
         </IconButton>
       </Flex>
-      <Container size="3" className="grow-0 px-4">
+      {/* <Container size="3" className="grow-0 px-4">
         <Flex gap="4" py="5">
           <TextField.Root
             size="3"
@@ -104,8 +104,8 @@ const PersonaPanel = (_props: PersonaPanelProps) => {
             Create
           </Button>
         </Flex>
-      </Container>
-      <ScrollArea className="flex-1" type="auto" scrollbars="vertical">
+      </Container> */}
+      {/* <ScrollArea className="flex-1" type="auto" scrollbars="vertical">
         <Container size="3" className="px-4">
           <Flex direction="column" className="divide-y">
             {promptList.map((prompt) => (
@@ -163,7 +163,7 @@ const PersonaPanel = (_props: PersonaPanelProps) => {
             ))}
           </Flex>
         </Container>
-      </ScrollArea>
+      </ScrollArea> */}
     </Flex>
   ) : null
 }

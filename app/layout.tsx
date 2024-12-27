@@ -10,7 +10,7 @@ export const metadata = {
     default: 'ChatGPT Lite',
     template: `%s - ChatGPT Lite`
   },
-  description: 'AI assistant powered by ChatGPT',
+  description: 'AI assistant powered by Grok',
   icons: {
     icon: '/favicon.ico',
     shortcut: '/favicon-16x16.png',
