@@ -8,12 +8,43 @@ import { v4 as uuid } from 'uuid'
 import { ChatGPInstance } from './Chat'
 import { Chat, ChatMessage, Persona } from './interface'
 
+async function getVoucherData() {
+  try {
+    const backendUrl = process.env.backendUrl;
+    const simplifiedVoucherList = await fetch(backendUrl + '/api/chatWithAI/getSimplifiedVoucherList', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
+    const simplifiedCountryList = await fetch(backendUrl + '/api/chatWithAI/getSimplifiedCountryList', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
+    if (!simplifiedVoucherList.ok) {
+      throw new Error('Failed to fetch voucher data');
+    }
+
+    const voucherData = await simplifiedVoucherList.json();
+    const countryData = await simplifiedCountryList.json();
+
+    const basePrompt = "You are a chatbot specialized in providing and summarizing voucher data to clients. refer to voucher table ";
+
+    const finalPrompt = basePrompt + (voucherData.message || '') + "refer to country table " + (countryData.message || '');
+    return finalPrompt;
+  } catch (error) {
+    return "You are a data assistant specialized in analyzing and summarizing structured datasets.";
+  }
+}
+
 export const DefaultPersonas: Persona[] = [
   {
     id: 'chatgpt',
     role: 'system',
     name: 'ChatGPT',
-    prompt: 'You are an AI assistant that helps people find information.',
+    prompt: '', // 初始为空，稍后会被更新
     isDefault: true
   },
   {
@@ -252,6 +283,16 @@ const useChatHook = () => {
     }
     isInit = true
   }, [chatList, openPersonaPanel, onCreateChat])
+
+  useEffect(() => {
+    const initVoucherData = async () => {
+      const voucherData = await getVoucherData();
+      DefaultPersonas[0].prompt = voucherData;
+      forceUpdate();
+    };
+
+    initVoucherData();
+  }, []);
 
   return {
     debug,
