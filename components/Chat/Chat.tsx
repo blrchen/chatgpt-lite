@@ -218,10 +218,9 @@ const Chat = (props: ChatProps, ref: any) => {
         <Heading size="4">{currentChatRef?.current?.persona?.name || 'None'}</Heading>
       </Flex>
       <ScrollArea
-        className="flex-1 px-4"
+        className="flex-1 px-4 min-h-0"
         type="auto"
         scrollbars="vertical"
-        style={{ height: '100%' }}
       >
         {conversation.current.map((item, index) => (
           <Message key={index} message={item} />
@@ -229,8 +228,9 @@ const Chat = (props: ChatProps, ref: any) => {
         {currentMessage && <Message message={{ content: currentMessage, role: 'assistant' }} />}
         <div ref={bottomOfChatRef}></div>
       </ScrollArea>
-      <WelcomeSection />
-      <div className="px-4 pb-3">
+      {/* 仅在没有消息时显示欢迎区 */}
+      {conversation.current.length === 0 && <WelcomeSection />}
+      <div className="px-4 pb-3 sticky bottom-0 z-10 bg-white">
         <Flex align="end" justify="between" gap="3" className="relative">
           <div className="rt-TextAreaRoot rt-r-size-1 rt-variant-surface flex-1 rounded-3xl chat-textarea">
             <ContentEditable

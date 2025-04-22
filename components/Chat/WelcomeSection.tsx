@@ -2,7 +2,7 @@ import React from "react";
 
 export default function WelcomeSection() {
   return (
-    <div className="flex flex-col items-center py-10 px-4 w-full bg-white">
+    <div className="flex flex-col items-center py-10 px-4 w-full bg-white max-h-[60vh] overflow-auto">
       <div className="flex flex-col items-center w-11/12 md:w-10/12">
         {/* Top: Emoji + Title */}
         <div className="flex items-center gap-3 mb-4">
