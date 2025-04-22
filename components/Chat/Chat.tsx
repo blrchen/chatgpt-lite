@@ -9,6 +9,7 @@ import {
   useRef,
   useState
 } from 'react'
+import WelcomeSection from './WelcomeSection';
 import { Flex, Heading, IconButton, ScrollArea, Tooltip } from '@radix-ui/themes'
 import ContentEditable from 'react-contenteditable'
 import toast from 'react-hot-toast'
@@ -228,6 +229,7 @@ const Chat = (props: ChatProps, ref: any) => {
         {currentMessage && <Message message={{ content: currentMessage, role: 'assistant' }} />}
         <div ref={bottomOfChatRef}></div>
       </ScrollArea>
+      <WelcomeSection />
       <div className="px-4 pb-3">
         <Flex align="end" justify="between" gap="3" className="relative">
           <div className="rt-TextAreaRoot rt-r-size-1 rt-variant-surface flex-1 rounded-3xl chat-textarea">

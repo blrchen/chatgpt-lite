@@ -2,6 +2,7 @@ import { Analytics } from '@vercel/analytics/react'
 import { Toaster } from 'react-hot-toast'
 import { Header } from '@/components/Header'
 import ThemesProvider from '@/providers/ThemesProvider'
+import Providers from '@/providers/PrivyProvider'
 import '@/styles/globals.scss'
 import '@/styles/theme-config.css'
 
@@ -22,11 +23,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body>
-        <ThemesProvider>
-          <Header />
-          {children}
-          <Toaster />
-        </ThemesProvider>
+        <Providers>
+          <ThemesProvider>
+            <Header />
+            {children}
+            <Toaster />
+          </ThemesProvider>
+        </Providers>
         <Analytics />
       </body>
     </html>

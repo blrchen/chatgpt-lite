@@ -8,6 +8,7 @@ import NextLink from 'next/link'
 import { FaAdjust, FaGithub, FaMoon, FaRegSun } from 'react-icons/fa'
 import { Link } from '../Link'
 import { useTheme } from '../Themes'
+import { ConnectButton } from './ConnectButton'
 
 export const Header = () => {
   const { theme, setTheme } = useTheme()
@@ -53,6 +54,7 @@ export const Header = () => {
               </Select.Item>
             </Select.Content>
           </Select.Root>
+          <ConnectButton />
         </Flex>
         <Tooltip content="Navigation">
           <IconButton
