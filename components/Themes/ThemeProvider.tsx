@@ -27,7 +27,7 @@ const Theme = ({
   children,
   nonce
 }: ThemeProviderProps) => {
-  const [theme, setThemeState] = useState<string>()
+  const [theme, setThemeState] = useState<string>('light')
   const [resolvedTheme, setResolvedTheme] = useState<string>()
   const attrs = !value ? themes : Object.values(value)
 

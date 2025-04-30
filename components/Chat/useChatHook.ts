@@ -105,20 +105,30 @@ const useChatHook = () => {
     forceUpdate()
   }, [])
 
+  /**
+   * 创建新 chat 支持带入第一条 user 消息
+   * @param persona persona
+   * @param firstMessage 可选首条 user 消息
+   */
   const onCreateChat = useCallback(
-    (persona: Persona) => {
+    (persona: Persona, firstMessage?: string) => {
       const id = uuid()
       const newChat: Chat = {
         id,
         persona: persona
       }
-
       setChatList((state) => {
         return [...state, newChat]
       })
-
+      // 如果有首条消息，写入 messagesMap 并持久化
+      if (firstMessage) {
+        const messages: ChatMessage[] = [{ content: firstMessage, role: 'user' }]
+        messagesMap.current.set(id, messages)
+        localStorage.setItem(`ms_${id}`, JSON.stringify(messages))
+      }
       onChangeChat(newChat)
       onClosePersonaPanel()
+      return newChat
     },
     [setChatList, onChangeChat, onClosePersonaPanel]
   )
@@ -201,18 +211,18 @@ const useChatHook = () => {
     const chatList = (JSON.parse(localStorage.getItem(StorageKeys.Chat_List) || '[]') ||
       []) as Chat[]
     const currentChatId = localStorage.getItem(StorageKeys.Chat_Current_ID)
+    console.log('[useChatHook] chatList:', chatList, 'currentChatId:', currentChatId)
     if (chatList.length > 0) {
-      const currentChat = chatList.find((chat) => chat.id === currentChatId)
-      setChatList(chatList)
+      // const currentChat = chatList.find((chat) => chat.id === currentChatId)
+      // setChatList(chatList)
 
-      chatList.forEach((chat) => {
-        const messages = JSON.parse(localStorage.getItem(`ms_${chat?.id}`) || '[]') as ChatMessage[]
-        messagesMap.current.set(chat.id!, messages)
-      })
+      // chatList.forEach((chat) => {
+      //   const messages = JSON.parse(localStorage.getItem(`ms_${chat?.id}`) || '[]') as ChatMessage[]
+      //   messagesMap.current.set(chat.id!, messages)
+      // })
 
-      onChangeChat(currentChat || chatList[0])
-    } else {
-      onCreateChat(DefaultPersonas[0])
+      // onChangeChat(currentChat || chatList[0])
+    // 页面组件负责新建 chat，这里不自动新建，避免死循环
     }
 
     return () => {
@@ -256,12 +266,11 @@ const useChatHook = () => {
   return {
     debug,
     DefaultPersonas,
-    chatRef,
     currentChatRef,
     chatList,
     personas,
-    editPersona,
     isOpenPersonaModal,
+    editPersona,
     personaModalLoading,
     openPersonaPanel,
     personaPanelType,
@@ -269,8 +278,8 @@ const useChatHook = () => {
     onOpenPersonaModal,
     onClosePersonaModal,
     onCreateChat,
-    onDeleteChat,
     onChangeChat,
+    onDeleteChat,
     onCreatePersona,
     onDeletePersona,
     onEditPersona,
@@ -278,7 +287,9 @@ const useChatHook = () => {
     onOpenPersonaPanel,
     onClosePersonaPanel,
     onToggleSidebar,
-    forceUpdate
+    forceUpdate,
+    chatRef,
+    messagesMap, // <-- Added so consumers can access chatHook.messagesMap.current
   }
 }
 

@@ -148,7 +148,23 @@ export const ConnectButton: React.FC = () => {
         </div>
       ) : (
         <button
-          className="bg-violet-600 hover:bg-violet-700 py-3 px-6 text-white rounded-lg"
+          className="header-connect-btn login-btn"
+          style={{
+            borderRadius: '12px',
+            border: '1.5px solid #cfd2da',
+            boxShadow: '0 2px 12px 0 rgba(127, 90, 240, 0.13)',
+            background: 'white',
+            color: '#7f5af0',
+            fontWeight: 600,
+            fontSize: '1rem',
+            padding: '0.5em 1.2em',
+            transition: 'box-shadow 0.2s, border-color 0.2s, transform 0.1s',
+            cursor: 'pointer',
+          }}
+          onMouseOver={e => e.currentTarget.style.boxShadow = '0 4px 24px 0 rgba(127,90,240,0.18)'}
+          onMouseOut={e => e.currentTarget.style.boxShadow = '0 2px 12px 0 rgba(127,90,240,0.13)'}
+          onMouseDown={e => e.currentTarget.style.transform = 'scale(0.96)'}
+          onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
           onClick={login}
         >
           Log in

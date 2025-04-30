@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
 @import 'tailwindcss/base';
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
@@ -5,10 +6,34 @@
 
 :root {
   @apply h-full;
-  --foreground-rgb: 0, 0, 0;
+  --foreground-rgb: 34, 34, 34; // dark gray for text
   --background-start-rgb: 214, 219, 220;
   --background-end-rgb: 255, 255, 255;
+  --text-color-light: #222;
+  --text-color-dark: #e0e0e6;
 }
+
+html, body, #__next, #__next > div {
+  color: var(--text-color-light);
+  font-family: 'Inter', 'SF Pro', 'Roboto', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+}
+
+[data-theme='dark'], .dark {
+  color: var(--text-color-dark) !important;
+}
+
+
+html, body, #__next, #__next > div {
+  height: 100vh !important;
+  min-height: 100vh !important;
+  overflow: hidden !important;
+  width: 100vw;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
 
 @media (prefers-color-scheme: dark) {
   :root {
@@ -34,6 +59,67 @@ body {
 }
 
 .radix-themes {
+  @apply flex flex-col;
+}
+
+.welcome-card-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 1.3;
+  color: #23252b;
+}
+
+.welcome-card-desc {
+  font-size: 1rem;
+  font-weight: 400;
+  color: #555c6a;
+  line-height: 1.6;
+  margin: 0.5em 0 0.2em 0;
+}
+
+.welcome-card-action {
+  font-size: 0.98rem;
+  font-weight: 500;
+  color: #cfd2da;
+  text-decoration: underline;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25em;
+}
+
+.welcome-card {
+  border: 1.5px solid rgba(127, 90, 240, 0.13);
+  box-shadow: 0 2px 16px 0 rgba(127, 90, 240, 0.07), 0 1.5px 6px 0 rgba(0,0,0,0.03);
+  background: rgba(255,255,255,0.82);
+  transition: transform 0.18s cubic-bezier(.4,2,.6,1), box-shadow 0.22s, border-color 0.22s;
+  cursor: pointer;
+  will-change: transform, box-shadow, border-color;
+  height: 200px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.welcome-card:hover, .welcome-card:focus {
+  border-color: #7f5af0;
+  box-shadow: 0 6px 32px 0 rgba(127, 90, 240, 0.13), 0 2px 8px 0 rgba(0,0,0,0.04);
+  transform: translateY(-3px) scale(1.035);
+  background: rgba(255,255,255,0.95);
+}
+
+.welcome-card:active {
+  transform: scale(0.97);
+  box-shadow: 0 2px 8px 0 rgba(127, 90, 240, 0.09), 0 1.5px 4px 0 rgba(0,0,0,0.02);
+}
+
+/* Fix unwanted scroll in WelcomeSection */
+.rt-ScrollAreaViewport {
+  overflow: unset !important;
+}
+
+.header-connect-btn {
   @apply flex flex-col;
 }
 

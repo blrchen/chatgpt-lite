@@ -9,8 +9,9 @@ import {
   useRef,
   useState
 } from 'react'
-import WelcomeSection from './WelcomeSection';
 import { Flex, Heading, IconButton, ScrollArea, Tooltip } from '@radix-ui/themes'
+import axios from 'axios';
+import { useRouter } from 'next/navigation';
 import ContentEditable from 'react-contenteditable'
 import toast from 'react-hot-toast'
 import { AiOutlineClear, AiOutlineLoading3Quarters, AiOutlineUnorderedList } from 'react-icons/ai'
@@ -18,13 +19,29 @@ import { FiSend } from 'react-icons/fi'
 import ChatContext from './chatContext'
 import type { Chat, ChatMessage } from './interface'
 import Message from './Message'
+import WelcomeSection from './WelcomeSection';
+import SwapBridgeStakeActionButtons from './SwapBridgeStakeActionButtons';
 
 import './index.scss'
+
+// 动画 keyframes 注入（仅一次）
+if (typeof window !== 'undefined' && !document.getElementById('glowPulseKeyframes')) {
+  const style = document.createElement('style');
+  style.id = 'glowPulseKeyframes';
+  style.innerHTML = `@keyframes glowPulse {
+    0% { box-shadow: 0 0 16px 4px #00C6FB88, 0 2px 8px 0 rgba(0,0,0,0.12); }
+    100% { box-shadow: 0 0 26px 8px #00C6FBcc, 0 2px 8px 0 rgba(0,0,0,0.14); }
+  }`;
+  document.head.appendChild(style);
+}
+
 
 const HTML_REGULAR =
   /<(?!img|table|\/table|thead|\/thead|tbody|\/tbody|tr|\/tr|td|\/td|th|\/th|br|\/br).*?>/gi
 
-export interface ChatProps {}
+export interface ChatProps {
+  chatId?: string;
+}
 
 export interface ChatGPInstance {
   setConversation: (messages: ChatMessage[]) => void
@@ -50,111 +67,104 @@ const postChatOrQuestion = async (chat: Chat, messages: any[], input: string) =>
   })
 }
 
+
 const Chat = (props: ChatProps, ref: any) => {
-  const { debug, currentChatRef, saveMessages, onToggleSidebar, forceUpdate } =
-    useContext(ChatContext)
+  // 组件顶层获取 context，避免 hooks 错误
+  const context = useContext(ChatContext);
+  // debug, setIsLoading, setCurrentMessage 如未用到，前面加下划线防止 ESLint 警告
+  const { debug: _debug, currentChatRef, saveMessages, onToggleSidebar, forceUpdate, onCreateChat, DefaultPersonas } = context;
+  const router = useRouter();
 
-  const [isLoading, setIsLoading] = useState(false)
+  // 只保留一份 state/ref 声明
+  const [isLoading, _setIsLoading] = useState(false);
+  const [message, setMessage] = useState('');
+  const [currentMessage, _setCurrentMessage] = useState<string>('');
+  const conversation = useRef<ChatMessage[]>([]);
+  const textAreaRef = useRef<HTMLElement>(null);
+  const bottomOfChatRef = useRef<HTMLDivElement>(null);
 
-  const conversationRef = useRef<ChatMessage[]>()
+  // --- 自动加载当前 chatId 的历史消息 ---
+  useEffect(() => {
+    const chatId = props.chatId || currentChatRef?.current?.id;
+    if (chatId) {
+      // const local = localStorage.getItem(`ms_${chatId}`);
+      // let messages: ChatMessage[] = [];
+      // if (local) {
+      //   try { messages = JSON.parse(local) || []; } catch {}
+      // }
+      // conversation.current = messages;
+      // forceUpdate?.();
+    }
+  }, [props.chatId, currentChatRef?.current?.id]);
 
-  const [message, setMessage] = useState('')
+  // Test proxy by requesting baidu.com and qq.com
 
-  const [currentMessage, setCurrentMessage] = useState<string>('')
-
-  const textAreaRef = useRef<HTMLElement>(null)
-
-  const conversation = useRef<ChatMessage[]>([])
-
-  const bottomOfChatRef = useRef<HTMLDivElement>(null)
   const sendMessage = useCallback(
-    async (e: any) => {
-      if (!isLoading) {
-        e.preventDefault()
-        const input = textAreaRef.current?.innerHTML?.replace(HTML_REGULAR, '') || ''
+    async () => {
+      console.log('[sendMessage] called', { isLoading, message, currentChatId: currentChatRef?.current?.id });
+      if (isLoading) return;
+      const input = message.trim();
+      if (!input) {
+        toast.error('Please type a message to continue.');
+        return;
+      }
+      _setIsLoading(true);
+      try {
+        let chatId = currentChatRef?.current?.id;
+        let chat = currentChatRef?.current;
 
-        if (input.length < 1) {
-          toast.error('Please type a message to continue.')
-          return
-        }
+        console.log('[sendMessage] chatId click', chatId, chat, DefaultPersonas);
+        console.log('[sendMessage] 当前 props.chatId:', props.chatId, 'currentChatRef.current?.id:', currentChatRef?.current?.id, 'chatId:', chatId);
+        // 只要在 /chat 页面点击发送，就强制新建会话并跳转
+        if (!props.chatId && onCreateChat && DefaultPersonas && DefaultPersonas[0]) {
+          console.log('[sendMessage] 强制新建会话！');
+          currentChatRef.current = undefined; // 重置当前会话
+          chat = onCreateChat(DefaultPersonas[0], input);
+          chatId = chat?.id;
 
-        const message = [...conversation.current]
-        conversation.current = [...conversation.current, { content: input, role: 'user' }]
-        setMessage('')
-        setIsLoading(true)
-        try {
-          const response = await postChatOrQuestion(currentChatRef?.current!, message, input)
-
-          if (response.ok) {
-            const data = response.body
-
-            if (!data) {
-              throw new Error('No data')
-            }
-
-            const reader = data.getReader()
-            const decoder = new TextDecoder('utf-8')
-            let done = false
-            let resultContent = ''
-
-            while (!done) {
-              try {
-                const { value, done: readerDone } = await reader.read()
-                const char = decoder.decode(value)
-                if (char) {
-                  setCurrentMessage((state) => {
-                    if (debug) {
-                      console.log({ char })
-                    }
-                    resultContent = state + char
-                    return resultContent
-                  })
-                }
-                done = readerDone
-              } catch {
-                done = true
-              }
-            }
-            // The delay of timeout can not be 0 as it will cause the message to not be rendered in racing condition
-            setTimeout(() => {
-              if (debug) {
-                console.log({ resultContent })
-              }
-              conversation.current = [
-                ...conversation.current,
-                { content: resultContent, role: 'assistant' }
-              ]
-
-              setCurrentMessage('')
-            }, 1)
-          } else {
-            const result = await response.json()
-            if (response.status === 401) {
-              conversation.current.pop()
-              location.href =
-                result.redirect +
-                `?callbackUrl=${encodeURIComponent(location.pathname + location.search)}`
-            } else {
-              toast.error(result.error)
-            }
+          setMessage('');
+          if (chatId && typeof window !== 'undefined' && router) {
+            router.push(`/chat/${chatId}`);
+            return;
           }
-
-          setIsLoading(false)
-        } catch (error: any) {
-          console.error(error)
-          toast.error(error.message)
-          setIsLoading(false)
+        } else if (chatId) {
+          console.log('[sendMessage] 往已有会话追加消息:', chatId);
+          // Existing chat: add user message, call API, add assistant reply
+          conversation.current.push({ content: input, role: 'user' });
+          saveMessages?.(conversation.current);
+          setMessage('');
+          forceUpdate?.();
+          // POST to external API (like langgraph-defi-interface)
+          const response = await axios.post('https://langgraph-defai.vercel.app/api/chat', {
+            message: input,
+            timestamp: new Date().toISOString()
+          }, {
+            headers: { 'Content-Type': 'application/json' }
+          });
+          const data = response.data;
+          if (data && data.result) {
+            conversation.current.push({ content: data.result, role: 'assistant' });
+            saveMessages?.(conversation.current);
+            forceUpdate?.();
+          } else {
+            toast.error(data?.error || 'No reply from AI');
+          }
         }
+      } catch (error: any) {
+        console.error(error);
+        toast.error(error.message || 'Failed to send message');
+      } finally {
+        _setIsLoading(false);
       }
     },
-    [currentChatRef, debug, isLoading]
+    [isLoading, message, forceUpdate, currentChatRef, saveMessages, onCreateChat, DefaultPersonas, router]
   )
 
   const handleKeypress = useCallback(
     (e: any) => {
-      if (e.keyCode == 13 && !e.shiftKey) {
-        sendMessage(e)
-        e.preventDefault()
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
       }
     },
     [sendMessage]
@@ -179,11 +189,12 @@ const Chat = (props: ChatProps, ref: any) => {
   }, [conversation, currentMessage])
 
   useEffect(() => {
-    conversationRef.current = conversation.current
+    // conversationRef.current = conversation.current; // 已无 conversationRef
     if (currentChatRef?.current?.id) {
-      saveMessages?.(conversation.current)
+      saveMessages?.(conversation.current);
     }
-  }, [currentChatRef, conversation.current, saveMessages])
+    // 不要依赖 conversation.current，防止死循环
+  }, [currentChatRef?.current?.id, saveMessages]);
 
   useEffect(() => {
     if (!isLoading) {
@@ -198,7 +209,7 @@ const Chat = (props: ChatProps, ref: any) => {
         forceUpdate?.()
       },
       getConversation() {
-        return conversationRef.current
+        return conversation.current // 修正：已无 conversationRef
       },
       focus: () => {
         textAreaRef.current?.focus()
@@ -206,105 +217,150 @@ const Chat = (props: ChatProps, ref: any) => {
     }
   })
 
+  // 自动发送事件监听（保留）
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      let pendingInput: string | null = null;
+      const handler = (e: any) => {
+        if (typeof e.detail === 'string') {
+          setMessage(e.detail);
+          pendingInput = e.detail;
+        }
+      };
+      window.addEventListener('autoSendInput', handler);
+      return () => window.removeEventListener('autoSendInput', handler);
+    }
+  }, []);
+
+  // 监听 message 变化，自动发送
+  useEffect(() => {
+    if (message && typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      const inputParam = url.searchParams.get('input');
+      if (inputParam && inputParam === message) {
+        // 清除参数，避免重复发送
+        url.searchParams.delete('input');
+        window.history.replaceState({}, '', url.pathname + url.search);
+        sendMessage();
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [message]);
+
   return (
-    <Flex direction="column" height="100%" className="relative" gap="3">
+    <Flex direction="column" height="100vh" className="relative" gap="3" style={{ minHeight: '100vh', overflow: 'hidden' }}>
       <Flex
         justify="between"
         align="center"
         py="3"
         px="4"
-        style={{ backgroundColor: 'var(--gray-a2)' }}
       >
-        <Heading size="4">{currentChatRef?.current?.persona?.name || 'None'}</Heading>
+        {/* <Flex align="center" gap="3">
+          <Heading size="4">{currentChatRef?.current?.persona?.name || 'None'}</Heading>
+        </Flex> */}
+        {/* <Flex gap="2">
+          <IconButton
+            size="2"
+            variant="ghost"
+            color="gray"
+            onClick={onToggleSidebar}
+          >
+            <AiOutlineUnorderedList />
+          </IconButton>
+        </Flex> */}
       </Flex>
-      <ScrollArea
-        className="flex-1 px-4 min-h-0"
-        type="auto"
-        scrollbars="vertical"
-      >
-        {conversation.current.map((item, index) => (
-          <Message key={index} message={item} />
-        ))}
-        {currentMessage && <Message message={{ content: currentMessage, role: 'assistant' }} />}
-        <div ref={bottomOfChatRef}></div>
-      </ScrollArea>
-      {/* 仅在没有消息时显示欢迎区 */}
-      {conversation.current.length === 0 && <WelcomeSection />}
-      <div className="px-4 pb-3 sticky bottom-0 z-10 bg-white">
-        <Flex align="end" justify="between" gap="3" className="relative">
-          <div className="rt-TextAreaRoot rt-r-size-1 rt-variant-surface flex-1 rounded-3xl chat-textarea">
-            <ContentEditable
-              innerRef={textAreaRef}
-              style={{
-                minHeight: '24px',
-                maxHeight: '200px',
-                overflowY: 'auto'
-              }}
-              className="rt-TextAreaInput text-base"
-              html={message}
-              disabled={isLoading}
-              onChange={(e) => {
-                setMessage(e.target.value.replace(HTML_REGULAR, ''))
-              }}
-              onKeyDown={(e) => {
-                handleKeypress(e)
-              }}
-            />
-            <div className="rt-TextAreaChrome"></div>
-          </div>
-          <Flex gap="3" className="absolute right-0 pr-4 bottom-2 pt">
-            {isLoading && (
-              <Flex
-                width="6"
-                height="6"
-                align="center"
-                justify="center"
-                style={{ color: 'var(--accent-11)' }}
-              >
-                <AiOutlineLoading3Quarters className="animate-spin size-4" />
-              </Flex>
-            )}
-            <Tooltip content={'Send Message'}>
-              <IconButton
-                variant="soft"
-                disabled={isLoading}
-                color="gray"
-                size="2"
-                className="rounded-xl cursor-pointer"
-                onClick={sendMessage}
-              >
-                <FiSend className="size-4" />
-              </IconButton>
-            </Tooltip>
-            <Tooltip content={'Clear History'}>
-              <IconButton
-                variant="soft"
-                color="gray"
-                size="2"
-                className="rounded-xl cursor-pointer"
-                disabled={isLoading}
-                onClick={clearMessages}
-              >
-                <AiOutlineClear className="size-4" />
-              </IconButton>
-            </Tooltip>
-            <Tooltip content={'Toggle Sidebar'}>
-              <IconButton
-                variant="soft"
-                color="gray"
-                size="2"
-                className="rounded-xl md:hidden cursor-pointer"
-                disabled={isLoading}
-                onClick={onToggleSidebar}
-              >
-                <AiOutlineUnorderedList className="size-4" />
-              </IconButton>
-            </Tooltip>
-          </Flex>
-        </Flex>
-      </div>
+      <Flex className="flex-1 px-4" style={{}}>
+        {/* 仅在没有消息时显示欢迎，否则渲染消息列表 */}
+        <WelcomeSection />
+        <div ref={bottomOfChatRef} />
+      </Flex>
+      <Flex className="chat-textarea w-full items-end gap-3 fixed bottom-0 inset-x-0 z-30" align="end" style={{
+  borderRadius: '40px',
+  display: 'flex',
+  width: '70vw',
+  maxWidth: 700,
+  padding: '12px 18px',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  minHeight: '22px',
+  height: 'auto',
+  boxSizing: 'border-box',
+  maxWidth: '100vw',
+  margin: '0 auto',
+  position: 'relative',
+  flexDirection: 'column',
+}}>
+  {/* 5 Action Buttons */}
+  <div style={{ width: '100%', marginBottom: 12 }}>
+      <SwapBridgeStakeActionButtons setMessage={setMessage} />
+  </div>
+  <div style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center', height: '100%', width: '100%' }}>
+    {(!message || message === '<br>') && (
+      <span style={{
+        position: 'absolute',
+        left: 20,
+        top: 0,
+        height: '50px',
+        display: 'flex',
+        alignItems: 'center',
+        color: '#fff',
+        pointerEvents: 'none',
+        fontSize: 16,
+        userSelect: 'none',
+        zIndex: 1,
+        fontWeight: 400,
+        lineHeight: '50px',
+        width: 'calc(100% - 56px)',
+      }}>
+        ask Miraix anything...
+      </span>
+    )}
+    <ContentEditable
+      innerRef={textAreaRef}
+      html={message}
+      disabled={isLoading}
+      onChange={e => setMessage(e.target.value.replace(HTML_REGULAR, ''))}
+      onKeyDown={handleKeypress}
+      className="rt-TextAreaInput flex-1"
+      style={{ paddingRight: '56px', paddingLeft: 20, minHeight: 22, height: 50, lineHeight: '50px', fontSize: 16, background: 'transparent', zIndex: 2 }}
+    />
+    <IconButton
+      size="3"
+      variant="solid"
+      color="accent"
+      disabled={isLoading}
+      onClick={sendMessage}
+      style={{
+        position: 'absolute',
+        right: '5%',
+        top: '50%',
+        transform: 'translateY(-50%) scale(0.7)',
+        zIndex: 2,
+        background: 'linear-gradient(100deg, #00C6FB 0%, #3F51B5 100%)',
+        borderRadius: '50%',
+        boxShadow: '0 0 16px 4px #00C6FB88, 0 2px 8px 0 rgba(0,0,0,0.12)',
+        transition: 'box-shadow 0.25s, transform 0.18s',
+        padding: '6px',
+        border: 'none',
+        cursor: 'pointer',
+        outline: 'none',
+        animation: 'glowPulse 2s infinite alternate',
+      } as React.CSSProperties}
+      onMouseOver={e => {
+        e.currentTarget.style.boxShadow = '0 0 38px 10px #00C6FBcc, 0 2px 8px 0 rgba(0,0,0,0.14)';
+        e.currentTarget.style.transform = 'translateY(-50%) scale(0.85)';
+      }}
+      onMouseOut={e => {
+        e.currentTarget.style.boxShadow = '0 0 16px 4px #00C6FB88, 0 2px 8px 0 rgba(0,0,0,0.12)';
+        e.currentTarget.style.transform = 'translateY(-50%) scale(0.7)';
+      }}
+    >
+      {isLoading ? <AiOutlineLoading3Quarters className="animate-spin" /> : <FiSend />}
+    </IconButton>
+  </div>
+</Flex>
     </Flex>
-  )
+  );
 }
 
 export default forwardRef<ChatGPInstance, ChatProps>(Chat)

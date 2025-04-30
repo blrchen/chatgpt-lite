@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>API 请求演示</title>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; }
+    button { margin: 10px 0; padding: 6px 18px; }
+    #result { margin-top: 20px; padding: 8px; border: 1px solid #ccc; min-height: 40px; background: #fafafa; }
+  </style>
+</head>
+<body>
+  <h2>API 请求演示</h2>
+  <button onclick="requestBaidu()">请求百度首页</button>
+  <button onclick="requestLocalPing()">请求本地 API /api/ping</button>
+  <div id="result">返回结果会显示在这里</div>
+
+  <script>
+    async function requestBaidu() {
+      document.getElementById('result').innerText = '请求百度中...';
+      try {
+        // 直接请求百度会被浏览器 CORS 拦截，仅作演示
+        const response = await axios.get('https://www.baidu.com');
+        document.getElementById('result').innerText = response.data;
+      } catch (err) {
+        document.getElementById('result').innerText = '请求百度失败：' + (err.message || err);
+      }
+    }
+    async function requestLocalPing() {
+      document.getElementById('result').innerText = '请求本地 API 中...';
+      try {
+        const response = await axios.get('http://localhost:3046/api/ping', {
+          // 你可以加 headers 或其它配置
+        });
+        document.getElementById('result').innerText = JSON.stringify(response.data, null, 2);
+      } catch (err) {
+        document.getElementById('result').innerText = '请求本地 API 失败：' + (err.message || err);
+      }
+    }
+  </script>
+</body>
+</html>
