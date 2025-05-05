@@ -1,11 +1,13 @@
 import { Analytics } from '@vercel/analytics/react'
-import { Toaster } from 'react-hot-toast'
+import { Metadata } from 'next'
+import { Toaster } from 'sonner'
 import { Header } from '@/components/Header'
 import ThemesProvider from '@/providers/ThemesProvider'
+
 import '@/styles/globals.scss'
 import '@/styles/theme-config.css'
 
-export const metadata = {
+export const metadata: Metadata = {
   title: {
     default: 'ChatGPT Lite',
     template: `%s - ChatGPT Lite`
@@ -20,12 +22,12 @@ export const metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" className="light" style={{ colorScheme: 'light' }}>
       <body>
         <ThemesProvider>
           <Header />
           {children}
-          <Toaster />
+          <Toaster position="top-center" toastOptions={{ style: { color: 'red' } }} />
         </ThemesProvider>
         <Analytics />
       </body>

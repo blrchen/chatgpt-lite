@@ -16,8 +16,8 @@ export const ThemeProvider = (props: ThemeProviderProps) => {
 
 const Theme = ({
   forcedTheme,
-  disableTransitionOnChange = false,
-  enableSystem = true,
+  disableTransitionOnChange = true,
+  enableSystem = false,
   enableColorScheme = true,
   storageKey = 'theme',
   themes = ['light', 'dark'],
@@ -83,7 +83,7 @@ const Theme = ({
       // Save to storage
       try {
         localStorage.setItem(storageKey, theme)
-      } catch (e) {
+      } catch {
         // Unsupported
       }
     },

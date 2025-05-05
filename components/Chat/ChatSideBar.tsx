@@ -2,7 +2,7 @@
 
 import React, { useContext } from 'react'
 import { Box, Flex, IconButton, ScrollArea, Text } from '@radix-ui/themes'
-import cs from 'classnames'
+import clsx from 'clsx'
 import { AiOutlineCloseCircle } from 'react-icons/ai'
 import { BiMessageDetail } from 'react-icons/bi'
 import { FiPlus } from 'react-icons/fi'
@@ -24,7 +24,7 @@ export const ChatSideBar = () => {
   } = useContext(ChatContext)
 
   return (
-    <Flex direction="column" className={cs('chat-side-bar', { show: toggleSidebar })}>
+    <Flex direction="column" className={clsx('chat-side-bar', { show: toggleSidebar })}>
       <Flex className="p-2 h-full overflow-hidden w-64" direction="column" gap="3">
         <Box
           width="auto"
@@ -40,7 +40,7 @@ export const ChatSideBar = () => {
               <Box
                 key={chat.id}
                 width="auto"
-                className={cs('bg-token-surface active:scale-95 truncate cursor-pointer', {
+                className={clsx('bg-token-surface active:scale-95 truncate cursor-pointer', {
                   active: currentChatRef?.current?.id === chat.id
                 })}
                 onClick={() => onChangeChat?.(chat)}

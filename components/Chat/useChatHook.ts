@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react'
 import axios from 'axios'
 import { useSearchParams } from 'next/navigation'
-import toast from 'react-hot-toast'
+import { toast } from 'sonner'
 import { v4 as uuid } from 'uuid'
 import { ChatGPInstance } from './Chat'
 import { Chat, ChatMessage, Persona } from './interface'
@@ -32,7 +32,7 @@ enum StorageKeys {
 }
 
 const uploadFiles = async (files: File[]) => {
-  let formData = new FormData()
+  const formData = new FormData()
 
   files.forEach((file) => {
     formData.append('files', file)
