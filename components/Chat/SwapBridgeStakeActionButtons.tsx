@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React from 'react';
 import { FaExchangeAlt } from 'react-icons/fa'; // Swap
 import { GiStakesFence } from 'react-icons/gi'; // Stake

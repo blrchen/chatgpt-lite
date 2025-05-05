@@ -199,37 +199,58 @@ const useChatHook = () => {
     })
   }
 
-  const saveMessages = (messages: ChatMessage[]) => {
-    if (messages.length > 0) {
-      localStorage.setItem(`ms_${currentChatRef.current?.id}`, JSON.stringify(messages))
-    } else {
-      localStorage.removeItem(`ms_${currentChatRef.current?.id}`)
+  const saveMessages = async (messages: ChatMessage[]) => {
+    if (messages.length > 0 && currentChatRef.current?.id) {
+      try {
+        const response = await fetch(`/api/chats/${currentChatRef.current.id}/messages`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ messages }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to save messages');
+        }
+      } catch (error) {
+        console.error('Error saving messages:', error);
+        toast.error('Failed to save messages');
+      }
     }
   }
 
   useEffect(() => {
-    const chatList = (JSON.parse(localStorage.getItem(StorageKeys.Chat_List) || '[]') ||
-      []) as Chat[]
-    const currentChatId = localStorage.getItem(StorageKeys.Chat_Current_ID)
-    console.log('[useChatHook] chatList:', chatList, 'currentChatId:', currentChatId)
+    const loadMessages = async (chatId: string) => {
+      try {
+        const response = await fetch(`/api/chats/${chatId}/messages`);
+        if (!response.ok) {
+          throw new Error('Failed to load messages');
+        }
+        const data = await response.json();
+        messagesMap.current.set(chatId, data.messages || []);
+        forceUpdate?.();
+      } catch (error) {
+        console.error('Error loading messages:', error);
+        toast.error('Failed to load messages');
+      }
+    };
+
+    const chatList = (JSON.parse(localStorage.getItem(StorageKeys.Chat_List) || '[]') || []) as Chat[];
+    const currentChatId = localStorage.getItem(StorageKeys.Chat_Current_ID);
+
     if (chatList.length > 0) {
-      // const currentChat = chatList.find((chat) => chat.id === currentChatId)
-      // setChatList(chatList)
-
-      // chatList.forEach((chat) => {
-      //   const messages = JSON.parse(localStorage.getItem(`ms_${chat?.id}`) || '[]') as ChatMessage[]
-      //   messagesMap.current.set(chat.id!, messages)
-      // })
-
-      // onChangeChat(currentChat || chatList[0])
-    // 页面组件负责新建 chat，这里不自动新建，避免死循环
+      setChatList(chatList);
+      if (currentChatId) {
+        loadMessages(currentChatId);
+      }
     }
 
     return () => {
-      document.body.removeAttribute('style')
-      localStorage.setItem(StorageKeys.Chat_List, JSON.stringify(chatList))
-    }
-  }, [])
+      document.body.removeAttribute('style');
+      localStorage.setItem(StorageKeys.Chat_List, JSON.stringify(chatList));
+    };
+  }, []);
 
   useEffect(() => {
     if (currentChatRef.current?.id) {

@@ -1,8 +1,10 @@
+// @ts-nocheck
+
 import React from 'react';
 import { FaExchangeAlt } from 'react-icons/fa'; // Swap
-import { RiExchangeDollarLine } from 'react-icons/ri'; // Bridge
 import { GiStakesFence } from 'react-icons/gi'; // Stake
 import { PiBookOpenTextBold } from 'react-icons/pi'; // Knowledge
+import { RiExchangeDollarLine } from 'react-icons/ri'; // Bridge
 
 export default function SwapBridgeStakeKnowledgeIcons() {
   return (

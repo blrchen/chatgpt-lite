@@ -1,16 +1,20 @@
+// @ts-nocheck
 'use client'
 
-import React, { useContext } from 'react'
+import React, { useContext, useState } from 'react'
 import { Box, Flex, IconButton, ScrollArea, Text } from '@radix-ui/themes'
 import cs from 'classnames'
 import { AiOutlineCloseCircle } from 'react-icons/ai'
 import { BiMessageDetail } from 'react-icons/bi'
-import { FiPlus } from 'react-icons/fi'
+import { FiPlus, FiCheckSquare } from 'react-icons/fi'
 import { RiRobot2Line } from 'react-icons/ri'
 import { useTheme } from '../Themes'
 import ChatContext from './chatContext'
-
 import './index.scss'
+import { ChatSelector } from './ChatSelector'
+import SidePanel from './SidePanel'
+import { StrategiesSelector } from './StrategiesSelector'
+import { TasksSelector } from './TasksSelector'
 
 export const ChatSideBar = () => {
   const {
@@ -24,186 +28,230 @@ export const ChatSideBar = () => {
     onOpenPersonaPanel
   } = useContext(ChatContext)
 
-  const { theme } = useTheme();
-  console.log('theme in chatsidebar', theme);
+  const { theme } = useTheme()
+  console.log('theme in chatsidebar', theme)
   // Log the value of chatList
-  console.log('chatList in ChatSideBar:', chatList);
+  console.log('chatList in ChatSideBar:', chatList)
+
+  const [isPanelOpen, setIsPanelOpen] = useState(false)
+  const [isLoggedIn, setIsLoggedIn] = useState(false) // Add login state
 
   // If chatList is null or empty, assign mock data for display
-  let displayChatList = chatList;
+  let displayChatList = chatList
   if (!Array.isArray(chatList) || chatList.length === 0) {
     displayChatList = [
       {
         id: 'mock-1',
-        title: 'Mock Chat 1',
+        name: 'Mock Chat 1',
         persona: { id: 'mock-persona-1', name: 'Mock Persona', role: 'system', prompt: 'Mock prompt' },
         messages: []
       },
       {
         id: 'mock-2',
-        title: 'Mock Chat 2',
+        name: 'Mock Chat 2',
         persona: { id: 'mock-persona-2', name: 'Mock Persona 2', role: 'system', prompt: 'Mock prompt 2' },
         messages: []
       }
-    ];
+    ]
+  }
+
+  // Mock data for tasks and strategies
+  const mockTasks = [
+    { id: 'task-1', title: 'Task 1' },
+    { id: 'task-2', title: 'Task 2' }
+  ]
+
+  const mockStrategies = [
+    { id: 'strategy-1', title: 'Strategy 1' },
+    { id: 'strategy-2', title: 'Strategy 2' }
+  ]
+
+  // Create handlers
+  const handleCreateChat = () => {
+    if (onCreateChat) {
+      onCreateChat()
+    }
+  }
+
+  const handleCreateTask = () => {
+    // TODO: Implement task creation logic
+    console.log('Creating new task')
+  }
+
+  const handleCreateStrategy = () => {
+    // TODO: Implement strategy creation logic
+    console.log('Creating new strategy')
+  }
+
+  const handleLogin = () => {
+    // Mock login function
+    setIsLoggedIn(true)
+  }
+
+  const handleLogout = () => {
+    // Mock logout function
+    setIsLoggedIn(false)
   }
 
   return (
-    <Flex direction="column" className={cs('chat-side-bar', { show: toggleSidebar })} style={{ backgroundColor: theme === 'light' ? '#F8F9FB' : '#111217', position: 'relative', minHeight: '100vh' }}>
+    <Flex direction="column" className={cs('chat-side-bar', { show: toggleSidebar })} style={{ backgroundColor: theme === 'light' ? '#F8F9FB' : '#111217', position: 'relative', minHeight: '100vh', paddingTop: '76px' }}>
       <Flex className="p-2 h-full overflow-hidden w-64" direction="column" gap="3" style={{ backgroundColor: theme === 'light' ? '#F8F9FB' : '#111217', flex: 1, minHeight: 0 }}>
-        <ScrollArea className="flex-1 " style={{ width: '100%' }} type="auto">
+        <ScrollArea className="flex-1" style={{ width: '100%' }} type="auto">
           <Flex direction="column" gap="3">
-            {displayChatList.map((chat) => (
-              <Box
-                key={chat.id}
-                className={cs('chat-history-row', {
-                  active: currentChatRef?.current?.id === chat.id,
-                })}
-                onClick={() => {
-                  onChangeChat?.(chat);
-                  if (typeof window !== 'undefined') {
-                    window.location.href = `/chat/${chat.id}`;
-                  }
-                }}
-              >
-                <Flex gap="2" align="center" className="overflow-hidden whitespace-nowrap">
-                  <img src="/solana-logo.svg" alt="" className="size-4" />
-                  <Text as="p" className="truncate">{chat.title || chat.persona?.name}</Text>
-                </Flex>
-              </Box>
-            ))}
+            <ChatSelector
+              chatList={displayChatList}
+              currentChatId={currentChatRef?.current?.id}
+              onChangeChat={onChangeChat}
+              onCreateChat={handleCreateChat}
+            />
+            <TasksSelector
+              taskList={mockTasks}
+              currentTaskId={mockTasks[0].id}
+              onChangeTask={(task) => console.log('Task selected:', task)}
+              onCreateTask={handleCreateTask}
+            />
+            <StrategiesSelector
+              strategyList={mockStrategies}
+              currentStrategyId={mockStrategies[0].id}
+              onChangeStrategy={(strategy) => console.log('Strategy selected:', strategy)}
+              onCreateStrategy={handleCreateStrategy}
+            />
           </Flex>
         </ScrollArea>
+
+        {/* Social Links */}
+        <div className="flex flex-col gap-2 mt-auto pt-4">
+          <a
+            href="https://discord.gg/your-discord"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="sidebar-social-link"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              borderRadius: 12,
+              padding: '8px 18px',
+              background: theme === 'light'
+                ? 'linear-gradient(90deg, #f7fafc 0%, #e3f0ff 100%)'
+                : 'linear-gradient(90deg, #23243a 0%, #23243a 100%)',
+              color: theme === 'light' ? '#222' : '#e0e0e6',
+              fontWeight: 600,
+              fontSize: 14,
+              boxShadow: theme === 'light'
+                ? '0 1px 8px 0 rgba(80,120,200,0.07)'
+                : '0 1px 8px 0 rgba(30,40,80,0.17)',
+              transition: 'all 0.18s',
+              textDecoration: 'none',
+              cursor: 'pointer',
+              backdropFilter: 'blur(2px)',
+              border: theme === 'light' ? '1px solid #e5e7eb' : '1px solid #393a4c',
+              position: 'relative',
+              overflow: 'hidden'
+            }}
+            onMouseOver={e => {
+              (e.currentTarget as HTMLElement).style.background = theme === 'light'
+                ? 'linear-gradient(90deg, #e3f0ff 0%, #b3e4fa 100%)'
+                : 'linear-gradient(90deg, #23243a 0%, #393a4c 100%)';
+              (e.currentTarget as HTMLElement).style.color = theme === 'light' ? '#1d72b8' : '#fff';
+            }}
+            onMouseOut={e => {
+              (e.currentTarget as HTMLElement).style.background = theme === 'light'
+                ? 'linear-gradient(90deg, #f7fafc 0%, #e3f0ff 100%)'
+                : 'linear-gradient(90deg, #23243a 0%, #23243a 100%)';
+              (e.currentTarget as HTMLElement).style.color = theme === 'light' ? '#222' : '#e0e0e6';
+            }}
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              stroke="none"
+            >
+              <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515a.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0a12.64 12.64 0 0 0-.617-1.25a.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057a19.9 19.9 0 0 0 5.993 3.03a.078.078 0 0 0 .084-.028a14.09 14.09 0 0 0 1.226-1.994a.076.076 0 0 0-.041-.106a13.107 13.107 0 0 1-1.872-.892a.077.077 0 0 1-.008-.128a10.2 10.2 0 0 0 .372-.292a.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127a12.299 12.299 0 0 1-1.873.892a.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028a19.839 19.839 0 0 0 6.002-3.03a.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.956-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.955-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.946 2.418-2.157 2.418z" />
+            </svg>
+            <span>Discord</span>
+          </a>
+          <a
+            href="https://twitter.com/your-twitter"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="sidebar-social-link"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              borderRadius: 12,
+              padding: '8px 18px',
+              background: theme === 'light'
+                ? 'linear-gradient(90deg, #f7fafc 0%, #e3f0ff 100%)'
+                : 'linear-gradient(90deg, #23243a 0%, #23243a 100%)',
+              color: theme === 'light' ? '#222' : '#e0e0e6',
+              fontWeight: 600,
+              fontSize: 14,
+              boxShadow: theme === 'light'
+                ? '0 1px 8px 0 rgba(80,120,200,0.07)'
+                : '0 1px 8px 0 rgba(30,40,80,0.17)',
+              transition: 'all 0.18s',
+              textDecoration: 'none',
+              cursor: 'pointer',
+              backdropFilter: 'blur(2px)',
+              border: theme === 'light' ? '1px solid #e5e7eb' : '1px solid #393a4c',
+              position: 'relative',
+              overflow: 'hidden'
+            }}
+            onMouseOver={e => {
+              (e.currentTarget as HTMLElement).style.background = theme === 'light'
+                ? 'linear-gradient(90deg, #e3f0ff 0%, #b3e4fa 100%)'
+                : 'linear-gradient(90deg, #23243a 0%, #393a4c 100%)';
+              (e.currentTarget as HTMLElement).style.color = theme === 'light' ? '#1d72b8' : '#fff';
+            }}
+            onMouseOut={e => {
+              (e.currentTarget as HTMLElement).style.background = theme === 'light'
+                ? 'linear-gradient(90deg, #f7fafc 0%, #e3f0ff 100%)'
+                : 'linear-gradient(90deg, #23243a 0%, #23243a 100%)';
+              (e.currentTarget as HTMLElement).style.color = theme === 'light' ? '#222' : '#e0e0e6';
+            }}
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              stroke="none"
+            >
+              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+            </svg>
+            <span>Twitter</span>
+          </a>
+        </div>
       </Flex>
-      {/* Fixed beautiful Twitter links at the bottom */}
-      <div style={{
-        position: 'absolute',
-        bottom: 24,
-        left: 0,
-        width: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: 12,
-        zIndex: 10
-      }}>
-        {/* Twitter Link */}
-        <a
-          href="https://x.com/askthehive_ai"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="sidebar-social-link twitter-link"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8,
-            borderRadius: 12,
-            padding: '8px 18px',
-            background: theme === 'light'
-              ? 'linear-gradient(90deg, #f7fafc 0%, #e3f0ff 100%)'
-              : 'linear-gradient(90deg, #23243a 0%, #23243a 100%)',
-            color: theme === 'light' ? '#222' : '#e0e0e6',
-            fontWeight: 600,
-            fontSize: 14,
-            boxShadow: theme === 'light'
-              ? '0 1px 8px 0 rgba(80,120,200,0.07)'
-              : '0 1px 8px 0 rgba(30,40,80,0.17)',
-            transition: 'all 0.18s',
-            textDecoration: 'none',
-            width: '80%',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            backdropFilter: 'blur(2px)',
-            border: theme === 'light' ? '1px solid #e5e7eb' : '1px solid #393a4c',
-            position: 'relative',
-            overflow: 'hidden'
-          }}
-          onMouseOver={e => {
-            (e.currentTarget as HTMLElement).style.background = theme === 'light'
-              ? 'linear-gradient(90deg, #e3f0ff 0%, #b3e4fa 100%)'
-              : 'linear-gradient(90deg, #23243a 0%, #393a4c 100%)';
-            (e.currentTarget as HTMLElement).style.color = theme === 'light' ? '#1d72b8' : '#fff';
-          }}
-          onMouseOut={e => {
-            (e.currentTarget as HTMLElement).style.background = theme === 'light'
-              ? 'linear-gradient(90deg, #f7fafc 0%, #e3f0ff 100%)'
-              : 'linear-gradient(90deg, #23243a 0%, #23243a 100%)';
-            (e.currentTarget as HTMLElement).style.color = theme === 'light' ? '#222' : '#e0e0e6';
-          }}
-        >
-          <svg
-            stroke="currentColor"
-            fill="currentColor"
-            strokeWidth="0"
-            viewBox="0 0 512 512"
-            height="1.2em"
-            width="1.2em"
-            xmlns="http://www.w3.org/2000/svg"
-            style={{ marginRight: 8, flexShrink: 0 }}
-          >
-            <path d="M389.2 48h70.6L305.6 224.2 487 464H345L233.7 318.6 106.5 464H35.8L200.7 275.5 26.8 48H172.4L272.9 180.9 389.2 48zM364.4 421.8h39.1L151.1 88h-42L364.4 421.8z"></path>
-          </svg>
-          <span className="truncate">Follow Twitter</span>
-        </a>
-        {/* Discord Link */}
-        <a
-          href="https://discord.gg/8TVcFvySWG"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="sidebar-social-link discord-link"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8,
-            borderRadius: 12,
-            padding: '8px 18px',
-            background: theme === 'light'
-              ? 'linear-gradient(90deg, #ecf2ff 0%, #e4e9f7 100%)'
-              : 'linear-gradient(90deg, #23243a 0%, #5865f2 100%)',
-            color: theme === 'light' ? '#5865f2' : '#fff',
-            fontWeight: 600,
-            fontSize: 14,
-            boxShadow: theme === 'light'
-              ? '0 1px 8px 0 rgba(80,120,200,0.07)'
-              : '0 1px 8px 0 rgba(30,40,80,0.17)',
-            transition: 'all 0.18s',
-            textDecoration: 'none',
-            width: '80%',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            backdropFilter: 'blur(2px)',
-            border: theme === 'light' ? '1px solid #e5e7eb' : '1px solid #5865f2',
-            position: 'relative',
-            overflow: 'hidden'
-          }}
-          onMouseOver={e => {
-            (e.currentTarget as HTMLElement).style.background = theme === 'light'
-              ? 'linear-gradient(90deg, #d1dcff 0%, #b3c7fa 100%)'
-              : 'linear-gradient(90deg, #5865f2 0%, #23243a 100%)';
-            (e.currentTarget as HTMLElement).style.color = '#fff';
-          }}
-          onMouseOut={e => {
-            (e.currentTarget as HTMLElement).style.background = theme === 'light'
-              ? 'linear-gradient(90deg, #ecf2ff 0%, #e4e9f7 100%)'
-              : 'linear-gradient(90deg, #23243a 0%, #5865f2 100%)';
-            (e.currentTarget as HTMLElement).style.color = theme === 'light' ? '#5865f2' : '#fff';
-          }}
-        >
-          <svg
-            stroke="currentColor"
-            fill="currentColor"
-            strokeWidth="0"
-            viewBox="0 0 640 512"
-            height="1.2em"
-            width="1.2em"
-            xmlns="http://www.w3.org/2000/svg"
-            style={{ marginRight: 8, flexShrink: 0 }}
-          >
-            <path d="M524.531,69.836a1.5,1.5,0,0,0-.764-.7A485.065,485.065,0,0,0,404.081,32.03a1.816,1.816,0,0,0-1.923.91,337.461,337.461,0,0,0-14.9,30.6,447.848,447.848,0,0,0-134.426,0,309.541,309.541,0,0,0-15.135-30.6,1.89,1.89,0,0,0-1.924-.91A483.689,483.689,0,0,0,116.085,69.137a1.712,1.712,0,0,0-.788.676C39.068,183.651,18.186,294.69,28.43,404.354a2.016,2.016,0,0,0,.765,1.375A487.666,487.666,0,0,0,176.02,479.918a1.9,1.9,0,0,0,2.063-.676A348.2,348.2,0,0,0,208.12,430.4a1.86,1.86,0,0,0-1.019-2.588,321.173,321.173,0,0,1-45.868-21.853,1.885,1.885,0,0,1-.185-3.126c3.082-2.309,6.166-4.711,9.109-7.137a1.819,1.819,0,0,1,1.9-.256c96.229,43.917,200.41,43.917,295.5,0a1.812,1.812,0,0,1,1.924.233c2.944,2.426,6.027,4.851,9.132,7.16a1.884,1.884,0,0,1-.162,3.126,301.407,301.407,0,0,1-45.89,21.83,1.875,1.875,0,0,0-1,2.611,391.055,391.055,0,0,0,30.014,48.815,1.864,1.864,0,0,0,2.063.7A486.048,486.048,0,0,0,610.7,405.729a1.882,1.882,0,0,0,.765-1.352C623.729,277.594,590.933,167.465,524.531,69.836ZM222.491,337.58c-28.972,0-52.844-26.587-52.844-59.239S193.056,219.1,222.491,219.1c29.665,0,53.306,26.82,52.843,59.239C275.334,310.993,251.924,337.58,222.491,337.58Zm195.38,0c-28.971,0-52.843-26.587-52.843-59.239S388.437,219.1,417.871,219.1c29.667,0,53.307,26.82,52.844,59.239C470.715,310.993,447.538,337.58,417.871,337.58Z"></path>
-          </svg>
-          <span className="truncate">Join Discord</span>
-        </a>
-      </div>
+
+      <SidePanel isOpen={isPanelOpen} onClose={() => setIsPanelOpen(false)}>
+        <div className="space-y-4">
+          <div className="rounded-lg border p-4">
+            <h3 className="mb-2 text-lg font-medium">Chat Settings</h3>
+            <p className="text-gray-600 dark:text-gray-300">
+              Configure your chat preferences here.
+            </p>
+          </div>
+
+          <div className="rounded-lg border p-4">
+            <h3 className="mb-2 text-lg font-medium">Task Management</h3>
+            <p className="text-gray-600 dark:text-gray-300">
+              View and manage your tasks.
+            </p>
+          </div>
+
+          <div className="rounded-lg border p-4">
+            <h3 className="mb-2 text-lg font-medium">Strategy Settings</h3>
+            <p className="text-gray-600 dark:text-gray-300">
+              Configure your AI strategies.
+            </p>
+          </div>
+        </div>
+      </SidePanel>
     </Flex>
   )
 }

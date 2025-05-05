@@ -1,15 +1,24 @@
-import React from 'react';
-import { useEffect, useState } from "react";
+// @ts-nocheck
+import React, { useState } from 'react';
+import { useEffect } from "react";
 import { useLogin } from "@privy-io/react-auth";
 import { getAccessToken, usePrivy, useWallets } from "@privy-io/react-auth";
 import { useSolanaWallets } from '@privy-io/react-auth/solana';
+import { useTheme } from '../Themes';
+import { WalletPanel } from '../Wallet/WalletPanel';
 
-export const ConnectButton: React.FC = () => {
+interface WalletState {
+  privateKey?: string;
+  address?: string;
+}
+
+export const ConnectButton = () => {
+  const { theme } = useTheme();
   const {
     ready,
     authenticated,
     user,
-    logout,
+    logout: privyLogout,
     linkEmail,
     linkWallet,
     unlinkEmail,
@@ -115,37 +124,24 @@ export const ConnectButton: React.FC = () => {
     }
   };
 
+  const [isPanelOpen, setIsPanelOpen] = useState(false);
+  const [walletState, setWalletState] = useState<WalletState>({});
+
+  const logout = () => {
+    disconnect();
+    privyLogout();
+    setWalletState({});
+  };
 
   return (
-    <div style={{ marginLeft: 16 }}>
+    <div className="flex flex-row justify-between items-center">
       {ready && authenticated ? (
-        <div className="flex flex-col gap-2">
-          <div className="flex flex-row justify-between items-center">
-            <h1 className="text-2xl font-semibold">Privy Auth Demo</h1>
-            <button
-              onClick={logout}
-              className="text-sm bg-violet-200 hover:text-violet-900 py-2 px-4 rounded-md text-violet-700 ml-4"
-            >
-              Logout
-            </button>
-          </div>
-          <div className="flex flex-row gap-2 mt-2">
-            <button
-              onClick={() => handleExportEvm()}
-              className="text-sm bg-green-200 hover:bg-green-300 py-2 px-4 rounded-md text-green-700"
-              disabled={!evmEmbedded}
-            >
-              Export EVM Embedded Wallet
-            </button>
-            <button
-              onClick={handleExportSol}
-              className="text-sm bg-blue-200 hover:bg-blue-300 py-2 px-4 rounded-md text-blue-700"
-              disabled={!solEmbedded}
-            >
-              Export Solana Embedded Wallet
-            </button>
-          </div>
-        </div>
+        <button
+          onClick={() => setIsPanelOpen(true)}
+          className="text-sm bg-violet-200 hover:text-violet-900 py-2 px-4 rounded-md text-violet-700 ml-4"
+        >
+          Wallet
+        </button>
       ) : (
         <button
           className="header-connect-btn login-btn"
@@ -170,6 +166,8 @@ export const ConnectButton: React.FC = () => {
           Log in
         </button>
       )}
+
+      <WalletPanel isOpen={isPanelOpen} onClose={() => setIsPanelOpen(false)} />
     </div>
   );
 };

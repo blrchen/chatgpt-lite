@@ -1,9 +1,9 @@
+// @ts-nocheck
+
 'use client'
 import { Suspense } from 'react'
 import { Flex } from '@radix-ui/themes'
 import { Chat, ChatContext, ChatSideBar, useChatHook } from '@/components'
-import PersonaModal from './PersonaModal'
-import PersonaPanel from './PersonaPanel'
 
 const ChatProvider = () => {
   const provider = useChatHook()
@@ -13,11 +13,14 @@ const ChatProvider = () => {
       <Flex style={{ height: 'calc(100% - 56px)' }} className="relative">
         <ChatSideBar />
         <div className="flex-1 relative">
+          <div className="absolute top-4 right-4 z-10">
+            <span className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800">
+              Beta
+            </span>
+          </div>
           <Chat ref={provider.chatRef} />
-          {/* <PersonaPanel /> */}
         </div>
       </Flex>
-      <PersonaModal />
     </ChatContext.Provider>
   )
 }

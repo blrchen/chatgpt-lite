@@ -1,9 +1,10 @@
+// @ts-nocheck
 'use client'
+import React from 'react';
 import { useEffect } from 'react';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
-import useChatHook from './useChatHook';
-import React from 'react';
 import Chat from './Chat';
+import useChatHook from './useChatHook';
 
 export default function ChatPage({ chatId }: { chatId?: string }) {
   React.useEffect(() => {

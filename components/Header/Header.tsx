@@ -22,36 +22,41 @@ export const Header = () => {
   return (
     <header
       className={cs('block shadow-sm sticky top-0 dark:shadow-gray-500 py-3 px-4 z-20 border-b')}
-      style={{ 
+      style={{
         backgroundColor: theme === 'light' ? '#F8F9FB' : '#18181c',
         borderBottom: theme === 'light' ? '1px solid #E5E7EB' : '1px solid #23243a'
       }}
     >
       <Flex align="center" gap="3">
         <NextLink href="/">
-          <Heading
-            as="h2"
-            size="4"
-            style={{
-              maxWidth: 200,
-              fontWeight: 900,
-              letterSpacing: '0.08em',
-              fontFamily: 'Inter, Segoe UI, Arial, sans-serif',
-              background: theme === 'dark'
-                ? 'linear-gradient(90deg, #7f7fd5 0%, #86a8e7 50%, #91eac9 100%)'
-                : 'linear-gradient(90deg, #4f8cff 0%, #7fdbda 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              textShadow: theme === 'dark'
-                ? '0 2px 12px rgba(64,64,128,0.18)'
-                : '0 2px 8px rgba(100,200,255,0.13)',
-              fontSize: 32
-            }}
-          >
-            MiraiX
-          </Heading>
+          <Flex align="center" gap="2">
+            <Heading
+              as="h2"
+              size="4"
+              style={{
+                maxWidth: 200,
+                fontWeight: 900,
+                letterSpacing: '0.08em',
+                fontFamily: 'Inter, Segoe UI, Arial, sans-serif',
+                background: theme === 'dark'
+                  ? 'linear-gradient(90deg, #7f7fd5 0%, #86a8e7 50%, #91eac9 100%)'
+                  : 'linear-gradient(90deg, #4f8cff 0%, #7fdbda 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                textShadow: theme === 'dark'
+                  ? '0 2px 12px rgba(64,64,128,0.18)'
+                  : '0 2px 8px rgba(100,200,255,0.13)',
+                fontSize: 32
+              }}
+            >
+              MiraiX
+            </Heading>
+            <span className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800">
+              Beta
+            </span>
+          </Flex>
         </NextLink>
-        <Flex align="center" gap="3" className="ml-auto" style={{  }}>
+        <Flex align="center" gap="3" className="ml-auto" style={{}}>
           {/* <Select.Root value={theme} onValueChange={setTheme} className="hidden">
             <Select.Trigger radius="full" >
               {theme === 'light' ? <FaMoon color="#e0e0e6" /> : <FaRegSun color="#e0e0e6" />}
@@ -67,7 +72,7 @@ export const Header = () => {
           </Select.Root> */}
           <ConnectButton />
         </Flex>
-        <Tooltip content="Navigation" style={{  }}>
+        <Tooltip content="Navigation" style={{}}>
           <IconButton
             size="3"
             variant="ghost"
