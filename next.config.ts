@@ -1,7 +1,6 @@
-require('path')
+import type { NextConfig } from 'next'
 
-/** @type {import('next').NextConfig} */
-const nextConfig = {
+const nextConfig: NextConfig = {
   output: 'standalone',
   sassOptions: {
     // includePaths: [path.join(__dirname, 'styles')]
@@ -23,4 +22,4 @@ const nextConfig = {
   }
 }
 
-module.exports = nextConfig
+export default nextConfig

@@ -2,8 +2,8 @@
 
 import { ClassAttributes, Fragment, HTMLAttributes, useCallback, useState } from 'react'
 import { IconButton, Tooltip } from '@radix-ui/themes'
-import cs from 'classnames'
-import { RxClipboardCopy } from 'react-icons/rx'
+import clsx from 'clsx'
+import { FaRegCopy } from 'react-icons/fa6'
 import ReactMarkdown, { ExtraProps } from 'react-markdown'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism'
@@ -50,7 +50,7 @@ const HighlightCode = (
           onClick={onCopy}
           onMouseLeave={() => setTooltipOpen(false)}
         >
-          <RxClipboardCopy />
+          <FaRegCopy />
         </IconButton>
       </Tooltip>
       <SyntaxHighlighter {...rest} style={vscDarkPlus} language={match[1]} PreTag="div">
@@ -58,7 +58,7 @@ const HighlightCode = (
       </SyntaxHighlighter>
     </Fragment>
   ) : (
-    <code ref={ref} {...rest} className={cs('highlight', className)}>
+    <code ref={ref} {...rest} className={clsx('highlight', className)}>
       {children}
     </code>
   )
@@ -66,17 +66,18 @@ const HighlightCode = (
 
 export const Markdown = ({ className, children }: MarkdownProps) => {
   return (
-    <ReactMarkdown
-      className={cs('prose dark:prose-invert max-w-none', className)}
-      remarkPlugins={[remarkParse, remarkMath, remarkRehype, remarkGfm]}
-      rehypePlugins={[rehypeRaw, rehypeKatex, rehypeStringify]}
-      components={{
-        code(props) {
-          return <HighlightCode {...props} />
-        }
-      }}
-    >
-      {children}
-    </ReactMarkdown>
+    <div className={clsx('prose dark:prose-invert max-w-none', className)}>
+      <ReactMarkdown
+        remarkPlugins={[remarkParse, remarkMath, remarkRehype, remarkGfm]}
+        rehypePlugins={[rehypeRaw, rehypeKatex, rehypeStringify]}
+        components={{
+          code(props) {
+            return <HighlightCode {...props} />
+          }
+        }}
+      >
+        {children}
+      </ReactMarkdown>
+    </div>
   )
 }

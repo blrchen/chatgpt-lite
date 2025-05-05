@@ -4,13 +4,13 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "website",
-      "cwd": "${workspaceFolder}",
+      "name": "Launch Program",
+      "skipFiles": ["<node_internals>/**"],
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
+      "cwd": "${workspaceFolder}",
       "autoAttachChildProcesses": true,
-      "stopOnEntry": true,
-      "skipFiles": ["<node_internals>/**"]
+      "stopOnEntry": true
     }
   ]
 }

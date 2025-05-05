@@ -2,9 +2,10 @@
 
 import { useCallback, useState } from 'react'
 import { Avatar, Flex, IconButton, Tooltip } from '@radix-ui/themes'
-import { FaRegCopy } from 'react-icons/fa'
+import { FaRegCopy } from 'react-icons/fa6'
 import { HiUser } from 'react-icons/hi'
 import { RiRobot2Line } from 'react-icons/ri'
+import sanitizeHtml from 'sanitize-html'
 import { Markdown } from '@/components'
 import { useCopyToClipboard } from '@/hooks/useCopyToClipboard'
 import { ChatMessage } from './interface'
@@ -18,11 +19,17 @@ const Message = (props: MessageProps) => {
   const isUser = role === 'user'
   const copy = useCopyToClipboard()
   const [tooltipOpen, setTooltipOpen] = useState<boolean>(false)
+  const [tooltipText, setTooltipText] = useState<string>('Copy response')
 
   const onCopy = useCallback(() => {
     copy(content, (isSuccess) => {
       if (isSuccess) {
+        setTooltipText('Copied!')
         setTooltipOpen(true)
+        setTimeout(() => {
+          setTooltipText('Copy response')
+          setTooltipOpen(false)
+        }, 1000)
       }
     })
   }, [content, copy])
@@ -40,23 +47,37 @@ const Message = (props: MessageProps) => {
           <div
             className="userMessage"
             dangerouslySetInnerHTML={{
-              __html: content.replace(
-                /<(?!\/?br\/?.+?>|\/?img|\/?table|\/?thead|\/?tbody|\/?tr|\/?td|\/?th.+?>)[^<>]*>/gi,
-                ''
-              )
+              __html: sanitizeHtml(content, {
+                allowedTags: ['br', 'img', 'table', 'thead', 'tbody', 'tr', 'td', 'th'],
+                allowedAttributes: {
+                  img: ['src', 'alt'],
+                  '*': ['class']
+                }
+              })
             }}
           ></div>
         ) : (
           <Flex direction="column" gap="4">
             <Markdown>{content}</Markdown>
             <Flex gap="4" align="center">
-              <Tooltip open={tooltipOpen} content="Copied!">
+              <Tooltip
+                open={tooltipOpen}
+                content={tooltipText}
+                onOpenChange={setTooltipOpen}
+                delayDuration={200}
+              >
                 <IconButton
                   className="cursor-pointer"
                   variant="outline"
                   color="gray"
                   onClick={onCopy}
-                  onMouseLeave={() => setTooltipOpen(false)}
+                  onMouseEnter={() => {
+                    setTooltipText('Copy response')
+                    setTooltipOpen(true)
+                  }}
+                  onMouseLeave={() => {
+                    setTooltipOpen(false)
+                  }}
                 >
                   <FaRegCopy />
                 </IconButton>
