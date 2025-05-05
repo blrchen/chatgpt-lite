@@ -2,6 +2,24 @@ import { memo } from 'react'
 import { ThemeProviderProps } from './interface'
 import { ColorSchemes, MEDIA } from './utils'
 
+const charMap: { [key: string]: string } = {
+  '<': '&lt;',
+  '>': '&gt;',
+  '\b': '\\b',
+  '\f': '\\f',
+  '\n': '\\n',
+  '\r': '\\r',
+  '\t': '\\t',
+  '\0': '\\0',
+  '\u2028': '\\u2028',
+  '\u2029': '\\u2029',
+  '\\': '\\\\'
+}
+
+function escapeUnsafeChars(str: string) {
+  return str.replace(/[<>\b\f\n\r\t\0\u2028\u2029\\]/g, (x) => charMap[x] || x)
+}
+
 const ThemeScript = ({
   forcedTheme,
   storageKey,
@@ -76,14 +94,14 @@ const ThemeScript = ({
       return `!function(){try{${optimization}var e=localStorage.getItem('${storageKey}');if('system'===e||(!e&&${defaultSystem})){var t='${MEDIA}',m=window.matchMedia(t);if(m.media!==t||m.matches){${updateDOM(
         'dark'
       )}}else{${updateDOM('light')}}}else if(e){${
-        value ? `var x=${JSON.stringify(value)};` : ''
+        value ? `var x=${escapeUnsafeChars(JSON.stringify(value))};` : ''
       }${updateDOM(value ? `x[e]` : 'e', true)}}${
         !defaultSystem ? `else{` + updateDOM(defaultTheme, false, false) + '}' : ''
       }${fallbackColorScheme}}catch(e){}}()`
     }
 
     return `!function(){try{${optimization}var e=localStorage.getItem('${storageKey}');if(e){${
-      value ? `var x=${JSON.stringify(value)};` : ''
+      value ? `var x=${escapeUnsafeChars(JSON.stringify(value))};` : ''
     }${updateDOM(value ? `x[e]` : 'e', true)}}else{${updateDOM(
       defaultTheme,
       false,

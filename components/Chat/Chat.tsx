@@ -11,17 +11,15 @@ import {
 } from 'react'
 import { Flex, Heading, IconButton, ScrollArea, Tooltip } from '@radix-ui/themes'
 import ContentEditable from 'react-contenteditable'
-import toast from 'react-hot-toast'
 import { AiOutlineClear, AiOutlineLoading3Quarters, AiOutlineUnorderedList } from 'react-icons/ai'
 import { FiSend } from 'react-icons/fi'
+import sanitizeHtml from 'sanitize-html'
+import { toast } from 'sonner'
 import ChatContext from './chatContext'
 import type { Chat, ChatMessage } from './interface'
 import Message from './Message'
 
 import './index.scss'
-
-const HTML_REGULAR =
-  /<(?!img|table|\/table|thead|\/thead|tbody|\/tbody|tr|\/tr|td|\/td|th|\/th|br|\/br).*?>/gi
 
 export interface ChatProps {}
 
@@ -70,8 +68,7 @@ const Chat = (props: ChatProps, ref: any) => {
     async (e: any) => {
       if (!isLoading) {
         e.preventDefault()
-        const input = textAreaRef.current?.innerHTML?.replace(HTML_REGULAR, '') || ''
-
+        const input = sanitizeHtml(textAreaRef.current?.innerHTML || '')
         if (input.length < 1) {
           toast.error('Please type a message to continue.')
           return
@@ -214,7 +211,33 @@ const Chat = (props: ChatProps, ref: any) => {
         px="4"
         style={{ backgroundColor: 'var(--gray-a2)' }}
       >
-        <Heading size="4">{currentChatRef?.current?.persona?.name || 'None'}</Heading>
+        <Heading size="4">{currentChatRef?.current?.persona?.name || 'No Persona'}</Heading>
+        <Flex gap="2" align="center">
+          <Tooltip content="Clear History">
+            <IconButton
+              variant="soft"
+              color="gray"
+              size="2"
+              className="rounded-xl cursor-pointer"
+              disabled={isLoading}
+              onClick={clearMessages}
+            >
+              <AiOutlineClear className="size-5" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip content="Toggle Sidebar">
+            <IconButton
+              variant="soft"
+              color="gray"
+              size="2"
+              className="rounded-lg md:hidden cursor-pointer"
+              disabled={isLoading}
+              onClick={onToggleSidebar}
+            >
+              <AiOutlineUnorderedList className="size-5" />
+            </IconButton>
+          </Tooltip>
+        </Flex>
       </Flex>
       <ScrollArea
         className="flex-1 px-4"
@@ -242,7 +265,7 @@ const Chat = (props: ChatProps, ref: any) => {
               html={message}
               disabled={isLoading}
               onChange={(e) => {
-                setMessage(e.target.value.replace(HTML_REGULAR, ''))
+                setMessage(sanitizeHtml(e.target.value))
               }}
               onKeyDown={(e) => {
                 handleKeypress(e)
@@ -259,12 +282,12 @@ const Chat = (props: ChatProps, ref: any) => {
                 justify="center"
                 style={{ color: 'var(--accent-11)' }}
               >
-                <AiOutlineLoading3Quarters className="animate-spin size-4" />
+                <AiOutlineLoading3Quarters className="animate-spin size-5" />
               </Flex>
             )}
-            <Tooltip content={'Send Message'}>
+            <Tooltip content="Send Message">
               <IconButton
-                variant="soft"
+                variant="surface"
                 disabled={isLoading}
                 color="gray"
                 size="2"
@@ -272,30 +295,6 @@ const Chat = (props: ChatProps, ref: any) => {
                 onClick={sendMessage}
               >
                 <FiSend className="size-4" />
-              </IconButton>
-            </Tooltip>
-            <Tooltip content={'Clear History'}>
-              <IconButton
-                variant="soft"
-                color="gray"
-                size="2"
-                className="rounded-xl cursor-pointer"
-                disabled={isLoading}
-                onClick={clearMessages}
-              >
-                <AiOutlineClear className="size-4" />
-              </IconButton>
-            </Tooltip>
-            <Tooltip content={'Toggle Sidebar'}>
-              <IconButton
-                variant="soft"
-                color="gray"
-                size="2"
-                className="rounded-xl md:hidden cursor-pointer"
-                disabled={isLoading}
-                onClick={onToggleSidebar}
-              >
-                <AiOutlineUnorderedList className="size-4" />
               </IconButton>
             </Tooltip>
           </Flex>

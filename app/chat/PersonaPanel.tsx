@@ -18,9 +18,7 @@ import { AiOutlineClose, AiOutlineDelete, AiOutlineEdit } from 'react-icons/ai'
 import { LuMessageSquarePlus } from 'react-icons/lu'
 import { ChatContext, Persona } from '@/components'
 
-export interface PersonaPanelProps {}
-
-const PersonaPanel = (_props: PersonaPanelProps) => {
+const PersonaPanel = () => {
   const {
     personaPanelType,
     DefaultPersonas,
