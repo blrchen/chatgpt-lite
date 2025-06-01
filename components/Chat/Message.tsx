@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useState } from 'react'
-import { Avatar, Flex, IconButton, Tooltip } from '@radix-ui/themes'
+import { Avatar, Flex, Tooltip, Text, Button } from '@radix-ui/themes'
 import { FaRegCopy } from 'react-icons/fa6'
 import { HiUser } from 'react-icons/hi'
 import { RiRobot2Line } from 'react-icons/ri'
@@ -18,18 +18,15 @@ const Message = (props: MessageProps) => {
   const { role, content } = props.message
   const isUser = role === 'user'
   const copy = useCopyToClipboard()
-  const [tooltipOpen, setTooltipOpen] = useState<boolean>(false)
-  const [tooltipText, setTooltipText] = useState<string>('Copy response')
+  const [copied, setCopied] = useState<boolean>(false)
 
   const onCopy = useCallback(() => {
     copy(content, (isSuccess) => {
       if (isSuccess) {
-        setTooltipText('Copied!')
-        setTooltipOpen(true)
+        setCopied(true)
         setTimeout(() => {
-          setTooltipText('Copy response')
-          setTooltipOpen(false)
-        }, 1000)
+          setCopied(false)
+        }, 1500)
       }
     })
   }, [content, copy])
@@ -45,10 +42,9 @@ const Message = (props: MessageProps) => {
       <div className="flex-1 pt-1 break-all">
         {isUser ? (
           <div
-            className="userMessage"
             dangerouslySetInnerHTML={{
               __html: sanitizeHtml(content, {
-                allowedTags: ['br', 'img', 'table', 'thead', 'tbody', 'tr', 'td', 'th'],
+                allowedTags: ['br', 'img', 'table', 'thead', 'tbody', 'tr', 'td', 'th', 'div'],
                 allowedAttributes: {
                   img: ['src', 'alt'],
                   '*': ['class']
@@ -59,28 +55,21 @@ const Message = (props: MessageProps) => {
         ) : (
           <Flex direction="column" gap="4">
             <Markdown>{content}</Markdown>
-            <Flex gap="4" align="center">
-              <Tooltip
-                open={tooltipOpen}
-                content={tooltipText}
-                onOpenChange={setTooltipOpen}
-                delayDuration={200}
-              >
-                <IconButton
-                  className="cursor-pointer"
-                  variant="outline"
-                  color="gray"
+            <Flex gap="2" align="center" className="copy-btn-group">
+              <Tooltip content={copied ? 'Copied!' : 'Copy to clipboard'} delayDuration={200}>
+                <Button
+                  variant="soft"
+                  color={copied ? 'green' : 'gray'}
+                  size="2"
+                  className="rounded-xl cursor-pointer"
+                  disabled={copied}
                   onClick={onCopy}
-                  onMouseEnter={() => {
-                    setTooltipText('Copy response')
-                    setTooltipOpen(true)
-                  }}
-                  onMouseLeave={() => {
-                    setTooltipOpen(false)
-                  }}
+                  tabIndex={0}
+                  style={{ gap: 8, display: 'flex', alignItems: 'center' }}
                 >
-                  <FaRegCopy />
-                </IconButton>
+                  <FaRegCopy className="size-5" />
+                  {copied ? 'Copied' : 'Copy'}
+                </Button>
               </Tooltip>
             </Flex>
           </Flex>

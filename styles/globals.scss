@@ -37,24 +37,6 @@ body {
   @apply flex flex-col;
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes fadeOut {
-  from {
-    opacity: 1;
-  }
-  to {
-    opacity: 0;
-  }
-}
-
 @keyframes slideIn {
   from {
     transform: translateX(calc(100% + 25px));

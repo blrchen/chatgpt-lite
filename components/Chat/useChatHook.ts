@@ -1,9 +1,6 @@
 'use client'
 
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react'
-import axios from 'axios'
-import { useSearchParams } from 'next/navigation'
-import { toast } from 'sonner'
 import { v4 as uuid } from 'uuid'
 import { ChatGPInstance } from './Chat'
 import { Chat, ChatMessage, Persona } from './interface'
@@ -31,54 +28,21 @@ enum StorageKeys {
   Chat_Current_ID = 'chatCurrentID'
 }
 
-const uploadFiles = async (files: File[]) => {
-  const formData = new FormData()
-
-  files.forEach((file) => {
-    formData.append('files', file)
-  })
-  const { data } = await axios<any>({
-    method: 'POST',
-    url: '/api/document/upload',
-    data: formData,
-    timeout: 1000 * 60 * 5
-  })
-  return data
-}
-
 let isInit = false
 
 const useChatHook = () => {
-  const searchParams = useSearchParams()
-
-  const debug = searchParams.get('debug') === 'true'
-
   const [_, forceUpdate] = useReducer((x: number) => x + 1, 0)
-
   const messagesMap = useRef<Map<string, ChatMessage[]>>(new Map<string, ChatMessage[]>())
-
   const chatRef = useRef<ChatGPInstance>(null)
-
   const currentChatRef = useRef<Chat | undefined>(undefined)
-
   const [chatList, setChatList] = useState<Chat[]>([])
-
   const [personas, setPersonas] = useState<Persona[]>([])
-
   const [editPersona, setEditPersona] = useState<Persona | undefined>()
-
   const [isOpenPersonaModal, setIsOpenPersonaModal] = useState<boolean>(false)
-
-  const [personaModalLoading, setPersonaModalLoading] = useState<boolean>(false)
-
   const [openPersonaPanel, setOpenPersonaPanel] = useState<boolean>(false)
-
-  const [personaPanelType, setPersonaPanelType] = useState<string>('')
-
   const [toggleSidebar, setToggleSidebar] = useState<boolean>(false)
 
-  const onOpenPersonaPanel = (type: string = 'chat') => {
-    setPersonaPanelType(type)
+  const onOpenPersonaPanel = () => {
     setOpenPersonaPanel(true)
   }
 
@@ -100,7 +64,9 @@ const useChatHook = () => {
     const newMessages = messagesMap.current.get(chat.id) || []
     chatRef.current?.setConversation(newMessages)
     chatRef.current?.focus()
-    messagesMap.current.set(currentChatRef.current?.id!, oldMessages)
+    if (currentChatRef.current?.id) {
+      messagesMap.current.set(currentChatRef.current?.id, oldMessages)
+    }
     currentChatRef.current = chat
     forceUpdate()
   }, [])
@@ -112,11 +78,7 @@ const useChatHook = () => {
         id,
         persona: persona
       }
-
-      setChatList((state) => {
-        return [...state, newChat]
-      })
-
+      setChatList((state) => [...state, newChat])
       onChangeChat(newChat)
       onClosePersonaPanel()
     },
@@ -127,66 +89,56 @@ const useChatHook = () => {
     setToggleSidebar((state) => !state)
   }, [])
 
-  const onDeleteChat = (chat: Chat) => {
-    const index = chatList.findIndex((item) => item.id === chat.id)
-    chatList.splice(index, 1)
-    setChatList([...chatList])
-    localStorage.removeItem(`ms_${chat.id}`)
-    if (currentChatRef.current?.id === chat.id) {
-      currentChatRef.current = chatList[0]
-    }
-    if (chatList.length === 0) {
-      onOpenPersonaPanel('chat')
-    }
-  }
+  const onDeleteChat = useCallback(
+    (chat: Chat) => {
+      setChatList((prevList) => {
+        const newList = prevList.filter((item) => item.id !== chat.id)
+        localStorage.removeItem(`ms_${chat.id}`)
+        messagesMap.current.delete(chat.id)
+        if (currentChatRef.current?.id === chat.id) {
+          if (newList.length > 0) {
+            currentChatRef.current = newList[0]
+            const newMessages = messagesMap.current.get(newList[0].id) || []
+            chatRef.current?.setConversation(newMessages)
+            chatRef.current?.focus()
+          } else {
+            currentChatRef.current = undefined
+            onOpenPersonaPanel()
+          }
+        }
+        return newList
+      })
+    },
+    [onOpenPersonaPanel]
+  )
 
-  const onCreatePersona = async (values: any) => {
-    const { type, name, prompt, files } = values
-    const persona: Persona = {
-      id: uuid(),
-      role: 'system',
-      name,
-      prompt,
-      key: ''
-    }
-
-    if (type === 'document') {
-      try {
-        setPersonaModalLoading(true)
-        const data = await uploadFiles(files)
-        persona.key = data.key
-      } catch (e) {
-        console.log(e)
-        toast.error('Error uploading files')
-      } finally {
-        setPersonaModalLoading(false)
+  const onCreateOrUpdatePersona = (values: any) => {
+    const { name, prompt } = values
+    if (editPersona) {
+      setPersonas((state) =>
+        state.map((item) => (item.id === editPersona.id ? { ...item, name, prompt } : item))
+      )
+    } else {
+      // Create new persona
+      const persona: Persona = {
+        id: uuid(),
+        role: 'system',
+        name,
+        prompt,
+        key: ''
       }
+      setPersonas((state) => [...state, persona])
     }
-
-    setPersonas((state) => {
-      const index = state.findIndex((item) => item.id === editPersona?.id)
-      if (index === -1) {
-        state.push(persona)
-      } else {
-        state.splice(index, 1, persona)
-      }
-      return [...state]
-    })
-
     onClosePersonaModal()
   }
 
-  const onEditPersona = async (persona: Persona) => {
+  const onEditPersona = (persona: Persona) => {
     setEditPersona(persona)
     onOpenPersonaModal()
   }
 
   const onDeletePersona = (persona: Persona) => {
-    setPersonas((state) => {
-      const index = state.findIndex((item) => item.id === persona.id)
-      state.splice(index, 1)
-      return [...state]
-    })
+    setPersonas((state) => state.filter((item) => item.id !== persona.id))
   }
 
   const saveMessages = (messages: ChatMessage[]) => {
@@ -225,7 +177,7 @@ const useChatHook = () => {
     if (currentChatRef.current?.id) {
       localStorage.setItem(StorageKeys.Chat_Current_ID, currentChatRef.current.id)
     }
-  }, [currentChatRef.current?.id])
+  }, [chatList, currentChatRef.current?.id])
 
   useEffect(() => {
     localStorage.setItem(StorageKeys.Chat_List, JSON.stringify(chatList))
@@ -254,7 +206,6 @@ const useChatHook = () => {
   }, [chatList, openPersonaPanel, onCreateChat])
 
   return {
-    debug,
     DefaultPersonas,
     chatRef,
     currentChatRef,
@@ -262,16 +213,14 @@ const useChatHook = () => {
     personas,
     editPersona,
     isOpenPersonaModal,
-    personaModalLoading,
     openPersonaPanel,
-    personaPanelType,
     toggleSidebar,
     onOpenPersonaModal,
     onClosePersonaModal,
     onCreateChat,
     onDeleteChat,
     onChangeChat,
-    onCreatePersona,
+    onCreateOrUpdatePersona,
     onDeletePersona,
     onEditPersona,
     saveMessages,

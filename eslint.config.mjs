@@ -44,9 +44,7 @@ const eslintConfig = [
       '@typescript-eslint/no-empty-object-type': 'off',
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-non-null-asserted-optional-chain': 'off',
-      'react-hooks/exhaustive-deps': 'off',
-      'tailwindcss/no-custom-classname': 'off',
-      'tailwindcss/classnames-order': 'off'
+      'react-hooks/exhaustive-deps': 'off'
     }
   }
 ]
