@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useState } from 'react'
-import { Avatar, Flex, Tooltip, Text, Button } from '@radix-ui/themes'
+import { Avatar, Flex, Tooltip, Button } from '@radix-ui/themes'
 import { FaRegCopy } from 'react-icons/fa6'
 import { HiUser } from 'react-icons/hi'
 import { RiRobot2Line } from 'react-icons/ri'
