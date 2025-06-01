@@ -2,6 +2,7 @@
   .rt-TextAreaInput {
     height: 50px;
     @apply py-3 px-4 pr-24;
+    outline: none;
     img {
       @apply max-w-md max-md:max-w-full;
     }
@@ -52,15 +53,5 @@
 
   &:hover {
     background-color: var(--accent-a3);
-  }
-}
-
-.userMessage {
-  table {
-    @apply border-collapse border  border-slate-400;
-    th,
-    td {
-      @apply border  border-slate-300;
-    }
   }
 }
