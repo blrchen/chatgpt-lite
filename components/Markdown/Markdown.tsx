@@ -154,7 +154,7 @@ export const Markdown = ({ className, children }: MarkdownProps) => {
           code(props) {
             return <HighlightCode {...props} />
           },
-          pre({ node, children, ...props }) {
+          pre({ children, ...props }) {
             return <pre {...props}>{children}</pre>
           }
         }}
