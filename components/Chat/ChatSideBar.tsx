@@ -1,11 +1,10 @@
 'use client'
 
 import React, { useContext } from 'react'
-import { Box, Flex, IconButton, ScrollArea, Text } from '@radix-ui/themes'
+import { Avatar, Box, Flex, IconButton, ScrollArea, Text } from '@radix-ui/themes'
 import clsx from 'clsx'
 import { AiOutlineCloseCircle } from 'react-icons/ai'
-import { BiMessageDetail } from 'react-icons/bi'
-import { FiPlus } from 'react-icons/fi'
+import { BiEdit, BiMessageDetail } from 'react-icons/bi'
 import { RiRobot2Line } from 'react-icons/ri'
 import ChatContext from './chatContext'
 
@@ -20,7 +19,8 @@ export const ChatSideBar = () => {
     onDeleteChat,
     onChangeChat,
     onCreateChat,
-    onOpenPersonaPanel
+    onOpenPersonaPanel,
+    onToggleSidebar
   } = useContext(ChatContext)
 
   return (
@@ -28,10 +28,13 @@ export const ChatSideBar = () => {
       <Flex className="p-2 h-full overflow-hidden w-64" direction="column" gap="3">
         <Box
           width="auto"
-          onClick={() => onCreateChat?.(DefaultPersonas[0])}
+          onClick={() => {
+            onCreateChat?.(DefaultPersonas[0])
+            onToggleSidebar?.()
+          }}
           className="bg-token-surface-primary active:scale-95 cursor-pointer"
         >
-          <FiPlus className="size-4" />
+          <Avatar fallback={<BiEdit className="size-6" />} />
           <Text>New Chat</Text>
         </Box>
         <ScrollArea className="flex-1 " style={{ width: '100%' }} type="auto">
@@ -43,7 +46,10 @@ export const ChatSideBar = () => {
                 className={clsx('bg-token-surface active:scale-95 truncate cursor-pointer', {
                   active: currentChatRef?.current?.id === chat.id
                 })}
-                onClick={() => onChangeChat?.(chat)}
+                onClick={() => {
+                  onChangeChat?.(chat)
+                  onToggleSidebar?.()
+                }}
               >
                 <Flex gap="2" align="center" className="overflow-hidden whitespace-nowrap">
                   <BiMessageDetail className="size-4" />

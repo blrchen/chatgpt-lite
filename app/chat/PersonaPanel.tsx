@@ -20,7 +20,6 @@ import { ChatContext, Persona } from '@/components'
 
 const PersonaPanel = () => {
   const {
-    personaPanelType,
     DefaultPersonas,
     personas,
     openPersonaPanel,
@@ -35,27 +34,17 @@ const PersonaPanel = () => {
   const [searchText, setSearchText] = useState('')
 
   const handleSearch = useCallback(
-    debounce((type: string, list: Persona[], searchText: string) => {
+    debounce((list: Persona[], searchText: string) => {
       setPromptList(
-        list.filter((item) => {
-          if (type === 'chat') {
-            return (
-              !item.key && (item.prompt?.includes(searchText) || item.name?.includes(searchText))
-            )
-          } else {
-            return (
-              item.key && (item.prompt?.includes(searchText) || item.name?.includes(searchText))
-            )
-          }
-        })
+        list.filter((item) => item.prompt?.includes(searchText) || item.name?.includes(searchText))
       )
     }, 350),
     []
   )
 
   useEffect(() => {
-    handleSearch(personaPanelType, [...DefaultPersonas, ...personas], searchText)
-  }, [personaPanelType, searchText, DefaultPersonas, personas, handleSearch])
+    handleSearch([...DefaultPersonas, ...personas], searchText)
+  }, [searchText, DefaultPersonas, personas, handleSearch])
 
   return openPersonaPanel ? (
     <Flex

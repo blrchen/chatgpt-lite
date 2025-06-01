@@ -9,7 +9,7 @@ import {
   useRef,
   useState
 } from 'react'
-import { Flex, Heading, IconButton, ScrollArea, Tooltip } from '@radix-ui/themes'
+import { Flex, Heading, IconButton, ScrollArea, Tooltip, Button } from '@radix-ui/themes'
 import ContentEditable from 'react-contenteditable'
 import { AiOutlineClear, AiOutlineLoading3Quarters, AiOutlineUnorderedList } from 'react-icons/ai'
 import { FiSend } from 'react-icons/fi'
@@ -205,38 +205,42 @@ const Chat = (props: ChatProps, ref: any) => {
   return (
     <Flex direction="column" height="100%" className="relative" gap="3">
       <Flex
-        justify="between"
+        justify="center"
         align="center"
         py="3"
         px="4"
-        style={{ backgroundColor: 'var(--gray-a2)' }}
+        style={{
+          backgroundColor: 'var(--gray-a2)',
+          borderBottom: '1px solid var(--gray-a4)',
+          position: 'relative'
+        }}
       >
-        <Heading size="4">{currentChatRef?.current?.persona?.name || 'No Persona'}</Heading>
-        <Flex gap="2" align="center">
-          <Tooltip content="Clear History">
-            <IconButton
-              variant="soft"
-              color="gray"
-              size="2"
-              className="rounded-xl cursor-pointer"
-              disabled={isLoading}
-              onClick={clearMessages}
-            >
-              <AiOutlineClear className="size-5" />
-            </IconButton>
-          </Tooltip>
+        <Flex gap="2" align="center" className="absolute left-4 top-1/2 -translate-y-1/2 md:hidden">
           <Tooltip content="Toggle Sidebar">
             <IconButton
               variant="soft"
               color="gray"
               size="2"
-              className="rounded-lg md:hidden cursor-pointer"
+              className="rounded-lg cursor-pointer"
               disabled={isLoading}
               onClick={onToggleSidebar}
             >
               <AiOutlineUnorderedList className="size-5" />
             </IconButton>
           </Tooltip>
+        </Flex>
+        <Flex align="center" width="100%" justify="center" gap="1">
+          <Heading
+            size="4"
+            style={{
+              flex: 'none',
+              textAlign: 'center',
+              fontWeight: 600,
+              letterSpacing: 0.5
+            }}
+          >
+            {currentChatRef?.current?.persona?.name || 'No Persona'}
+          </Heading>
         </Flex>
       </Flex>
       <ScrollArea
@@ -252,6 +256,23 @@ const Chat = (props: ChatProps, ref: any) => {
         <div ref={bottomOfChatRef}></div>
       </ScrollArea>
       <div className="px-4 pb-3">
+        {conversation.current.length > 0 && (
+          <Flex justify="start" mb="2">
+            <Button
+              variant="soft"
+              color="gray"
+              size="2"
+              className="rounded-xl cursor-pointer"
+              disabled={isLoading}
+              onClick={clearMessages}
+              tabIndex={0}
+              style={{ gap: 8, display: 'flex', alignItems: 'center' }}
+            >
+              <AiOutlineClear className="size-5" />
+              Clear Chat History
+            </Button>
+          </Flex>
+        )}
         <Flex align="end" justify="between" gap="3" className="relative">
           <div className="rt-TextAreaRoot rt-r-size-1 rt-variant-surface flex-1 rounded-3xl chat-textarea">
             <ContentEditable
@@ -287,7 +308,7 @@ const Chat = (props: ChatProps, ref: any) => {
             )}
             <Tooltip content="Send Message">
               <IconButton
-                variant="surface"
+                variant="soft"
                 disabled={isLoading}
                 color="gray"
                 size="2"
