@@ -1,4 +1,13 @@
 .next
 node_modules
+components/ui
+
+app/globals.css
+components.json
+lib/utils.ts
+hooks/use-mobile.ts
+next.config.mjs
 package.json
 package-lock.json
+postcss.config.mjs
+tsconfig.json
