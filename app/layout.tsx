@@ -1,11 +1,10 @@
 import { Analytics } from '@vercel/analytics/react'
 import { Metadata } from 'next'
-import { Toaster } from 'sonner'
-import { Header } from '@/components/Header'
-import ThemesProvider from '@/providers/ThemesProvider'
+import { TooltipProvider } from '@/components/ui/tooltip'
+import { AppContextProvider } from '@/contexts/app'
+import { ThemeProvider } from '@/providers/ThemesProvider'
 
-import '@/styles/globals.scss'
-import '@/styles/theme-config.css'
+import './globals.css'
 
 export const metadata: Metadata = {
   title: {
@@ -22,13 +21,17 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body>
-        <ThemesProvider>
-          <Header />
-          {children}
-          <Toaster position="top-center" toastOptions={{ style: { color: 'red' } }} />
-        </ThemesProvider>
+    <html lang="en" suppressHydrationWarning className="h-full">
+      <body className="h-full overflow-hidden">
+        <AppContextProvider>
+          <ThemeProvider attribute="class" disableTransitionOnChange defaultTheme="light">
+            <TooltipProvider>
+              <main className="h-full flex flex-col flex-1 bg-background text-foreground">
+                {children}
+              </main>
+            </TooltipProvider>
+          </ThemeProvider>
+        </AppContextProvider>
         <Analytics />
       </body>
     </html>

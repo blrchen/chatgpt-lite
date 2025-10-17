@@ -9,17 +9,16 @@ import {
   useRef,
   useState
 } from 'react'
-import { Flex, Heading, IconButton, ScrollArea, Tooltip, Button } from '@radix-ui/themes'
 import ContentEditable from 'react-contenteditable'
-import { AiOutlineClear, AiOutlineLoading3Quarters, AiOutlineUnorderedList } from 'react-icons/ai'
+import { AiOutlineClear, AiOutlineLoading3Quarters } from 'react-icons/ai'
 import { FiSend } from 'react-icons/fi'
 import sanitizeHtml from 'sanitize-html'
 import { toast } from 'sonner'
+import { Button } from '@/components/ui/button'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import ChatContext from './chatContext'
 import type { Chat, ChatMessage } from './interface'
-import Message from './Message'
-
-import './index.scss'
+import { Message } from './message'
 
 export interface ChatProps {}
 
@@ -29,7 +28,7 @@ export interface ChatGPInstance {
   focus: () => void
 }
 
-const postChatOrQuestion = async (chat: Chat, messages: any[], input: string) => {
+const postChatOrQuestion = async (chat: Chat, messages: ChatMessage[], input: string) => {
   const url = '/api/chat'
 
   const data = {
@@ -48,18 +47,18 @@ const postChatOrQuestion = async (chat: Chat, messages: any[], input: string) =>
 }
 
 const Chat = (props: ChatProps, ref: any) => {
-  const { debug, currentChatRef, saveMessages, onToggleSidebar, forceUpdate } =
-    useContext(ChatContext)
+  const { currentChatRef, saveMessages, forceUpdate } = useContext(ChatContext)
 
   const [isLoading, setIsLoading] = useState(false)
 
-  const conversationRef = useRef<ChatMessage[]>()
+  const conversationRef = useRef<ChatMessage[]>([])
 
   const [message, setMessage] = useState('')
 
   const [currentMessage, setCurrentMessage] = useState<string>('')
 
-  const textAreaRef = useRef<HTMLElement>(null)
+  // Fix: Ref should be React.RefObject<HTMLElement> instead of HTMLElement | null
+  const textAreaRef = useRef<HTMLElement>(null) as React.MutableRefObject<HTMLElement>
 
   const conversation = useRef<ChatMessage[]>([])
 
@@ -78,8 +77,13 @@ const Chat = (props: ChatProps, ref: any) => {
         conversation.current = [...conversation.current, { content: input, role: 'user' }]
         setMessage('')
         setIsLoading(true)
+        if (!currentChatRef?.current) {
+          toast.error('No chat selected.')
+          setIsLoading(false)
+          return
+        }
         try {
-          const response = await postChatOrQuestion(currentChatRef?.current!, message, input)
+          const response = await postChatOrQuestion(currentChatRef.current, message, input)
 
           if (response.ok) {
             const data = response.body
@@ -99,9 +103,6 @@ const Chat = (props: ChatProps, ref: any) => {
                 const char = decoder.decode(value)
                 if (char) {
                   setCurrentMessage((state) => {
-                    if (debug) {
-                      console.log({ char })
-                    }
                     resultContent = state + char
                     return resultContent
                   })
@@ -111,11 +112,7 @@ const Chat = (props: ChatProps, ref: any) => {
                 done = true
               }
             }
-            // The delay of timeout can not be 0 as it will cause the message to not be rendered in racing condition
             setTimeout(() => {
-              if (debug) {
-                console.log({ resultContent })
-              }
               conversation.current = [
                 ...conversation.current,
                 { content: resultContent, role: 'assistant' }
@@ -143,7 +140,7 @@ const Chat = (props: ChatProps, ref: any) => {
         }
       }
     },
-    [currentChatRef, debug, isLoading]
+    [currentChatRef, isLoading]
   )
 
   const handleKeypress = useCallback(
@@ -203,125 +200,144 @@ const Chat = (props: ChatProps, ref: any) => {
   })
 
   return (
-    <Flex direction="column" height="100%" className="relative" gap="3">
-      <Flex
-        justify="center"
-        align="center"
-        py="3"
-        px="4"
-        style={{
-          backgroundColor: 'var(--gray-a2)',
-          borderBottom: '1px solid var(--gray-a4)',
-          position: 'relative'
-        }}
-      >
-        <Flex gap="2" align="center" className="absolute left-4 top-1/2 -translate-y-1/2 md:hidden">
-          <Tooltip content="Toggle Sidebar">
-            <IconButton
-              variant="soft"
-              color="gray"
-              size="2"
-              className="rounded-lg cursor-pointer"
-              disabled={isLoading}
-              onClick={onToggleSidebar}
-            >
-              <AiOutlineUnorderedList className="size-5" />
-            </IconButton>
-          </Tooltip>
-        </Flex>
-        <Flex align="center" width="100%" justify="center" gap="1">
-          <Heading
-            size="4"
-            style={{
-              flex: 'none',
-              textAlign: 'center',
-              fontWeight: 600,
-              letterSpacing: 0.5
-            }}
-          >
-            {currentChatRef?.current?.persona?.name || 'No Persona'}
-          </Heading>
-        </Flex>
-      </Flex>
-      <ScrollArea
-        className="flex-1 px-4"
-        type="auto"
-        scrollbars="vertical"
-        style={{ height: '100%' }}
-      >
-        {conversation.current.map((item, index) => (
-          <Message key={index} message={item} />
-        ))}
-        {currentMessage && <Message message={{ content: currentMessage, role: 'assistant' }} />}
-        <div ref={bottomOfChatRef}></div>
-      </ScrollArea>
-      <div className="px-4 pb-3">
-        {conversation.current.length > 0 && (
-          <Flex justify="start" mb="2">
-            <Button
-              variant="soft"
-              color="gray"
-              size="2"
-              className="rounded-xl cursor-pointer"
-              disabled={isLoading}
-              onClick={clearMessages}
-              tabIndex={0}
-              style={{ gap: 8, display: 'flex', alignItems: 'center' }}
-            >
-              <AiOutlineClear className="size-5" />
-              Clear Chat History
-            </Button>
-          </Flex>
-        )}
-        <Flex align="end" justify="between" gap="3" className="relative">
-          <div className="rt-TextAreaRoot rt-r-size-1 rt-variant-surface flex-1 rounded-3xl chat-textarea">
-            <ContentEditable
-              innerRef={textAreaRef}
-              style={{
-                minHeight: '24px',
-                maxHeight: '200px',
-                overflowY: 'auto'
-              }}
-              className="rt-TextAreaInput text-base"
-              html={message}
-              disabled={isLoading}
-              onChange={(e) => {
-                setMessage(sanitizeHtml(e.target.value))
-              }}
-              onKeyDown={(e) => {
-                handleKeypress(e)
-              }}
-            />
-            <div className="rt-TextAreaChrome"></div>
-          </div>
-          <Flex gap="3" className="absolute right-0 pr-4 bottom-2 pt">
-            {isLoading && (
-              <Flex
-                width="6"
-                height="6"
-                align="center"
-                justify="center"
-                style={{ color: 'var(--accent-11)' }}
-              >
-                <AiOutlineLoading3Quarters className="animate-spin size-5" />
-              </Flex>
+    <div className="relative flex flex-col h-full bg-background text-foreground">
+      {/* Main chat area */}
+      <div className="flex-1 min-h-0">
+        <ScrollArea className="h-full">
+          <div className="max-w-4xl mx-auto px-4 py-4">
+            {conversation.current.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full min-h-[60vh] space-y-8 px-4">
+                <div className="text-center space-y-4">
+                  <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-secondary flex items-center justify-center">
+                    <span className="text-2xl">✨</span>
+                  </div>
+                  <h1 className="text-3xl md:text-4xl font-normal text-foreground">
+                    Hello, I&apos;m here to help
+                  </h1>
+                  <p className="text-muted-foreground text-base md:text-lg">
+                    Ask me anything, or try one of these:
+                  </p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-2xl">
+                  <div
+                    className="p-4 rounded-xl border border-border hover:border-accent-foreground cursor-pointer transition-colors"
+                    onClick={() => {
+                      setMessage(
+                        'Write a screenplay for an engaging and fun Chemistry 101 explainer video covering topics like atomic structure, chemical bonding and reactions.'
+                      )
+                      textAreaRef.current?.focus()
+                    }}
+                  >
+                    <p className="text-foreground text-sm">
+                      Write a screenplay for an engaging and fun Chemistry 101 explainer video
+                    </p>
+                  </div>
+                  <div
+                    className="p-4 rounded-xl border border-border hover:border-accent-foreground cursor-pointer transition-colors"
+                    onClick={() => {
+                      setMessage('Explain quantum computing in simple terms')
+                      textAreaRef.current?.focus()
+                    }}
+                  >
+                    <p className="text-foreground text-sm">
+                      Explain quantum computing in simple terms
+                    </p>
+                  </div>
+                  <div
+                    className="p-4 rounded-xl border border-border hover:border-accent-foreground cursor-pointer transition-colors"
+                    onClick={() => {
+                      setMessage('Create a workout plan for beginners')
+                      textAreaRef.current?.focus()
+                    }}
+                  >
+                    <p className="text-foreground text-sm">Create a workout plan for beginners</p>
+                  </div>
+                  <div
+                    className="p-4 rounded-xl border border-border hover:border-accent-foreground cursor-pointer transition-colors"
+                    onClick={() => {
+                      setMessage('Help me plan a trip to New Zealand')
+                      textAreaRef.current?.focus()
+                    }}
+                  >
+                    <p className="text-foreground text-sm">Help me plan a trip to New Zealand</p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4 pb-4">
+                {conversation.current.map((item, index) => (
+                  <Message key={index} message={item} />
+                ))}
+                {currentMessage && (
+                  <Message message={{ content: currentMessage, role: 'assistant' }} />
+                )}
+                <div ref={bottomOfChatRef}></div>
+              </div>
             )}
-            <Tooltip content="Send Message">
-              <IconButton
-                variant="soft"
-                disabled={isLoading}
-                color="gray"
-                size="2"
-                className="rounded-xl cursor-pointer"
-                onClick={sendMessage}
-              >
-                <FiSend className="size-4" />
-              </IconButton>
-            </Tooltip>
-          </Flex>
-        </Flex>
+          </div>
+        </ScrollArea>
       </div>
-    </Flex>
+      {/* Input area */}
+      <div className="border-t border-border bg-background">
+        <div className="max-w-4xl mx-auto px-4 py-3">
+          {conversation.current.length > 0 && (
+            <div className="flex justify-start mb-3">
+              <Button
+                size="sm"
+                variant="ghost"
+                className="rounded-lg"
+                disabled={isLoading}
+                onClick={clearMessages}
+              >
+                <AiOutlineClear className="size-4 mr-2" />
+                <span>Clear chat</span>
+              </Button>
+            </div>
+          )}
+          <div className="relative">
+            <div className="flex items-end gap-3 bg-secondary rounded-3xl border border-border focus-within:border-accent-foreground transition-all duration-200">
+              <div className="flex-1 px-4 py-3 min-h-[52px] flex items-center">
+                <ContentEditable
+                  innerRef={textAreaRef}
+                  style={{
+                    minHeight: '24px',
+                    maxHeight: '200px',
+                    overflowY: 'auto',
+                    outline: 'none'
+                  }}
+                  className="w-full bg-transparent text-foreground placeholder-muted-foreground focus:outline-none text-base resize-none"
+                  html={message}
+                  disabled={isLoading}
+                  onChange={(e) => {
+                    setMessage(sanitizeHtml(e.target.value))
+                  }}
+                  onKeyDown={(e: any) => {
+                    handleKeypress(e)
+                  }}
+                />
+              </div>
+
+              <div className="flex items-center pr-2 pb-2">
+                {isLoading ? (
+                  <div className="flex items-center justify-center p-2">
+                    <AiOutlineLoading3Quarters className="animate-spin size-5 text-muted-foreground" />
+                  </div>
+                ) : (
+                  <Button
+                    size="icon"
+                    disabled={isLoading || !message.trim()}
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full h-8 w-8 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                    onClick={sendMessage}
+                  >
+                    <FiSend className="size-4" />
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   )
 }
 

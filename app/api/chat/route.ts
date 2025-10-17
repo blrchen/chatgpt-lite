@@ -82,13 +82,10 @@ const getOpenAIStream = async (
     method: 'POST',
     body: JSON.stringify({
       model: model,
-      frequency_penalty: 0,
       max_tokens: 4000,
       messages: messages,
-      presence_penalty: 0,
       stream: true,
-      temperature: 0.5,
-      top_p: 0.95
+      temperature: 1
     })
   })
 
@@ -130,10 +127,19 @@ const getOpenAIStream = async (
 
       const parser = createParser(onParse)
 
-      for await (const chunk of res.body as any) {
-        // An extra newline is required to make AzureOpenAI work.
-        const str = decoder.decode(chunk).replace('[DONE]\n', '[DONE]\n\n')
-        parser.feed(str)
+      if (res.body) {
+        const reader = res.body.getReader()
+        try {
+          while (true) {
+            const { done, value } = await reader.read()
+            if (done) break
+            // An extra newline is required to make AzureOpenAI work.
+            const str = decoder.decode(value).replace('[DONE]\n', '[DONE]\n\n')
+            parser.feed(str)
+          }
+        } finally {
+          reader.releaseLock()
+        }
       }
     }
   })

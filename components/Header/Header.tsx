@@ -1,73 +1,53 @@
 'use client'
 
-import { useCallback } from 'react'
-import { Avatar, Flex, Heading, IconButton, Tooltip } from '@radix-ui/themes'
-import clsx from 'clsx'
-import NextLink from 'next/link'
-import { BsSun, BsMoonStars } from 'react-icons/bs'
+import * as React from 'react'
+import { useContext } from 'react'
+import Link from 'next/link'
 import { FaGithub } from 'react-icons/fa6'
-import { Link } from '../Link'
-import { useTheme } from '../Themes'
+import { HiOutlineMenu } from 'react-icons/hi'
+import ChatContext from '@/components/chat/chatContext'
+import ThemeToggle from '@/components/theme/toggle'
+import { Button } from '@/components/ui/button'
 
 export const Header = () => {
-  const { theme, setTheme } = useTheme()
-
-  const handleThemeChange = useCallback(
-    (nextTheme: 'dark' | 'light') => {
-      if (theme === nextTheme) return
-      setTheme(nextTheme)
-    },
-    [theme, setTheme]
-  )
-
+  const context = useContext(ChatContext)
+  const { onToggleSidebar } = context || {}
   return (
-    <header
-      className={clsx(
-        'block shadow-sm sticky top-0 dark:shadow-gray-500 py-3 px-4 z-20 transition-colors duration-300'
-      )}
-      style={{ backgroundColor: 'var(--color-background)' }}
-    >
-      <Flex align="center" gap="3">
-        <NextLink href="/">
-          <Heading as="h2" size="4" style={{ maxWidth: 200 }}>
-            ChatGPT Lite
-          </Heading>
-        </NextLink>
-        <Flex align="center" gap="3" className="ml-auto">
-          <Tooltip
-            content={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-            delayDuration={100}
+    <header className="sticky top-0 z-20 w-full bg-background border-b border-border">
+      <div className="flex items-center justify-between px-3 sm:px-4 py-3 gap-2 sm:gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => {
+              onToggleSidebar?.()
+            }}
+            className="transition-colors"
+            title="Toggle Sidebar"
+            aria-label="Toggle Sidebar"
           >
-            <IconButton
-              size="3"
-              variant="ghost"
-              color="gray"
-              aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-              onClick={() => handleThemeChange(theme === 'dark' ? 'light' : 'dark')}
-              radius="full"
-              tabIndex={0}
-              className="transition-all duration-300"
-              style={{ outline: 'none' }}
+            <HiOutlineMenu className="h-5 w-5" />
+          </Button>
+          <Link href="/" className="flex items-center cursor-pointer select-none">
+            <h2 className="text-lg font-semibold text-foreground max-w-[120px] sm:max-w-[200px] truncate">
+              ChatGPT Lite
+            </h2>
+          </Link>
+        </div>
+        <div className="flex items-center gap-2 sm:gap-4">
+          <nav className="flex items-center gap-1 sm:gap-2">
+            <ThemeToggle />
+            <a
+              href="https://github.com/blrchen/chatgpt-lite"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-full p-2 transition-colors hover:bg-accent text-foreground"
             >
-              {theme === 'dark' ? (
-                <BsSun className="text-xl transition-transform duration-300 rotate-0 dark:rotate-180" />
-              ) : (
-                <BsMoonStars className="text-xl transition-transform duration-300 rotate-0 dark:rotate-180" />
-              )}
-            </IconButton>
-          </Tooltip>
-          <Avatar
-            color="gray"
-            size="2"
-            radius="full"
-            fallback={
-              <Link href="https://github.com/blrchen/chatgpt-lite" aria-label="GitHub Repository">
-                <FaGithub />
-              </Link>
-            }
-          />
-        </Flex>
-      </Flex>
+              <FaGithub className="text-xl" />
+            </a>
+          </nav>
+        </div>
+      </div>
     </header>
   )
 }

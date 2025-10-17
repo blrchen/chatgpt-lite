@@ -2,9 +2,9 @@
 
 import { createContext, MutableRefObject } from 'react'
 import { Chat, ChatMessage, Persona } from './interface'
+import { DefaultPersonas } from './utils'
 
 const ChatContext = createContext<{
-  debug?: boolean
   DefaultPersonas: Persona[]
   currentChatRef?: MutableRefObject<Chat | undefined>
   chatList: Chat[]
@@ -29,7 +29,7 @@ const ChatContext = createContext<{
   onToggleSidebar?: () => void
   forceUpdate?: () => void
 }>({
-  DefaultPersonas: [],
+  DefaultPersonas: DefaultPersonas,
   chatList: [],
   personas: []
 })

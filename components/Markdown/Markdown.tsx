@@ -49,9 +49,9 @@ const HighlightCode = (
         onClick={onCopy}
         className={clsx(
           'absolute right-3 top-3 z-10',
-          'rounded-md bg-gray-700 text-white p-2',
-          'hover:bg-gray-600 transition-colors',
-          'focus:outline-none focus:ring-2 focus:ring-blue-500',
+          'rounded-md bg-muted text-muted-foreground p-2',
+          'hover:bg-muted/80 transition-colors',
+          'focus:outline-none focus:ring-2 focus:ring-ring',
           'flex items-center justify-center'
         )}
         tabIndex={0}
@@ -121,7 +121,7 @@ export const Markdown = ({ className, children }: MarkdownProps) => {
         .prose pre {
           margin: 0.5em 0 !important;
           position: relative;
-          background-color: #1e1e1e !important;
+          background-color: hsl(var(--muted)) !important;
           overflow-x: auto;
         }
         .prose pre code {
@@ -131,11 +131,6 @@ export const Markdown = ({ className, children }: MarkdownProps) => {
           white-space: pre-wrap !important;
           overflow-wrap: anywhere !important;
           background: transparent !important;
-        }
-        @media (prefers-color-scheme: light) {
-          .prose pre {
-            background-color: #f6f8fa !important;
-          }
         }
         .prose table {
           margin-top: 0.5em;

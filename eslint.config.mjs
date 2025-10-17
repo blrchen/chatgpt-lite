@@ -10,8 +10,18 @@ const compat = new FlatCompat({
 })
 
 const eslintConfig = [
-  ...compat.extends('next/core-web-vitals', 'next/typescript'),
   {
+    ignores: [
+      'components/ui/**'
+    ]
+  },
+  ...compat.extends('next/core-web-vitals', 'next/typescript'),
+  ...compat.config({
+    plugins: ['import'],
+    env: {
+      es2020: true,
+      node: true
+    },
     rules: {
       'import/order': [
         'error',
@@ -43,10 +53,9 @@ const eslintConfig = [
       ],
       '@typescript-eslint/no-empty-object-type': 'off',
       '@typescript-eslint/no-explicit-any': 'off',
-      '@typescript-eslint/no-non-null-asserted-optional-chain': 'off',
       'react-hooks/exhaustive-deps': 'off'
     }
-  }
+  })
 ]
 
 export default eslintConfig
