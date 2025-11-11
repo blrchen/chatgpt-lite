@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useState } from 'react'
+import { useCallback, useContext, useState } from 'react'
 import { FaRegCopy } from 'react-icons/fa6'
 import sanitizeHtml from 'sanitize-html'
 import { toast } from 'sonner'
@@ -8,6 +8,7 @@ import { Markdown } from '@/components/markdown'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { useCopyToClipboard } from '@/hooks/useCopyToClipboard'
+import ChatContext from './chatContext'
 import { ChatMessage } from './interface'
 
 export interface MessageProps {
@@ -20,6 +21,7 @@ export const Message = (props: MessageProps) => {
   const copy = useCopyToClipboard()
   const [copied, setCopied] = useState<boolean>(false)
   const [vote, setVote] = useState<'yes' | 'no' | null>(null)
+  const { currentChatRef } = useContext(ChatContext)
 
   const onCopy = useCallback(() => {
     copy(content, (isSuccess) => {
@@ -33,10 +35,22 @@ export const Message = (props: MessageProps) => {
   }, [content, copy])
   const onVote = useCallback(
     (choice: 'yes' | 'no') => {
-      if (vote) return
       setVote(choice)
-      toast.success(`Thanks — you voted ${choice === 'yes' ? 'Yes' : 'No'}`)
-      // TODO: save vote
+      toast.success(`You voted ${choice === 'yes' ? 'Yes' : 'No'}`)
+      // Save vote to server log
+      try {
+        void fetch('/api/log', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sessionId: currentChatRef?.current?.id || 'anon',
+            role: 'vote',
+            content: `Vote - ${choice}`
+          })
+        })
+      } catch (e) {
+        console.warn('failed to log vote', e)
+      }
     },
     [vote]
   )
@@ -83,6 +97,7 @@ export const Message = (props: MessageProps) => {
                       </TooltipContent>
                     </Tooltip>
                   </div>
+                  <div className="w-full border-t border-border/50 my-2" />
                   <div className="mt-2 flex flex-col items-center justify-center gap-2">
                     <span className="text-lg">Is OP an asshole?</span>
                     <div className="flex gap-2">
@@ -91,7 +106,6 @@ export const Message = (props: MessageProps) => {
                         size="sm"
                         className="rounded-lg h-8 px-3 text-lg"
                         onClick={() => onVote('yes')}
-                        disabled={!!vote}
                         aria-pressed={vote === 'yes'}
                       >
                         Yes
@@ -101,7 +115,6 @@ export const Message = (props: MessageProps) => {
                         size="sm"
                         className="rounded-lg h-8 px-3 text-lg"
                         onClick={() => onVote('no')}
-                        disabled={!!vote}
                         aria-pressed={vote === 'no'}
                       >
                         No

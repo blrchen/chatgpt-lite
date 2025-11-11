@@ -75,6 +75,7 @@ const Chat = (props: ChatProps, ref: any) => {
 
         const message = [...conversation.current]
         conversation.current = [...conversation.current, { content: input, role: 'user' }]
+        logToServer(currentChatRef?.current?.id || 'anon', 'user', input)
         setMessage('')
         setIsLoading(true)
         if (!currentChatRef?.current) {
@@ -93,6 +94,7 @@ const Chat = (props: ChatProps, ref: any) => {
               await new Promise((r) => setTimeout(r, 8))
             }
             conversation.current = [...conversation.current, { content: buffer, role: 'assistant' }]
+            logToServer(currentChatRef.current?.id || 'anon', 'assistant', buffer)
             setCurrentMessage('')
           } else {
             const response = await postChatOrQuestion(currentChatRef.current, message, input)
@@ -352,6 +354,18 @@ const Chat = (props: ChatProps, ref: any) => {
       </div>
     </div>
   )
+}
+
+async function logToServer(sessionId: string, role: 'assistant' | 'user', content: string) {
+  try {
+    await fetch('/api/log', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId, role, content })
+    })
+  } catch (e) {
+    console.warn('log failed', e)
+  }
 }
 
 export default forwardRef<ChatGPInstance, ChatProps>(Chat)
