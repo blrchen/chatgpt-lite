@@ -81,6 +81,7 @@ const HighlightCode = (
   )
 }
 
+// GPT response renderer
 export const Markdown = ({ className, children }: MarkdownProps) => {
   return (
     <div

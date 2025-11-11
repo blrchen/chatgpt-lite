@@ -24,14 +24,20 @@ const useChatHook = () => {
   const [editPersona, setEditPersona] = useState<Persona | undefined>()
   const [isOpenPersonaModal, setIsOpenPersonaModal] = useState<boolean>(false)
   const [openPersonaPanel, setOpenPersonaPanel] = useState<boolean>(false)
-  const [toggleSidebar, setToggleSidebar] = useState<boolean>(() => {
-    // Initialize from localStorage, default to true
+  const [toggleSidebar, setToggleSidebar] = useState<boolean>(true)
+
+  useEffect(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem(StorageKeys.Sidebar_Toggle)
-      return saved !== null ? JSON.parse(saved) : true
+      if (saved !== null) {
+        try {
+          setToggleSidebar(JSON.parse(saved))
+        } catch {
+          // ignore parse errors and keep default
+        }
+      }
     }
-    return true
-  })
+  }, [])
 
   const onOpenPersonaPanel = () => {
     setOpenPersonaPanel(true)

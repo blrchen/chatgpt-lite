@@ -2,8 +2,6 @@
 
 import { useCallback, useState } from 'react'
 import { FaRegCopy } from 'react-icons/fa6'
-import { HiUser } from 'react-icons/hi'
-import { RiRobot2Line } from 'react-icons/ri'
 import sanitizeHtml from 'sanitize-html'
 import { Markdown } from '@/components/markdown'
 import { Button } from '@/components/ui/button'
@@ -33,16 +31,11 @@ export const Message = (props: MessageProps) => {
   }, [content, copy])
   return (
     <div className="flex gap-3 group items-start">
-      <div className={`flex-shrink-0 ${isUser ? 'mt-1.5' : 'mt-0.5'}`}>
-        <div className="w-8 h-8 rounded-full flex items-center justify-center bg-secondary text-secondary-foreground">
-          {isUser ? <HiUser className="w-4 h-4" /> : <RiRobot2Line className="w-4 h-4" />}
-        </div>
-      </div>
       <div className="flex-1 min-w-0">
         <div className="text-foreground leading-relaxed">
           {isUser ? (
             <div
-              className="leading-relaxed mt-2.5"
+              className="leading-relaxed mt-2.5 bg-gray-100 p-4 rounded-2xl w-fit max-w-2xl ml-auto"
               dangerouslySetInnerHTML={{
                 __html: sanitizeHtml(content, {
                   allowedTags: ['br', 'img', 'table', 'thead', 'tbody', 'tr', 'td', 'th', 'div'],
@@ -59,7 +52,7 @@ export const Message = (props: MessageProps) => {
                 <Markdown>{content}</Markdown>
               </div>
               {content && (
-                <div className="opacity-70 group-hover:opacity-100 transition-opacity duration-200 pt-2 border-t border-border/50 mt-2">
+                <div className="opacity-70 group-hover:opacity-100 transition-opacity duration-200 pt-2 border-border/50 mt-2">
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button
