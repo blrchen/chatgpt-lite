@@ -3,6 +3,7 @@
 import { useCallback, useState } from 'react'
 import { FaRegCopy } from 'react-icons/fa6'
 import sanitizeHtml from 'sanitize-html'
+import { toast } from 'sonner'
 import { Markdown } from '@/components/markdown'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
@@ -18,6 +19,7 @@ export const Message = (props: MessageProps) => {
   const isUser = role === 'user'
   const copy = useCopyToClipboard()
   const [copied, setCopied] = useState<boolean>(false)
+  const [vote, setVote] = useState<'yes' | 'no' | null>(null)
 
   const onCopy = useCallback(() => {
     copy(content, (isSuccess) => {
@@ -29,6 +31,15 @@ export const Message = (props: MessageProps) => {
       }
     })
   }, [content, copy])
+  const onVote = useCallback(
+    (choice: 'yes' | 'no') => {
+      if (vote) return
+      setVote(choice)
+      toast.success(`Thanks — you voted ${choice === 'yes' ? 'Yes' : 'No'}`)
+      // TODO: save vote
+    },
+    [vote]
+  )
   return (
     <div className="flex gap-3 group items-start">
       <div className="flex-1 min-w-0">
@@ -52,24 +63,53 @@ export const Message = (props: MessageProps) => {
                 <Markdown>{content}</Markdown>
               </div>
               {content && (
-                <div className="opacity-70 group-hover:opacity-100 transition-opacity duration-200 pt-2 border-border/50 mt-2">
-                  <Tooltip>
-                    <TooltipTrigger asChild>
+                <div>
+                  <div className="opacity-70 group-hover:opacity-100 transition-opacity duration-200 pt-2 border-border/50 mt-2">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="rounded-lg h-8 px-3 text-xs hover:bg-accent hover:text-accent-foreground border border-transparent hover:border-border"
+                          disabled={copied}
+                          onClick={onCopy}
+                        >
+                          <FaRegCopy className="size-3 mr-1.5" />
+                          {copied ? 'Copied' : 'Copy'}
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>{copied ? 'Copied!' : 'Copy to clipboard'}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
+                  <div className="mt-2 flex flex-col items-center justify-center gap-2">
+                    <span className="text-lg">Is OP an asshole?</span>
+                    <div className="flex gap-2">
                       <Button
-                        variant="ghost"
+                        variant="outline"
                         size="sm"
-                        className="rounded-lg h-8 px-3 text-xs hover:bg-accent hover:text-accent-foreground border border-transparent hover:border-border"
-                        disabled={copied}
-                        onClick={onCopy}
+                        className="rounded-lg h-8 px-3 text-lg"
+                        onClick={() => onVote('yes')}
+                        disabled={!!vote}
+                        aria-pressed={vote === 'yes'}
                       >
-                        <FaRegCopy className="size-3 mr-1.5" />
-                        {copied ? 'Copied' : 'Copy'}
+                        Yes
                       </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>{copied ? 'Copied!' : 'Copy to clipboard'}</p>
-                    </TooltipContent>
-                  </Tooltip>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="rounded-lg h-8 px-3 text-lg"
+                        onClick={() => onVote('no')}
+                        disabled={!!vote}
+                        aria-pressed={vote === 'no'}
+                      >
+                        No
+                      </Button>
+                    </div>
+                    <br />
+                    <p className="text-lg mb-2">Please explain your reasoning:</p>
+                  </div>
                 </div>
               )}
             </div>
