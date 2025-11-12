@@ -1,0 +1,11 @@
+[
+  { "prompt": "What is the capital of France?", "response": "The capital of France is Paris." },
+  {
+    "prompt": "Who wrote 'Romeo and Juliet'?",
+    "response": "'Romeo and Juliet' was written by William Shakespeare."
+  },
+  {
+    "prompt": "What is the largest planet in our solar system?",
+    "response": "The largest planet in our solar system is Jupiter."
+  }
+]
