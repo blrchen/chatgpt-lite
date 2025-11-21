@@ -39,7 +39,7 @@ export const Message = (props: MessageProps) => {
       toast.success(`You voted ${choice === 'yes' ? 'Yes' : 'No'}`)
       // Save vote to server log
       try {
-        void fetch('/api/log', {
+        void fetch('/api/log/buffer', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

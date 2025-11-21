@@ -24,6 +24,7 @@
     "@radix-ui/react-slot": "^1.1.1",
     "@radix-ui/react-tooltip": "^1.1.6",
     "@vercel/analytics": "^1.5.0",
+    "@vercel/blob": "^2.0.0",
     "axios": "1.12.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

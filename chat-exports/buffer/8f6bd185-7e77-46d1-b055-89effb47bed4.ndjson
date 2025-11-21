@@ -1,0 +1,5 @@
+{"role":"user","content":"What is the capital of France?","ts":"2025-11-12T20:05:17.136Z"}
+{"role":"assistant","content":"The capital of France is Paris.","ts":"2025-11-12T20:05:17.791Z"}
+{"role":"user","content":"tset","ts":"2025-11-12T20:05:26.864Z"}
+{"role":"user","content":"What is the capital of France?","ts":"2025-11-12T20:06:31.667Z"}
+{"role":"assistant","content":"The capital of France is Paris.","ts":"2025-11-12T20:06:32.345Z"}

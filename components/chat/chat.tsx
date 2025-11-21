@@ -89,9 +89,15 @@ const Chat = (props: ChatProps, ref: any) => {
           return
         }
 
-        const message = [...conversation.current]
+        // handle export keyword: if user types exactly `/export`, flush server buffer to blob
+        if (input.trim().toLowerCase() === '/export') {
+          await flushBuffer()
+          setMessage('')
+          return
+        }
+
         conversation.current = [...conversation.current, { content: input, role: 'user' }]
-        logToServer(currentChatRef?.current?.id || 'anon', 'user', input)
+        await logToServer(currentChatRef?.current?.id || 'anon', 'user', input)
         setMessage('')
         setIsLoading(true)
         if (!currentChatRef?.current) {
@@ -114,7 +120,7 @@ const Chat = (props: ChatProps, ref: any) => {
               await new Promise((r) => setTimeout(r, 8))
             }
             conversation.current = [...conversation.current, { content: buffer, role: 'assistant' }]
-            logToServer(currentChatRef.current?.id || 'anon', 'assistant', buffer)
+            await logToServer(currentChatRef.current?.id || 'anon', 'assistant', buffer)
             setCurrentMessage('')
             setIsLoading(false)
             return
@@ -249,6 +255,28 @@ const Chat = (props: ChatProps, ref: any) => {
     }
   })
 
+  const flushBuffer = useCallback(async () => {
+    try {
+      setIsLoading(true)
+      const res = await fetch('/api/log/flush', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId: currentChatRef?.current?.id || 'anon' })
+      })
+      const json = await res.json()
+      if (res.ok) {
+        toast.success('Exported chat: ' + (json.path || 'done'))
+      } else {
+        toast.error(json.error || 'Export failed')
+      }
+    } catch (e: any) {
+      console.error('export failed', e)
+      toast.error(e?.message || 'Export failed')
+    } finally {
+      setIsLoading(false)
+    }
+  }, [currentChatRef])
+
   return (
     <div className="relative flex flex-col h-full bg-background text-foreground">
       {/* Main chat area */}
@@ -342,6 +370,15 @@ const Chat = (props: ChatProps, ref: any) => {
                 <AiOutlineClear className="size-4 mr-2" />
                 <span>Clear chat</span>
               </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="rounded-lg ml-2"
+                disabled={isLoading}
+                onClick={() => flushBuffer()}
+              >
+                <span>Export</span>
+              </Button>
             </div>
           )}
           <div className="relative">
@@ -393,10 +430,11 @@ const Chat = (props: ChatProps, ref: any) => {
 
 async function logToServer(sessionId: string, role: 'assistant' | 'user', content: string) {
   try {
-    await fetch('/api/log', {
+    // send to server-side buffer (append NDJSON) instead of writing/overwriting the final blob
+    await fetch('/api/log/buffer', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ sessionId, role, content })
+      body: JSON.stringify({ sessionId, role, content, ts: new Date().toISOString() })
     })
   } catch (e) {
     console.warn('log failed', e)
