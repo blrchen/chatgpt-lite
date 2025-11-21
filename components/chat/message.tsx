@@ -74,7 +74,7 @@ export const Message = (props: MessageProps) => {
             ></div>
           ) : (
             <div className="space-y-3">
-              <div className="leading-relaxed">
+              <div className="leading-relaxed whitespace-pre-wrap">
                 <Markdown>{content}</Markdown>
               </div>
               {content && (
