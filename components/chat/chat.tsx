@@ -97,7 +97,7 @@ const Chat = (props: ChatProps, ref: any) => {
         }
 
         conversation.current = [...conversation.current, { content: input, role: 'user' }]
-        await logToServer(currentChatRef?.current?.id || 'anon', 'user', input)
+        // await logToServer(currentChatRef?.current?.id || 'anon', 'user', input)
         setMessage('')
         setIsLoading(true)
         if (!currentChatRef?.current) {
@@ -112,6 +112,7 @@ const Chat = (props: ChatProps, ref: any) => {
             return p !== '' && user.includes(p)
           })
           if (matched) {
+            await logToServer(currentChatRef?.current?.id || 'anon', 'user', input.substring(0, 50))
             const resp = matched.response || ''
             let buffer = ''
             for (const ch of resp) {
@@ -120,73 +121,17 @@ const Chat = (props: ChatProps, ref: any) => {
               await new Promise((r) => setTimeout(r, 8))
             }
             conversation.current = [...conversation.current, { content: buffer, role: 'assistant' }]
-            await logToServer(currentChatRef.current?.id || 'anon', 'assistant', buffer)
+            await logToServer(
+              currentChatRef.current?.id || 'anon',
+              'assistant',
+              buffer.substring(0, 50)
+            )
             setCurrentMessage('')
             setIsLoading(false)
             return
+          } else {
+            await logToServer(currentChatRef?.current?.id || 'anon', 'user', input)
           }
-          // if (USE_HARDCODED) {
-          //   const hardcodedMessage = `What is Lorem Ipsum? Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum. Why do we use it? It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. The point of using Lorem Ipsum is that it has a more-or-less normal distribution of letters, as opposed to using 'Content here, content here', making it look like readable English. Many desktop publishing packages and web page editors now use Lorem Ipsum as their default model text, and a search for 'lorem ipsum' will uncover many web sites still in their infancy. Various versions have evolved over the years, sometimes by accident, sometimes on purpose (injected humour and the like).`
-          //   let buffer = ''
-          //   for (const ch of hardcodedMessage) {
-          //     buffer += ch
-          //     setCurrentMessage(buffer)
-          //     // small delay to simulate streaming chunks
-          //     await new Promise((r) => setTimeout(r, 8))
-          //   }
-          //   conversation.current = [...conversation.current, { content: buffer, role: 'assistant' }]
-          //   logToServer(currentChatRef.current?.id || 'anon', 'assistant', buffer)
-          //   setCurrentMessage('')
-          // } else {
-          //   const response = await postChatOrQuestion(currentChatRef.current, message, input)
-
-          //   if (response.ok) {
-          //     const data = response.body
-
-          //     if (!data) {
-          //       throw new Error('No data')
-          //     }
-
-          //     const reader = data.getReader()
-          //     const decoder = new TextDecoder('utf-8')
-          //     let done = false
-          //     let resultContent = ''
-
-          //     while (!done) {
-          //       try {
-          //         const { value, done: readerDone } = await reader.read()
-          //         const char = decoder.decode(value)
-          //         if (char) {
-          //           setCurrentMessage((state) => {
-          //             resultContent = state + char
-          //             return resultContent
-          //           })
-          //         }
-          //         done = readerDone
-          //       } catch {
-          //         done = true
-          //       }
-          //     }
-          //     setTimeout(() => {
-          //       conversation.current = [
-          //         ...conversation.current,
-          //         { content: resultContent, role: 'assistant' }
-          //       ]
-
-          //       setCurrentMessage('')
-          //     }, 1)
-          //   } else {
-          //     const result = await response.json()
-          //     if (response.status === 401) {
-          //       conversation.current.pop()
-          //       location.href =
-          //         result.redirect +
-          //         `?callbackUrl=${encodeURIComponent(location.pathname + location.search)}`
-          //     } else {
-          //       toast.error(result.error)
-          //     }
-          //   }
-          // }
 
           setIsLoading(false)
         } catch (error: any) {
