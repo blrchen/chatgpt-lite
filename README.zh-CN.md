@@ -4,17 +4,35 @@
 
 ## 演示
 
-访问 [ChatGPT Lite 演示网站](https://bit.ly/chatgpt-lite)
+访问 [ChatGPT Lite 演示网站](https://gptlite.vercel.app)
 
-![演示](./docs/images/demo.zh-CN.jpg)
+![浅色主题](./docs/images/demo.jpg)
+![深色主题](./docs/images/demo-dark.jpg)
 
 ## 功能介绍
 
-ChatGPT Lite 是一个基于 Next.js 和 [OpenAI Chat API](https://platform.openai.com/docs/api-reference/chat) 的轻量级 ChatGPT 网页应用，支持 OpenAI 与 Azure OpenAI 账户。
+ChatGPT Lite 是一个基于 Next.js 16 和 [OpenAI Chat API](https://platform.openai.com/docs/api-reference/chat) 的轻量级 ChatGPT 网页应用，支持 OpenAI 与 Azure OpenAI 账户。
 
-- 可自定义部署的 ChatGPT 网页界面，支持 Markdown 渲染、提示词保存和多用户聊天。
-- 搭建私有 ChatGPT聊天网站，方便朋友使用，无需暴露 API 密钥。
-- 代码结构清晰且易于扩展，适合作为 Next.js AI 项目的起点。
+**核心功能：**
+
+- **实时流式响应** - 通过 Edge Runtime 和 Server-Sent Events 实现逐字输出
+- **丰富的 Markdown 渲染** - 完整支持 Markdown 语法、代码高亮及 KaTeX 数学公式
+- **角色系统** - 创建并切换不同的 AI 人设，自定义系统提示词
+- **持久化聊天记录** - 所有对话本地保存，无需数据库
+- **双平台支持** - 同时兼容 OpenAI 和 Azure OpenAI API
+
+**用户体验：**
+
+- **响应式设计** - 移动优先的界面设计，可折叠侧边栏，适配各种屏幕尺寸
+- **40+ 内置主题** - 丰富的主题库，涵盖浅色、深色及多彩风格
+- **多会话管理** - 轻松组织和切换多个聊天会话
+- **隐私保护** - 自托管实例，终端用户无需接触 API 密钥
+
+**开发体验：**
+
+- 基于 **Next.js 16 App Router**、**React 19**、**TypeScript** 和 **Tailwind CSS v4** 构建
+- 采用 **Shadcn/ui** 组件库，架构清晰易扩展
+- 支持一键部署到 Vercel、Docker 或任意 Node.js 环境
 
 如果你需要更适合初学者的 ChatGPT UI 代码库，建议查看 [ChatGPT Minimal](https://github.com/blrchen/chatgpt-minimal)。
 
@@ -63,13 +81,6 @@ docker run -d -p 3000:3000 \
 5. 运行 `npm run dev` 启动应用。
 6. 在浏览器访问 http://localhost:3000。
 
-### 使用 Docker 本地运行
-
-1. 克隆仓库并进入根目录。
-2. 在 `docker-compose.yml` 中配置相关环境变量（如 OPENAI_API_KEY）。
-3. 运行 `docker-compose build .` 构建镜像。
-4. 运行 `docker-compose up -d` 启动服务。
-
 ## 环境变量
 
 以下环境变量为必填项：
@@ -78,9 +89,9 @@ docker run -d -p 3000:3000 \
 
 | 名称                | 说明                                                                             | 默认值                 |
 | ------------------- | -------------------------------------------------------------------------------- | ---------------------- |
-| OPENAI_API_BASE_URL | 如需为 `api.openai.com` 配置反向代理可设此变量。                                 | https://api.openai.com |
+| OPENAI_API_BASE_URL | （可选）如需为 `api.openai.com` 配置反向代理可设此变量。                             | https://api.openai.com |
 | OPENAI_API_KEY      | 从 [OpenAI API](https://platform.openai.com/account/api-keys) 获取的密钥字符串。 |                        |
-| OPENAI_MODEL        | 使用的 GPT 模型                                                                  | gpt-3.5-turbo          |
+| OPENAI_MODEL        | （可选）使用的 GPT 模型                                                          | gpt-3.5-turbo          |
 
 **Azure OpenAI 账户：**
 
@@ -89,6 +100,10 @@ docker run -d -p 3000:3000 \
 | AZURE_OPENAI_API_BASE_URL | 终端地址（如 https://xxx.openai.azure.com） |
 | AZURE_OPENAI_API_KEY      | 密钥                                        |
 | AZURE_OPENAI_DEPLOYMENT   | 模型部署名称                                |
+
+## 致谢
+
+- 主题配置来自 [tweakcn](https://github.com/jnsahaj/tweakcn)
 
 ## 贡献
 

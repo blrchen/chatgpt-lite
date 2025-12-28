@@ -1,0 +1,70 @@
+.markdown p {
+  margin-top: 0.3em;
+  margin-bottom: 0.3em;
+}
+
+.markdown h1,
+.markdown h2,
+.markdown h3,
+.markdown h4,
+.markdown h5,
+.markdown h6 {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+.markdown ul,
+.markdown ol {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+.markdown blockquote {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+.markdown hr {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+.markdown pre {
+  margin: 0.5em 0 !important;
+  position: relative;
+  padding: 0 !important;
+  background-color: transparent !important;
+  overflow-x: auto;
+}
+
+.markdown pre code {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  white-space: pre-wrap !important;
+  overflow-wrap: break-word !important;
+  background: transparent !important;
+}
+
+.markdown table {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+}
+
+/* Fix Prism markdown table tokens that incorrectly use display: table */
+:global(span.token.table),
+:global(span.token.table-header-row),
+:global(span.token.table-line),
+:global(span.token.table-data-rows) {
+  display: inline !important;
+}
+
+.codeBlock {
+  position: relative;
+  margin: 0.5em 0;
+  border-radius: 0.75rem;
+}
