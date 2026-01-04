@@ -25,7 +25,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" suppressHydrationWarning className="h-full">
       <body className="h-full overflow-hidden text-sm antialiased">
         <AppContextProvider>
-          <ThemeProvider attribute="class" disableTransitionOnChange defaultTheme="light">
+          <ThemeProvider>
             <TooltipProvider>
               <main className="bg-background text-foreground flex h-full flex-1 flex-col">
                 <Header />

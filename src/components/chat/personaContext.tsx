@@ -14,7 +14,7 @@ import { cacheGetJson, cacheSet } from '@/lib/cache'
 import { v4 as uuid } from 'uuid'
 
 import type { Persona } from './interface'
-import { DefaultPersonas } from './utils'
+import { DefaultPersona, DefaultPersonas } from './utils'
 
 type PersonaContextValue = {
   defaultPersonas: Persona[]
@@ -111,7 +111,7 @@ export const PersonaProvider = ({ children }: { children: ReactNode }) => {
     (id: string) => {
       return (
         personas.find((persona) => persona.id === id) ||
-        DefaultPersonas.find((persona) => persona.id === id)
+        (id === DefaultPersona.id ? DefaultPersona : undefined)
       )
     },
     [personas]

@@ -17,7 +17,7 @@ export const Header = () => {
             variant="ghost"
             size="icon"
             onClick={onToggleSidebar}
-            className="transition-colors"
+            className="rounded-full"
             title="Toggle Sidebar"
             aria-label="Toggle Sidebar"
           >
@@ -34,16 +34,17 @@ export const Header = () => {
         </div>
         <nav className="flex flex-1 items-center justify-end gap-1 sm:gap-2">
           <ThemeToggle />
-          <a
-            href="https://github.com/blrchen/chatgpt-lite"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-foreground hover:bg-accent hover:text-accent-foreground rounded-full p-2 transition-colors"
-            aria-label="Open ChatGPT Lite on GitHub"
-            title="Open ChatGPT Lite on GitHub"
-          >
-            <Github className="size-5" />
-          </a>
+          <Button variant="ghost" size="icon" className="rounded-full" asChild>
+            <a
+              href="https://github.com/blrchen/chatgpt-lite"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Open ChatGPT Lite on GitHub"
+              title="Open ChatGPT Lite on GitHub"
+            >
+              <Github className="size-5" />
+            </a>
+          </Button>
         </nav>
       </div>
     </header>

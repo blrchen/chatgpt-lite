@@ -33,6 +33,15 @@ const applySystemFontsToMap = (presets: Record<string, ThemePreset>) =>
 export const themePresets: Record<string, ThemePreset> = applySystemFontsToMap(defaultPresets)
 export const themePresetEntries = Object.entries(themePresets) as [string, ThemePreset][]
 
+export const isValidPresetId = (id: string | null | undefined): id is string =>
+  typeof id === 'string' && id in themePresets
+
+export const resolvePresetId = (id: string | null | undefined): string =>
+  isValidPresetId(id) ? id : DEFAULT_THEME_PRESET
+
+export const getInitialPresetId = (cachedId: string | null | undefined): string =>
+  isValidPresetId(cachedId) ? cachedId : DEFAULT_THEME_PRESET
+
 const fontKeyMap: Record<string, string> = {
   'font-sans': 'theme-font-sans',
   'font-serif': 'theme-font-serif',

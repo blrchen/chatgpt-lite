@@ -12,8 +12,7 @@ import {
 } from 'react'
 import { ensureMessageIds, generateMessageId } from '@/components/chat/utils'
 import { Button } from '@/components/ui/button'
-import { ArrowUp, Eraser, Loader2 } from 'lucide-react'
-import sanitizeHtml from 'sanitize-html'
+import { AlertCircle, ArrowUp, Eraser, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { StickToBottom } from 'use-stick-to-bottom'
 
@@ -74,17 +73,7 @@ const Chat = (_: object, ref: React.ForwardedRef<ChatRef>) => {
   const textAreaRef = useRef<HTMLTextAreaElement | null>(null)
 
   const getComposerValue = useCallback(() => textAreaRef.current?.value ?? message ?? '', [message])
-  const getComposerText = useCallback(() => {
-    return sanitizeHtml(getComposerValue(), { allowedTags: [], allowedAttributes: {} }).trim()
-  }, [getComposerValue])
-  const getComposerHtml = useCallback(() => {
-    const normalized = getComposerValue().replace(/\r\n/g, '\n')
-    const withBreaks = normalized.replace(/\n/g, '<br />')
-    return sanitizeHtml(withBreaks, {
-      allowedTags: ['br'],
-      allowedAttributes: {}
-    }).trim()
-  }, [getComposerValue])
+  const getComposerText = useCallback(() => getComposerValue().trim(), [getComposerValue])
 
   const [conversation, setConversationState] = useState<ChatMessage[]>([])
   const conversationRef = useRef<ChatMessage[]>([])
@@ -144,7 +133,7 @@ const Chat = (_: object, ref: React.ForwardedRef<ChatRef>) => {
       }
 
       e.preventDefault()
-      const input = getComposerHtml()
+      const input = getComposerText()
       if (input.length < 1) {
         setComposerError('Please enter a message to continue.')
         return
@@ -264,21 +253,8 @@ const Chat = (_: object, ref: React.ForwardedRef<ChatRef>) => {
           }
         } else {
           const result = await response.json()
-          if (response.status === 401) {
-            if (
-              streamingChatIdRef.current === targetChatId &&
-              activeChatIdRef.current === targetChatId
-            ) {
-              setConversation((prev) => prev.slice(0, -1), targetChatId)
-            }
-            saveMessages(history, targetChatId, { chat: activeChat })
-            location.href =
-              result.redirect +
-              `?callbackUrl=${encodeURIComponent(location.pathname + location.search)}`
-          } else {
-            toast.error(result.error)
-            setComposerError('Unable to send message. Please try again.')
-          }
+          toast.error(result.error)
+          setComposerError('Unable to send message. Please try again.')
         }
       } catch (error) {
         console.error(error)
@@ -295,7 +271,7 @@ const Chat = (_: object, ref: React.ForwardedRef<ChatRef>) => {
       isChatHydrated,
       ensureActiveChat,
       getPersonaById,
-      getComposerHtml,
+      getComposerText,
       currentChatId,
       loadingChatId,
       saveMessages,
@@ -380,7 +356,7 @@ const Chat = (_: object, ref: React.ForwardedRef<ChatRef>) => {
 
     return (
       <div className="relative">
-        <div className="bg-background border-border flex flex-col rounded-2xl border transition-all duration-200">
+        <div className="bg-background border-border focus-within:ring-ring focus-within:border-ring has-[textarea[aria-invalid=true]]:border-destructive has-[textarea[aria-invalid=true]]:ring-destructive/20 flex flex-col rounded-2xl border shadow-[0_0_0_1px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.04)] transition-all duration-200 focus-within:ring-2 has-[textarea[aria-invalid=true]]:ring-2 dark:shadow-[0_0_0_1px_rgba(255,255,255,0.06),0_2px_8px_rgba(0,0,0,0.2)]">
           <div className="relative flex min-h-[44px] min-w-0 flex-1 items-start px-4 pt-2 pb-1">
             <label className="sr-only" htmlFor={chatInputId}>
               Message input
@@ -389,7 +365,7 @@ const Chat = (_: object, ref: React.ForwardedRef<ChatRef>) => {
               Press Enter to send your message. Use Shift plus Enter to insert a new line.
             </p>
             {!message && !isComposerFocused && (
-              <span className="text-muted-foreground pointer-events-none absolute top-2 left-4 text-base">
+              <span className="text-foreground/50 pointer-events-none absolute top-2 left-4 text-base">
                 Ask anything
               </span>
             )}
@@ -439,9 +415,9 @@ const Chat = (_: object, ref: React.ForwardedRef<ChatRef>) => {
               </div>
             ) : (
               <Button
-                size="icon"
+                size="icon-sm"
                 disabled={!canSend}
-                className="!bg-primary !text-primary-foreground hover:!bg-primary/90 size-8 rounded-full"
+                className="rounded-full"
                 onClick={sendMessage}
                 aria-label="Send message"
                 title="Send message"
@@ -451,13 +427,16 @@ const Chat = (_: object, ref: React.ForwardedRef<ChatRef>) => {
             )}
           </div>
         </div>
-        <div className="mt-1 space-y-1">
-          {composerError && (
-            <p id={errorTextId} className="text-destructive text-xs" role="alert">
-              {composerError}
-            </p>
-          )}
-        </div>
+        {composerError && (
+          <div
+            id={errorTextId}
+            className="bg-destructive/10 text-foreground animate-in fade-in slide-in-from-top-1 mt-2 flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs duration-200"
+            role="alert"
+          >
+            <AlertCircle className="text-destructive size-3.5 shrink-0" />
+            <span className="font-medium">{composerError}</span>
+          </div>
+        )}
       </div>
     )
   }
@@ -478,10 +457,14 @@ const Chat = (_: object, ref: React.ForwardedRef<ChatRef>) => {
 
   return (
     <div className="bg-background text-foreground relative flex min-h-0 flex-1 flex-col overflow-hidden">
-      {/* Main chat area */}
-      <div className="min-h-0 flex-1">
-        <StickToBottom className="relative h-full overflow-y-auto" initial="smooth" resize="smooth">
-          <StickToBottom.Content className="@container/chat mx-auto w-full max-w-5xl px-4 pt-4 pb-3 md:px-6 lg:px-8">
+      <StickToBottom
+        className="relative min-h-0 flex-1 overflow-y-auto"
+        initial="smooth"
+        resize="smooth"
+      >
+        <StickToBottom.Content className="flex min-h-full flex-col">
+          {/* Main chat area */}
+          <div className="@container/chat mx-auto w-full max-w-5xl flex-1 px-4 pt-4 pb-3 md:px-6 lg:px-8">
             {!isChatHydrated ? (
               <div className="flex h-full min-h-[60vh] items-center justify-center">
                 <div className="text-muted-foreground flex items-center gap-3 text-sm">
@@ -502,7 +485,7 @@ const Chat = (_: object, ref: React.ForwardedRef<ChatRef>) => {
                 <div className="w-full max-w-2xl">{renderComposer()}</div>
               </div>
             ) : (
-              <div className="@container/chat mx-auto w-full max-w-5xl space-y-4 px-4 md:px-6 lg:px-8">
+              <div className="space-y-4">
                 {conversation.map((item) => (
                   <Message key={item.id} message={item} />
                 ))}
@@ -519,17 +502,17 @@ const Chat = (_: object, ref: React.ForwardedRef<ChatRef>) => {
                 )}
               </div>
             )}
-          </StickToBottom.Content>
-        </StickToBottom>
-      </div>
-      {/* Input area - only show at bottom when there are messages */}
-      {conversation.length > 0 && (
-        <div className="bg-background">
-          <div className="@container/chat mx-auto w-full max-w-5xl px-4 pt-0 pb-2 md:px-6 lg:px-8">
-            {renderComposer(true)}
           </div>
-        </div>
-      )}
+          {/* Input area - only show at bottom when there are messages */}
+          {conversation.length > 0 && (
+            <div className="bg-background sticky bottom-0 mt-auto">
+              <div className="@container/chat mx-auto w-full max-w-5xl px-4 pt-0 pb-2 md:px-6 lg:px-8">
+                {renderComposer(true)}
+              </div>
+            </div>
+          )}
+        </StickToBottom.Content>
+      </StickToBottom>
     </div>
   )
 }
