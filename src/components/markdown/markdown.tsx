@@ -1,6 +1,7 @@
 'use client'
 
 import { ClassAttributes, HTMLAttributes, memo, useCallback } from 'react'
+import { Button } from '@/components/ui/button'
 import { useCopyToClipboard } from '@/hooks/useCopyToClipboard'
 import clsx from 'clsx'
 import { Check, Copy } from 'lucide-react'
@@ -10,14 +11,51 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { oneDark, oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import rehypeKatex from 'rehype-katex'
 import rehypeRaw from 'rehype-raw'
+import rehypeSanitize, { defaultSchema, type Options as SanitizeOptions } from 'rehype-sanitize'
 import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
+import type { PluggableList } from 'unified'
 
 import styles from './markdown.module.css'
 
+// Extend default schema to allow KaTeX elements and common safe attributes
+const sanitizeSchema: SanitizeOptions = {
+  ...defaultSchema,
+  tagNames: [
+    ...(defaultSchema.tagNames || []),
+    'math',
+    'semantics',
+    'mrow',
+    'mi',
+    'mo',
+    'mn',
+    'msup',
+    'msub',
+    'mfrac',
+    'munder',
+    'mover',
+    'msqrt',
+    'mroot',
+    'mtable',
+    'mtr',
+    'mtd',
+    'mtext',
+    'mspace',
+    'annotation',
+    'span'
+  ],
+  attributes: {
+    ...defaultSchema.attributes,
+    '*': [...(defaultSchema.attributes?.['*'] || []), 'className', 'class', 'style'],
+    span: ['className', 'class', 'style', 'aria-hidden'],
+    math: ['xmlns', 'display'],
+    annotation: ['encoding']
+  }
+}
+
 // Only include actual plugins - react-markdown handles parse/rehype/stringify internally
 const remarkPluginList = [remarkGfm, remarkMath]
-const rehypePluginList = [rehypeRaw, rehypeKatex]
+const rehypePluginList: PluggableList = [rehypeRaw, [rehypeSanitize, sanitizeSchema], rehypeKatex]
 
 export interface MarkdownProps {
   className?: string
@@ -40,25 +78,16 @@ const HighlightCode = (
 
   return match ? (
     <div className={clsx(styles.codeBlock, 'border-border overflow-hidden rounded-xl border')}>
-      <button
-        type="button"
+      <Button
+        variant="secondary"
+        size="icon-sm"
         aria-label={copied ? 'Copied!' : 'Copy to clipboard'}
         onClick={onCopy}
-        className={clsx(
-          'absolute top-2 right-2 z-10 flex items-center gap-1 md:top-3 md:right-3',
-          'rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors',
-          '!bg-sidebar-primary !text-sidebar-primary-foreground hover:!bg-sidebar-primary/90',
-          'focus-visible:ring-ring !border-0 focus-visible:ring-2 focus-visible:outline-none'
-        )}
-        tabIndex={0}
+        className="absolute top-2 right-2 z-10 md:top-3 md:right-3"
         title={copied ? 'Copied!' : 'Copy to clipboard'}
       >
-        {copied ? (
-          <Check className="text-sidebar-primary-foreground size-4" />
-        ) : (
-          <Copy className="size-4" />
-        )}
-      </button>
+        {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
+      </Button>
       <SyntaxHighlighter
         {...rest}
         style={resolvedTheme === 'dark' ? oneDark : oneLight}

@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { DefaultPersonas, ensureMessageIds } from '@/components/chat/utils'
+import { DefaultPersona, ensureMessageIds } from '@/components/chat/utils'
 import { cacheGet, cacheGetJson, cacheRemove, cacheSet } from '@/lib/cache'
 import { v4 as uuid } from 'uuid'
 
@@ -17,15 +17,19 @@ const STORAGE_KEYS = {
 const normalizeChatList = (list: Chat[]) => {
   const seen = new Set<string>()
   const now = new Date().toISOString()
+  const result: Chat[] = []
 
-  return list
-    .filter((chat) => chat?.id && !seen.has(chat.id) && seen.add(chat.id))
-    .map((chat) => {
-      const createdAt = chat.createdAt ?? now
-      const updatedAt = chat.updatedAt ?? createdAt
-      const title = chat.title || chat.persona?.name || 'New Chat'
-      return { ...chat, createdAt, updatedAt, title }
-    })
+  for (const chat of list) {
+    if (!chat?.id || seen.has(chat.id)) continue
+    seen.add(chat.id)
+
+    const createdAt = chat.createdAt ?? now
+    const updatedAt = chat.updatedAt ?? createdAt
+    const title = chat.title || chat.persona?.name || 'New Chat'
+    result.push({ ...chat, createdAt, updatedAt, title })
+  }
+
+  return result
 }
 
 const sortChatsByRecent = (list: Chat[]) =>
@@ -36,9 +40,11 @@ const truncateToWords = (text: string, maxWords: number) => {
   return words.join(' ')
 }
 
+const stripHtmlTags = (text: string) => text.replace(/<br\s*\/?>/gi, ' ').replace(/<[^>]*>/g, '')
+
 const deriveTitleFromMessages = (messages: ChatMessage[], fallback: string) => {
   const userContent = messages.find((msg) => msg.role === 'user')?.content?.trim()
-  const candidate = userContent || messages[0]?.content?.trim() || ''
+  const candidate = stripHtmlTags(userContent || messages[0]?.content?.trim() || '')
   if (!candidate) {
     return fallback
   }
@@ -260,7 +266,7 @@ const useChatHook = (): ChatContextValue => {
 
   const onCreateDefaultChat = useCallback(
     (firstMessage?: string) => {
-      return onCreateChat(DefaultPersonas[0], firstMessage)
+      return onCreateChat(DefaultPersona, firstMessage)
     },
     [onCreateChat]
   )
@@ -277,8 +283,8 @@ const useChatHook = (): ChatContextValue => {
         : [
             {
               id: uuid(),
-              title: DefaultPersonas[0].name || 'New Chat',
-              persona: DefaultPersonas[0],
+              title: 'New Chat',
+              persona: DefaultPersona,
               createdAt: new Date().toISOString(),
               updatedAt: new Date().toISOString()
             }
@@ -305,8 +311,8 @@ const useChatHook = (): ChatContextValue => {
       const now = new Date().toISOString()
       const defaultChat: Chat = {
         id: uuid(),
-        title: DefaultPersonas[0].name || 'New Chat',
-        persona: DefaultPersonas[0],
+        title: 'New Chat',
+        persona: DefaultPersona,
         createdAt: now,
         updatedAt: now
       }

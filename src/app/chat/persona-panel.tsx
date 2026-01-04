@@ -3,6 +3,7 @@
 import { useCallback, useMemo, useState } from 'react'
 import { Persona } from '@/components/chat'
 import { usePersonaContext } from '@/components/chat/personaContext'
+import { DefaultPersona } from '@/components/chat/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -87,13 +88,13 @@ const PersonaPanel = ({ onStartChat }: PersonaPanelProps) => {
                 <Search className="size-4" />
               </span>
               <label className="sr-only" htmlFor="persona-search">
-                Search persona templates
+                Search personas
               </label>
               <Input
                 type="text"
                 id="persona-search"
                 className="pl-9"
-                placeholder="Search Persona Template"
+                placeholder="Search personas"
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
               />
@@ -126,30 +127,32 @@ const PersonaPanel = ({ onStartChat }: PersonaPanelProps) => {
                     <MessageSquarePlus className="size-4" />
                     <span>New Chat</span>
                   </Button>
-                  <div className="grid w-full grid-cols-2 gap-2 sm:w-auto">
-                    <Button
-                      size="sm"
-                      variant="default"
-                      onClick={() => {
-                        openEditPersonaModal(prompt)
-                      }}
-                      className="w-full gap-1.5 px-3 font-semibold sm:w-auto"
-                    >
-                      <Pencil className="size-4" />
-                      <span>Edit</span>
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      onClick={() => {
-                        deletePersona(prompt)
-                      }}
-                      className="w-full gap-1.5 px-3 sm:w-auto"
-                    >
-                      <Trash2 className="size-4" />
-                      <span>Delete</span>
-                    </Button>
-                  </div>
+                  {prompt.id !== DefaultPersona.id && (
+                    <div className="grid w-full grid-cols-2 gap-2 sm:w-auto">
+                      <Button
+                        size="sm"
+                        variant="default"
+                        onClick={() => {
+                          openEditPersonaModal(prompt)
+                        }}
+                        className="w-full gap-1.5 px-3 font-semibold sm:w-auto"
+                      >
+                        <Pencil className="size-4" />
+                        <span>Edit</span>
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => {
+                          deletePersona(prompt)
+                        }}
+                        className="w-full gap-1.5 px-3 sm:w-auto"
+                      >
+                        <Trash2 className="size-4" />
+                        <span>Delete</span>
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}

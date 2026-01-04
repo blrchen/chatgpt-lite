@@ -10,19 +10,13 @@ import {
   useEffect,
   useState
 } from 'react'
-import { cacheGet, cacheSet } from '@/lib/cache'
-import { DEFAULT_THEME_PRESET, themePresets } from '@/lib/themes'
+import { cacheGet, cacheGetJson, cacheSet } from '@/lib/cache'
+import { getInitialPresetId } from '@/lib/themes'
 import { CacheKey } from '@/services/constant'
 
 const SIDEBAR_STORAGE_KEY = 'sidebarToggle'
 
-const getInitialThemePreset = () => {
-  const cached = cacheGet(CacheKey.ThemePreset)
-  if (cached && themePresets[cached]) {
-    return cached
-  }
-  return DEFAULT_THEME_PRESET
-}
+const getInitialThemePreset = () => getInitialPresetId(cacheGet(CacheKey.ThemePreset))
 
 interface AppContextValue {
   themePreset: string
@@ -58,12 +52,8 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
   }, [themePreset])
 
   useEffect(() => {
-    const saved = cacheGet(SIDEBAR_STORAGE_KEY)
-    if (saved !== null) {
-      setToggleSidebarState(JSON.parse(saved))
-    } else {
-      setToggleSidebarState(window.innerWidth >= 768)
-    }
+    const defaultOpen = window.innerWidth >= 768
+    setToggleSidebarState(cacheGetJson<boolean>(SIDEBAR_STORAGE_KEY, defaultOpen))
   }, [])
 
   const onToggleSidebar = useCallback(() => {

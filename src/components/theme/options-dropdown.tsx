@@ -64,7 +64,6 @@ export default function ThemeOptionsDropdown() {
       return name.includes(query) || id.toLowerCase().includes(query)
     })
   }, [options, search])
-  const visibleOptions = filteredOptions.length ? filteredOptions : options
 
   const closeDropdown = useCallback(() => {
     setOpen(false)
@@ -118,29 +117,29 @@ export default function ThemeOptionsDropdown() {
   }, [])
 
   const handleShuffleSelect = useCallback(() => {
-    if (!visibleOptions.length) {
+    if (!filteredOptions.length) {
       return
     }
-    const random = visibleOptions[Math.floor(Math.random() * visibleOptions.length)]
+    const random = filteredOptions[Math.floor(Math.random() * filteredOptions.length)]
     if (random) {
       handleSelect(random[0])
     }
-  }, [handleSelect, visibleOptions])
+  }, [handleSelect, filteredOptions])
 
   const handleStepSelect = useCallback(
     (direction: 'prev' | 'next') => {
-      if (!visibleOptions.length) {
+      if (!filteredOptions.length) {
         return
       }
-      const currentIndex = visibleOptions.findIndex(([id]) => id === themePreset)
+      const currentIndex = filteredOptions.findIndex(([id]) => id === themePreset)
       const normalizedIndex = currentIndex === -1 ? 0 : currentIndex
       const nextIndex =
         direction === 'next'
-          ? (normalizedIndex + 1) % visibleOptions.length
-          : (normalizedIndex - 1 + visibleOptions.length) % visibleOptions.length
-      handleSelect(visibleOptions[nextIndex][0])
+          ? (normalizedIndex + 1) % filteredOptions.length
+          : (normalizedIndex - 1 + filteredOptions.length) % filteredOptions.length
+      handleSelect(filteredOptions[nextIndex][0])
     },
-    [handleSelect, themePreset, visibleOptions]
+    [handleSelect, themePreset, filteredOptions]
   )
 
   if (!mounted) {
@@ -156,7 +155,7 @@ export default function ThemeOptionsDropdown() {
         aria-label="Select previous theme"
         title="Select previous theme"
         onClick={() => handleStepSelect('prev')}
-        disabled={!visibleOptions.length}
+        disabled={!filteredOptions.length}
       >
         <ChevronLeftIcon className="size-4" />
       </Button>
@@ -216,7 +215,7 @@ export default function ThemeOptionsDropdown() {
                 </Button>
               </div>
             </div>
-            <Separator className="bg-border" />
+            <Separator />
             <div
               className="max-h-[360px] overflow-y-auto p-1"
               role="listbox"
@@ -237,8 +236,8 @@ export default function ThemeOptionsDropdown() {
                       className={cn(
                         'focus-visible:ring-ring group flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition focus-visible:ring-2 focus-visible:outline-hidden',
                         isActive
-                          ? 'bg-accent text-accent-foreground ring-accent/40 shadow-sm ring-1'
-                          : 'hover:bg-accent/50'
+                          ? 'bg-foreground/[0.06] text-foreground ring-foreground/20 shadow-sm ring-1'
+                          : 'hover:bg-foreground/[0.04] text-foreground'
                       )}
                       role="option"
                       aria-selected={isActive}
@@ -248,10 +247,12 @@ export default function ThemeOptionsDropdown() {
                         <span className="text-sm leading-tight font-medium">
                           {preset.label || id}
                         </span>
-                        <span className="text-muted-foreground text-xs leading-tight">{id}</span>
+                        <span className="text-foreground/60 text-xs leading-tight">{id}</span>
                       </div>
                       {isActive && (
-                        <span className="text-primary text-xs font-semibold uppercase">Active</span>
+                        <span className="bg-foreground text-background rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase">
+                          Active
+                        </span>
                       )}
                     </button>
                   )
@@ -268,7 +269,7 @@ export default function ThemeOptionsDropdown() {
         aria-label="Shuffle themes"
         title="Shuffle themes"
         onClick={handleShuffleSelect}
-        disabled={!visibleOptions.length}
+        disabled={!filteredOptions.length}
       >
         <ShuffleIcon className="size-4" />
       </Button>
@@ -279,7 +280,7 @@ export default function ThemeOptionsDropdown() {
         aria-label="Select next theme"
         title="Select next theme"
         onClick={() => handleStepSelect('next')}
-        disabled={!visibleOptions.length}
+        disabled={!filteredOptions.length}
       >
         <ChevronRightIcon className="size-4" />
       </Button>

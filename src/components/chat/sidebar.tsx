@@ -9,10 +9,11 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { useAppContext } from '@/contexts/app'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { cn } from '@/lib/utils'
-import { Bot, MoreHorizontal, Pencil, Plus, Trash2 } from 'lucide-react'
+import { Bot, MessageSquare, MoreHorizontal, Pencil, Plus, Trash2 } from 'lucide-react'
 
 import ChatContext from './chatContext'
 
@@ -87,119 +88,138 @@ export const SideBar = () => {
             type="button"
             variant="secondary"
             onClick={handleNewChat}
-            className="!bg-secondary !text-secondary-foreground mb-6 rounded-full"
+            className="group/btn !bg-secondary !text-secondary-foreground mb-6 rounded-full transition-transform active:scale-95"
           >
-            <Plus className="size-4" />
+            <Plus className="size-4 transition-transform duration-200 group-hover/btn:rotate-90" />
             <span className="font-medium">New chat</span>
           </Button>
           {/* Recent Section */}
-          <div className="mb-2">
-            <h3 className="text-muted-foreground mb-2 text-sm font-medium">Recent</h3>
+          <div className="mb-1">
+            <h3 className="text-muted-foreground mb-1.5 text-xs font-medium tracking-wider uppercase">
+              Recent
+            </h3>
           </div>
-          {/* Chat List */}
-          <ScrollArea className="flex-1">
-            <div className="space-y-1" role="listbox" aria-label="Recent chats">
-              {chatList.map((chat) => {
-                const isActive = currentChatId === chat.id
+          {/* Chat List - viewport override fixes Radix's display:table that breaks text truncation */}
+          <ScrollArea className="flex-1 [&_[data-slot=scroll-area-viewport]>div]:!block [&_[data-slot=scroll-area-viewport]>div]:!min-w-0">
+            <div className="space-y-0.5" role="listbox" aria-label="Recent chats">
+              {chatList.length === 0 ? (
+                <div className="text-muted-foreground flex flex-col items-center justify-center py-8">
+                  <MessageSquare className="mb-2 size-8" />
+                  <p className="text-sm">No conversations yet</p>
+                </div>
+              ) : (
+                chatList.map((chat) => {
+                  const isActive = currentChatId === chat.id
+                  const chatTitle = chat.title || chat.persona?.name || 'New Chat'
 
-                return (
-                  <div
-                    key={chat.id}
-                    role="option"
-                    tabIndex={0}
-                    aria-selected={isActive}
-                    className={cn(
-                      'group focus-visible:ring-ring focus-visible:ring-offset-background relative flex w-full cursor-pointer items-center gap-2 rounded-lg border border-transparent px-3 py-2 text-left transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none',
-                      isActive
-                        ? 'bg-sidebar-primary text-sidebar-primary-foreground font-medium'
-                        : 'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
-                    )}
-                    onClick={() => {
-                      onChangeChat(chat)
-                      dismissIfMobile()
-                    }}
-                    onKeyDown={(event) => {
-                      if (event.key === 'Enter' || event.key === ' ') {
-                        event.preventDefault()
+                  return (
+                    <div
+                      key={chat.id}
+                      role="option"
+                      tabIndex={0}
+                      aria-selected={isActive}
+                      aria-label={chatTitle}
+                      className={cn(
+                        'group focus-visible:ring-ring focus-visible:ring-offset-background relative flex w-full cursor-pointer items-center gap-2 overflow-hidden rounded-lg border border-transparent px-3 py-2 text-left transition-all duration-150 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none active:scale-[0.98]',
+                        isActive
+                          ? 'bg-sidebar-primary text-sidebar-primary-foreground border-l-primary font-medium shadow-sm'
+                          : 'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground hover:translate-x-0.5'
+                      )}
+                      onClick={() => {
                         onChangeChat(chat)
                         dismissIfMobile()
-                      }
-                    }}
-                  >
-                    {renamingChatId === chat.id ? (
-                      <input
-                        ref={renameInputRef}
-                        type="text"
-                        value={renameValue}
-                        onChange={(e) => setRenameValue(e.target.value)}
-                        onBlur={confirmRename}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            confirmRename()
-                          } else if (e.key === 'Escape') {
-                            cancelRename()
-                          }
-                          e.stopPropagation()
-                        }}
-                        onClick={(e) => e.stopPropagation()}
-                        className="ring-ring min-w-0 flex-1 truncate rounded bg-transparent px-1 text-sm font-medium ring-1 outline-none"
-                      />
-                    ) : (
-                      <span
-                        className={cn(
-                          'min-w-0 flex-1 truncate text-sm font-medium',
-                          isActive
-                            ? 'text-sidebar-primary-foreground'
-                            : 'text-sidebar-foreground group-hover:text-sidebar-accent-foreground'
-                        )}
-                      >
-                        {chat.title || chat.persona?.name || 'New Chat'}
-                      </span>
-                    )}
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className={cn(
-                            'size-6 flex-shrink-0 rounded-full !border-transparent opacity-100 transition-opacity focus-visible:opacity-100 md:opacity-0 md:group-hover:opacity-100',
-                            'focus-visible:ring-sidebar-ring/50',
-                            isActive
-                              ? '!text-sidebar-primary-foreground hover:!bg-sidebar-primary-foreground/10 opacity-100'
-                              : 'text-sidebar-foreground hover:bg-foreground/10'
-                          )}
+                      }}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault()
+                          onChangeChat(chat)
+                          dismissIfMobile()
+                        }
+                      }}
+                    >
+                      {renamingChatId === chat.id ? (
+                        <input
+                          ref={renameInputRef}
+                          type="text"
+                          value={renameValue}
+                          onChange={(e) => setRenameValue(e.target.value)}
+                          onBlur={confirmRename}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              confirmRename()
+                            } else if (e.key === 'Escape') {
+                              cancelRename()
+                            }
+                            e.stopPropagation()
+                          }}
                           onClick={(e) => e.stopPropagation()}
-                          aria-label="Chat options"
-                        >
-                          <MoreHorizontal className="size-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-40">
-                        <DropdownMenuItem
-                          className="cursor-pointer"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            startRename(chat.id, chat.title || chat.persona?.name || 'New Chat')
-                          }}
-                        >
-                          <Pencil className="mr-2 size-4" />
-                          Rename
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          className="text-destructive focus:text-destructive cursor-pointer"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            onDeleteChat(chat)
-                          }}
-                        >
-                          <Trash2 className="mr-2 size-4" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                )
-              })}
+                          aria-label="Rename chat"
+                          className="ring-ring min-w-0 flex-1 truncate rounded bg-transparent px-1 text-sm font-medium ring-1 outline-none"
+                        />
+                      ) : (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span
+                              className={cn(
+                                'min-w-0 flex-1 truncate text-sm font-medium',
+                                isActive
+                                  ? 'text-sidebar-primary-foreground'
+                                  : 'text-sidebar-foreground group-hover:text-sidebar-accent-foreground'
+                              )}
+                            >
+                              {chatTitle}
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent side="right" className="max-w-[200px]">
+                            <p className="break-words">{chatTitle}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className={cn(
+                              'size-6 flex-shrink-0 rounded-full !border-transparent transition-all duration-150 focus-visible:opacity-100',
+                              'focus-visible:ring-sidebar-ring/50',
+                              isActive
+                                ? '!text-sidebar-primary-foreground hover:!bg-sidebar-primary-foreground/10 opacity-100'
+                                : 'text-sidebar-foreground hover:bg-foreground/10 opacity-100 md:opacity-0 md:group-hover:opacity-100'
+                            )}
+                            onClick={(e) => e.stopPropagation()}
+                            aria-label="Chat options"
+                          >
+                            <MoreHorizontal className="size-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-40">
+                          <DropdownMenuItem
+                            className="cursor-pointer"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              startRename(chat.id, chatTitle)
+                            }}
+                          >
+                            <Pencil className="mr-2 size-4" />
+                            Rename
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="text-destructive focus:text-destructive cursor-pointer"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              onDeleteChat(chat)
+                            }}
+                          >
+                            <Trash2 className="mr-2 size-4" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  )
+                })
+              )}
             </div>
           </ScrollArea>
           {/* Persona Store Button */}

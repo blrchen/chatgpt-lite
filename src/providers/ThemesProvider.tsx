@@ -6,10 +6,11 @@ import { useAppContext } from '@/contexts/app'
 import { cacheGet } from '@/lib/cache'
 import {
   applyThemePresetStyles,
-  DEFAULT_THEME_PRESET,
+  getInitialPresetId,
   getThemePresetCss,
-  THEME_STYLE_ELEMENT_ID,
-  themePresets
+  isValidPresetId,
+  resolvePresetId as resolvePreset,
+  THEME_STYLE_ELEMENT_ID
 } from '@/lib/themes'
 import { CacheKey } from '@/services/constant'
 import { ThemeMode } from '@/types/theme'
@@ -23,16 +24,12 @@ const DEFAULT_THEME_MODE: ThemeMode = isValidTheme(process.env.NEXT_PUBLIC_DEFAU
 
 const resolvePresetId = (current: string) => {
   if (typeof window === 'undefined') {
-    return themePresets[current] ? current : DEFAULT_THEME_PRESET
+    return resolvePreset(current)
   }
-  if (themePresets[current]) {
+  if (isValidPresetId(current)) {
     return current
   }
-  const cached = cacheGet(CacheKey.ThemePreset)
-  if (cached && themePresets[cached]) {
-    return cached
-  }
-  return DEFAULT_THEME_PRESET
+  return getInitialPresetId(cacheGet(CacheKey.ThemePreset))
 }
 
 function ThemePresetStyle() {
