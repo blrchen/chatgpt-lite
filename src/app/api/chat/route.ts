@@ -1,9 +1,50 @@
 import { NextRequest } from 'next/server'
 import { createAzure } from '@ai-sdk/azure'
+import { createOpenAI } from '@ai-sdk/openai'
 import type { ModelMessage } from '@ai-sdk/provider-utils'
-import { convertToModelMessages, streamText } from 'ai'
+import { convertToModelMessages, streamText, type LanguageModel } from 'ai'
 
 export const runtime = 'edge'
+
+/**
+ * Helper method to dynamically select and configure the AI model
+ * based on environment variables.
+ *
+ * @returns {LanguageModel} Configured language model (Azure or OpenAI)
+ */
+function getModel(): LanguageModel {
+  // Check if Azure OpenAI credentials are provided
+  const azureResourceName = process.env.AZURE_OPENAI_RESOURCE_NAME
+  const azureApiKey = process.env.AZURE_OPENAI_API_KEY
+  const azureDeployment = process.env.AZURE_OPENAI_DEPLOYMENT
+
+  if (azureResourceName && azureApiKey && azureDeployment) {
+    // Use Azure OpenAI
+    const azure = createAzure({
+      resourceName: azureResourceName,
+      apiKey: azureApiKey
+    })
+    return azure(azureDeployment)
+  }
+
+  // Fallback to OpenAI
+  const openaiApiKey = process.env.OPENAI_API_KEY
+  const openaiBaseUrl = process.env.OPENAI_API_BASE_URL || 'https://api.openai.com'
+  const openaiModel = process.env.OPENAI_MODEL || 'gpt-3.5-turbo'
+
+  if (!openaiApiKey) {
+    throw new Error(
+      'No AI provider configured. Please set either Azure OpenAI or OpenAI credentials in environment variables.'
+    )
+  }
+
+  const openai = createOpenAI({
+    apiKey: openaiApiKey,
+    baseURL: openaiBaseUrl
+  })
+
+  return openai(openaiModel)
+}
 
 type MessageContent =
   | string
@@ -66,15 +107,6 @@ export async function POST(req: NextRequest) {
       input: MessageContent
     }
 
-    // Initialize Azure provider
-    const azure = createAzure({
-      resourceName: process.env.AZURE_OPENAI_RESOURCE_NAME || '',
-      apiKey: process.env.AZURE_OPENAI_API_KEY || ''
-    })
-
-    const deployment = process.env.AZURE_OPENAI_DEPLOYMENT || 'gpt-4'
-    const model = azure(deployment)
-
     // Build messages array with proper typing
     const messagesWithHistory: ModelMessage[] = [
       { role: 'system', content: prompt },
@@ -84,7 +116,7 @@ export async function POST(req: NextRequest) {
 
     // Use streamText from ai-sdk
     const result = await streamText({
-      model,
+      model: getModel(),
       messages: messagesWithHistory,
       temperature: 1
     })
