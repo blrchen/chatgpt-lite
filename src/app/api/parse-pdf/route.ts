@@ -1,17 +1,21 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { PDFParse } from 'pdf-parse'
 import { join } from 'path'
 import { pathToFileURL } from 'url'
-
-// Note: pdf-parse requires Node.js environment
-export const runtime = 'nodejs'
+import { NextRequest, NextResponse } from 'next/server'
+import { PDFParse } from 'pdf-parse'
 
 // File size limit: 10MB
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB in bytes
 
 // Configure worker path for Node.js environment
 // Convert to file:// URL for Windows compatibility
-const workerPath = join(process.cwd(), 'node_modules', 'pdf-parse', 'dist', 'worker', 'pdf.worker.mjs')
+const workerPath = join(
+  process.cwd(),
+  'node_modules',
+  'pdf-parse',
+  'dist',
+  'worker',
+  'pdf.worker.mjs'
+)
 const workerUrl = pathToFileURL(workerPath).href
 PDFParse.setWorker(workerUrl)
 
