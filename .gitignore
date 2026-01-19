@@ -30,6 +30,7 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 .claude
+.env.local
 # env files (can opt-in for committing if needed)
 # .env*
 
