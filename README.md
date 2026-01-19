@@ -1,10 +1,6 @@
 # ChatGPT Lite
 
 English | [简体中文](./README.zh-CN.md)
-
-## Git Commit Guidelines
- 
-- Do not include Co-Authored-By trailers in git commits.
  
 
 ## Demo
