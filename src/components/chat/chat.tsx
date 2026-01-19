@@ -99,6 +99,8 @@ const Chat = (_: object, ref: React.ForwardedRef<ChatRef>) => {
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const documentInputRef = useRef<HTMLInputElement | null>(null)
   const recognitionRef = useRef<any>(null)
+  const isManualStopRef = useRef<boolean>(false)
+  const isListeningRef = useRef<boolean>(false)
 
   const getComposerValue = useCallback(() => textAreaRef.current?.value ?? message ?? '', [message])
   const getComposerText = useCallback(() => getComposerValue().trim(), [getComposerValue])
@@ -158,7 +160,20 @@ const Chat = (_: object, ref: React.ForwardedRef<ChatRef>) => {
     if (!files || files.length === 0) return
 
     Array.from(files).forEach((file) => {
-      if (!file.type.startsWith('image/')) {
+      // Check file type - on mobile browsers, file.type might be empty
+      // So also check file extension as fallback
+      const fileName = file.name.toLowerCase()
+      const isImage =
+        file.type.startsWith('image/') ||
+        fileName.endsWith('.jpg') ||
+        fileName.endsWith('.jpeg') ||
+        fileName.endsWith('.png') ||
+        fileName.endsWith('.gif') ||
+        fileName.endsWith('.webp') ||
+        fileName.endsWith('.heic') ||
+        fileName.endsWith('.heif')
+
+      if (!isImage) {
         toast.error('Please upload an image file')
         return
       }
@@ -166,7 +181,13 @@ const Chat = (_: object, ref: React.ForwardedRef<ChatRef>) => {
       const reader = new FileReader()
       reader.onload = (event) => {
         const base64 = event.target?.result as string
-        setUploadedImages((prev) => [...prev, { url: base64, mimeType: file.type }])
+        // Use file.type if available, otherwise infer from extension
+        const mimeType = file.type || `image/${fileName.split('.').pop()}`
+        setUploadedImages((prev) => [...prev, { url: base64, mimeType }])
+      }
+      reader.onerror = (error) => {
+        console.error('Error reading file:', error)
+        toast.error(`Failed to load image: ${file.name}`)
       }
       reader.readAsDataURL(file)
     })
@@ -259,18 +280,52 @@ const Chat = (_: object, ref: React.ForwardedRef<ChatRef>) => {
 
         recognition.onerror = (event: any) => {
           console.error('Speech recognition error:', event.error)
-          setIsListening(false)
+
+          // Handle different error types
           if (event.error === 'not-allowed') {
+            setIsListening(false)
+            isListeningRef.current = false
+            isManualStopRef.current = true
             toast.error('Microphone access denied. Please allow microphone access in your browser.')
           } else if (event.error === 'no-speech') {
-            toast.error('No speech detected. Please try again.')
+            // Don't show error for no-speech - it's common during pauses
+            // The recognition will auto-restart via onend handler
+            console.log('No speech detected, will auto-restart if still listening')
+          } else if (event.error === 'aborted') {
+            // Manual abort, don't show error
+            console.log('Speech recognition aborted')
           } else {
+            setIsListening(false)
+            isListeningRef.current = false
+            isManualStopRef.current = true
             toast.error('Speech recognition error: ' + event.error)
           }
         }
 
         recognition.onend = () => {
-          setIsListening(false)
+          // If it was a manual stop, just update state
+          if (isManualStopRef.current) {
+            setIsListening(false)
+            isListeningRef.current = false
+            isManualStopRef.current = false
+            return
+          }
+
+          // Auto-restart if it stopped unexpectedly and user hasn't manually stopped
+          // This handles browser auto-stop after silence
+          if (isListeningRef.current) {
+            try {
+              recognition.start()
+              console.log('Auto-restarting speech recognition')
+            } catch (error) {
+              console.error('Failed to auto-restart speech recognition:', error)
+              setIsListening(false)
+              isListeningRef.current = false
+            }
+          } else {
+            setIsListening(false)
+            isListeningRef.current = false
+          }
         }
 
         recognitionRef.current = recognition
@@ -291,15 +346,27 @@ const Chat = (_: object, ref: React.ForwardedRef<ChatRef>) => {
     }
 
     if (isListening) {
-      recognitionRef.current.stop()
-      setIsListening(false)
+      try {
+        isManualStopRef.current = true
+        recognitionRef.current.stop()
+        // Don't set state here - let onend handler do it
+      } catch (error) {
+        console.error('Error stopping speech recognition:', error)
+        isManualStopRef.current = true
+        setIsListening(false)
+        isListeningRef.current = false
+      }
     } else {
       try {
+        isManualStopRef.current = false
         recognitionRef.current.start()
         setIsListening(true)
+        isListeningRef.current = true
         toast.success('Listening... Speak now')
       } catch (error) {
         console.error('Error starting speech recognition:', error)
+        setIsListening(false)
+        isListeningRef.current = false
         toast.error('Failed to start speech recognition')
       }
     }
@@ -596,7 +663,7 @@ const Chat = (_: object, ref: React.ForwardedRef<ChatRef>) => {
                   <button
                     type="button"
                     onClick={() => removeImage(index)}
-                    className="bg-destructive text-destructive-foreground absolute -top-2 -right-2 rounded-full p-1 opacity-0 transition-opacity group-hover:opacity-100"
+                    className="bg-destructive text-destructive-foreground absolute -top-2 -right-2 rounded-full p-1 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100"
                     aria-label="Remove image"
                   >
                     <X className="size-3" />
@@ -615,7 +682,7 @@ const Chat = (_: object, ref: React.ForwardedRef<ChatRef>) => {
                   <button
                     type="button"
                     onClick={() => removeDocument(index)}
-                    className="bg-destructive text-destructive-foreground ml-auto rounded-full p-1 opacity-0 transition-opacity group-hover:opacity-100"
+                    className="bg-destructive text-destructive-foreground ml-auto rounded-full p-1 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100"
                     aria-label="Remove document"
                   >
                     <X className="size-3" />
@@ -679,7 +746,7 @@ const Chat = (_: object, ref: React.ForwardedRef<ChatRef>) => {
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="image/*"
+                accept="image/*,.heic,.heif"
                 multiple
                 className="hidden"
                 onChange={handleImageUpload}
