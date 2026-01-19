@@ -1,26 +1,29 @@
 import { join } from 'path'
 import { pathToFileURL } from 'url'
 import { NextRequest, NextResponse } from 'next/server'
-import { PDFParse } from 'pdf-parse'
+
+export const runtime = 'nodejs'
 
 // File size limit: 10MB
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB in bytes
 
-// Configure worker path for Node.js environment
-// Convert to file:// URL for Windows compatibility
-const workerPath = join(
-  process.cwd(),
-  'node_modules',
-  'pdf-parse',
-  'dist',
-  'worker',
-  'pdf.worker.mjs'
-)
-const workerUrl = pathToFileURL(workerPath).href
-PDFParse.setWorker(workerUrl)
-
 export async function POST(req: NextRequest) {
   try {
+    // Dynamic import: Prevent triggering of pdfjs during module initialization stage
+    const { PDFParse } = await import('pdf-parse')
+
+    // Configure worker path for Node.js environment
+    // Convert to file:// URL for Windows compatibility
+    const workerPath = join(
+      process.cwd(),
+      'node_modules',
+      'pdf-parse',
+      'dist',
+      'worker',
+      'pdf.worker.mjs'
+    )
+    const workerUrl = pathToFileURL(workerPath).href
+    PDFParse.setWorker(workerUrl)
     const formData = await req.formData()
     const file = formData.get('file') as File
 
