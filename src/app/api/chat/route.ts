@@ -29,9 +29,12 @@ function getModel(): LanguageModel {
 
   // Fallback to OpenAI
   const openaiApiKey = process.env.OPENAI_API_KEY
-  const openaiBaseUrl = process.env.OPENAI_API_BASE_URL || 'https://api.openai.com'
+  let openaiBaseUrl = process.env.OPENAI_API_BASE_URL || 'https://api.openai.com/v1'
   const openaiModel = process.env.OPENAI_MODEL || 'gpt-3.5-turbo'
-
+  // Ensure baseURL ends with /v1 for OpenAI-compatible APIs
+  if (!openaiBaseUrl.endsWith('/v1')) {
+    openaiBaseUrl = openaiBaseUrl.replace(/\/$/, '') + '/v1'
+  }
   if (!openaiApiKey) {
     throw new Error(
       'No AI provider configured. Please set either Azure OpenAI or OpenAI credentials in environment variables.'
@@ -43,7 +46,7 @@ function getModel(): LanguageModel {
     baseURL: openaiBaseUrl
   })
 
-  return openai(openaiModel)
+  return openai.chat(openaiModel)
 }
 
 type MessageContent =

@@ -2,6 +2,11 @@
 
 English | [简体中文](./README.zh-CN.md)
 
+## Git Commit Guidelines
+ 
+- Do not include Co-Authored-By trailers in git commits.
+ 
+
 ## Demo
 
 Try the [ChatGPT Lite Demo Site](https://gptlite.vercel.app).
