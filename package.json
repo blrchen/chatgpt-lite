@@ -14,6 +14,7 @@
     "docker:build": "docker build -f Dockerfile -t chatgpt-lite:latest ."
   },
   "dependencies": {
+    "@ai-sdk/azure": "^3.0.12",
     "@hookform/resolvers": "^5.2.2",
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-dropdown-menu": "^2.1.16",
@@ -23,12 +24,16 @@
     "@radix-ui/react-slot": "^1.2.4",
     "@radix-ui/react-tooltip": "^1.2.8",
     "@vercel/analytics": "^1.6.0",
+    "ai": "^6.0.39",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "eventsource-parser": "^2.0.0",
     "lucide-react": "^0.553.0",
+    "mammoth": "^1.11.0",
     "next": "16.0.10",
     "next-themes": "^0.4.6",
+    "papaparse": "^5.5.3",
+    "pdf2json": "^4.0.2",
     "react": "^19.2.1",
     "react-dom": "^19.2.1",
     "react-hook-form": "^7.68.0",
@@ -44,6 +49,7 @@
     "tailwindcss-animate": "^1.0.7",
     "use-stick-to-bottom": "^1.1.1",
     "uuid": "^13.0.0",
+    "xlsx": "^0.18.5",
     "zod": "^4.1.13"
   },
   "devDependencies": {
@@ -51,6 +57,7 @@
     "@tailwindcss/postcss": "^4.1.4",
     "@tailwindcss/typography": "^0.5.19",
     "@types/node": "^20.17.10",
+    "@types/papaparse": "^5.5.2",
     "@types/react": "19.2.2",
     "@types/react-dom": "19.2.2",
     "@types/react-syntax-highlighter": "^15.5.13",

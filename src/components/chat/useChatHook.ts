@@ -7,7 +7,7 @@ import { v4 as uuid } from 'uuid'
 
 import { ChatRef } from './chat'
 import type { ChatContextValue } from './chatContext'
-import { Chat, ChatMessage, Persona } from './interface'
+import { Chat, ChatMessage, MessageContent, Persona } from './interface'
 
 const STORAGE_KEYS = {
   chatList: 'chatList',
@@ -42,9 +42,28 @@ const truncateToWords = (text: string, maxWords: number) => {
 
 const stripHtmlTags = (text: string) => text.replace(/<br\s*\/?>/gi, ' ').replace(/<[^>]*>/g, '')
 
+const getTextFromContent = (content: MessageContent): string => {
+  if (typeof content === 'string') {
+    return content
+  }
+  return content
+    .filter((part) => part.type === 'text' || part.type === 'document')
+    .map((part) => {
+      if (part.type === 'text') {
+        return part.text
+      } else if (part.type === 'document') {
+        return `[${part.name}]`
+      }
+      return ''
+    })
+    .join(' ')
+}
+
 const deriveTitleFromMessages = (messages: ChatMessage[], fallback: string) => {
-  const userContent = messages.find((msg) => msg.role === 'user')?.content?.trim()
-  const candidate = stripHtmlTags(userContent || messages[0]?.content?.trim() || '')
+  const userMessage = messages.find((msg) => msg.role === 'user')
+  const userContent = userMessage ? getTextFromContent(userMessage.content).trim() : ''
+  const firstContent = messages[0] ? getTextFromContent(messages[0].content).trim() : ''
+  const candidate = stripHtmlTags(userContent || firstContent || '')
   if (!candidate) {
     return fallback
   }

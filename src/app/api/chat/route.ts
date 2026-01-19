@@ -1,143 +1,107 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { createParser, ParsedEvent, ReconnectInterval } from 'eventsource-parser'
+import { NextRequest } from 'next/server'
+import { createAzure } from '@ai-sdk/azure'
+import type { ModelMessage } from '@ai-sdk/provider-utils'
+import { convertToModelMessages, streamText } from 'ai'
 
 export const runtime = 'edge'
 
-type ChatCompletionMessage = { role: 'assistant' | 'user' | 'system'; content: string }
+type MessageContent =
+  | string
+  | Array<
+      | { type: 'text'; text: string }
+      | { type: 'image'; image: string | URL }
+      | { type: 'document'; name: string; content: string; mimeType: string }
+    >
+
+type ChatCompletionMessage = {
+  role: 'assistant' | 'user' | 'system'
+  content: MessageContent
+}
+
+const convertToCoreMessage = (msg: ChatCompletionMessage): ModelMessage => {
+  if (msg.role === 'system') {
+    return {
+      role: 'system',
+      content: typeof msg.content === 'string' ? msg.content : ''
+    }
+  }
+
+  if (msg.role === 'user') {
+    if (typeof msg.content === 'string') {
+      return {
+        role: 'user',
+        content: msg.content
+      }
+    }
+    return {
+      role: 'user',
+      content: msg.content.map((part) => {
+        if (part.type === 'text') {
+          return { type: 'text', text: part.text }
+        } else if (part.type === 'image') {
+          return { type: 'image', image: part.image }
+        } else {
+          // Convert document to text
+          return {
+            type: 'text',
+            text: `[Document: ${part.name}]\n\n${part.content}`
+          }
+        }
+      })
+    }
+  }
+
+  // assistant
+  return {
+    role: 'assistant',
+    content: typeof msg.content === 'string' ? msg.content : ''
+  }
+}
 
 export async function POST(req: NextRequest) {
   try {
     const { prompt, messages, input } = (await req.json()) as {
       prompt: string
       messages: ChatCompletionMessage[]
-      input: string
+      input: MessageContent
     }
-    const messagesWithHistory: ChatCompletionMessage[] = [
-      { role: 'system', content: prompt },
-      ...messages,
-      { role: 'user', content: input }
-    ]
-    const requestMessages = messagesWithHistory.map(({ role, content }) => ({ role, content }))
 
-    const { apiUrl, apiKey, model } = getApiConfig()
-    const stream = await getOpenAIStream(apiUrl, apiKey, model, requestMessages)
-    return new NextResponse(stream, {
-      headers: { 'Content-Type': 'text/event-stream' }
+    // Initialize Azure provider
+    const azure = createAzure({
+      resourceName: process.env.AZURE_OPENAI_RESOURCE_NAME || '',
+      apiKey: process.env.AZURE_OPENAI_API_KEY || ''
     })
-  } catch (error) {
-    console.error(error)
-    return NextResponse.json(
-      { success: false, error: error instanceof Error ? error.message : 'Unknown error' },
-      { status: 500 }
-    )
-  }
-}
 
-const getApiConfig = () => {
-  const useAzureOpenAI =
-    process.env.AZURE_OPENAI_API_BASE_URL && process.env.AZURE_OPENAI_API_BASE_URL.length > 0
+    const deployment = process.env.AZURE_OPENAI_DEPLOYMENT || 'gpt-4'
+    const model = azure(deployment)
 
-  let apiUrl: string
-  let apiKey: string
-  let model: string
-  if (useAzureOpenAI) {
-    let apiBaseUrl = process.env.AZURE_OPENAI_API_BASE_URL
-    const apiVersion = '2024-02-01'
-    const deployment = process.env.AZURE_OPENAI_DEPLOYMENT || ''
-    if (apiBaseUrl && apiBaseUrl.endsWith('/')) {
-      apiBaseUrl = apiBaseUrl.slice(0, -1)
-    }
-    apiUrl = `${apiBaseUrl}/openai/deployments/${deployment}/chat/completions?api-version=${apiVersion}`
-    apiKey = process.env.AZURE_OPENAI_API_KEY || ''
-    model = '' // Azure Open AI always ignores the model and decides based on the deployment name passed through.
-  } else {
-    let apiBaseUrl = process.env.OPENAI_API_BASE_URL || 'https://api.openai.com'
-    if (apiBaseUrl && apiBaseUrl.endsWith('/')) {
-      apiBaseUrl = apiBaseUrl.slice(0, -1)
-    }
-    apiUrl = `${apiBaseUrl}/v1/chat/completions`
-    apiKey = process.env.OPENAI_API_KEY || ''
-    model = process.env.OPENAI_MODEL || 'gpt-3.5-turbo'
-  }
+    // Build messages array with proper typing
+    const messagesWithHistory: ModelMessage[] = [
+      { role: 'system', content: prompt },
+      ...messages.map(convertToCoreMessage),
+      convertToCoreMessage({ role: 'user', content: input })
+    ]
 
-  return { apiUrl, apiKey, model }
-}
-
-const getOpenAIStream = async (
-  apiUrl: string,
-  apiKey: string,
-  model: string,
-  messages: ChatCompletionMessage[]
-) => {
-  const encoder = new TextEncoder()
-  const decoder = new TextDecoder()
-  const res = await fetch(apiUrl, {
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
-      'api-key': `${apiKey}`
-    },
-    method: 'POST',
-    body: JSON.stringify({
-      model: model,
-      messages: messages,
-      stream: true,
+    // Use streamText from ai-sdk
+    const result = await streamText({
+      model,
+      messages: messagesWithHistory,
       temperature: 1
     })
-  })
 
-  if (res.status !== 200) {
-    const statusText = res.statusText
-    const responseBody = await res.text()
-    console.error(`OpenAI API response error: ${responseBody}`)
-    throw new Error(
-      `The OpenAI API has encountered an error with a status code of ${res.status} ${statusText}: ${responseBody}`
+    // Return the text stream
+    return result.toTextStreamResponse()
+  } catch (error) {
+    console.error(error)
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      }),
+      {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      }
     )
   }
-
-  return new ReadableStream({
-    async start(controller) {
-      const onParse = (event: ParsedEvent | ReconnectInterval) => {
-        if (event.type === 'event') {
-          const data = event.data
-
-          if (data === '[DONE]') {
-            controller.close()
-            return
-          }
-
-          try {
-            const json = JSON.parse(data)
-            const text = json.choices[0]?.delta?.content
-            if (text !== undefined) {
-              const queue = encoder.encode(text)
-              controller.enqueue(queue)
-            } else {
-              console.error('Received undefined content:', json)
-            }
-          } catch (e) {
-            console.error('Error parsing event data:', e)
-            controller.error(e)
-          }
-        }
-      }
-
-      const parser = createParser(onParse)
-
-      if (res.body) {
-        const reader = res.body.getReader()
-        try {
-          while (true) {
-            const { done, value } = await reader.read()
-            if (done) break
-            // An extra newline is required to make AzureOpenAI work.
-            const str = decoder.decode(value).replace('[DONE]\n', '[DONE]\n\n')
-            parser.feed(str)
-          }
-        } finally {
-          reader.releaseLock()
-        }
-      }
-    }
-  })
 }

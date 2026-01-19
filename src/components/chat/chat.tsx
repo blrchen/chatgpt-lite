@@ -12,12 +12,22 @@ import {
 } from 'react'
 import { ensureMessageIds, generateMessageId } from '@/components/chat/utils'
 import { Button } from '@/components/ui/button'
-import { AlertCircle, ArrowUp, Eraser, Loader2 } from 'lucide-react'
+import {
+  AlertCircle,
+  ArrowUp,
+  Eraser,
+  FileText,
+  ImagePlus,
+  Loader2,
+  Mic,
+  MicOff,
+  X
+} from 'lucide-react'
 import { toast } from 'sonner'
 import { StickToBottom } from 'use-stick-to-bottom'
 
 import ChatContext from './chatContext'
-import type { ChatMessage } from './interface'
+import type { ChatMessage, MessageContent } from './interface'
 import { Message } from './message'
 import { usePersonaContext } from './personaContext'
 
@@ -30,7 +40,11 @@ export interface ChatRef {
 const toMessagePayload = (messages: ChatMessage[]) =>
   messages.map(({ role, content }) => ({ role, content }))
 
-const sendChatMessage = async (personaPrompt: string, messages: ChatMessage[], input: string) => {
+const sendChatMessage = async (
+  personaPrompt: string,
+  messages: ChatMessage[],
+  input: MessageContent
+) => {
   const url = '/api/chat'
 
   const data = {
@@ -67,10 +81,18 @@ const Chat = (_: object, ref: React.ForwardedRef<ChatRef>) => {
   const [isComposing, setIsComposing] = useState(false)
 
   const [message, setMessage] = useState('')
+  const [uploadedImages, setUploadedImages] = useState<Array<{ url: string; mimeType: string }>>([])
+  const [uploadedDocuments, setUploadedDocuments] = useState<
+    Array<{ name: string; content: string; mimeType: string }>
+  >([])
 
   const [currentMessage, setCurrentMessage] = useState<string>('')
+  const [isListening, setIsListening] = useState(false)
 
   const textAreaRef = useRef<HTMLTextAreaElement | null>(null)
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const documentInputRef = useRef<HTMLInputElement | null>(null)
+  const recognitionRef = useRef<any>(null)
 
   const getComposerValue = useCallback(() => textAreaRef.current?.value ?? message ?? '', [message])
   const getComposerText = useCallback(() => getComposerValue().trim(), [getComposerValue])
@@ -104,7 +126,10 @@ const Chat = (_: object, ref: React.ForwardedRef<ChatRef>) => {
   const isCurrentChatLoading = loadingChatId !== null && loadingChatId === currentChatId
   const hasActiveChat = Boolean(currentChatId ?? conversationChatIdRef.current)
   const canSend =
-    isChatHydrated && hasActiveChat && !isCurrentChatLoading && Boolean(getComposerText())
+    isChatHydrated &&
+    hasActiveChat &&
+    !isCurrentChatLoading &&
+    (Boolean(getComposerText()) || uploadedImages.length > 0 || uploadedDocuments.length > 0)
   const textareaClassName =
     'text-foreground w-full min-w-0 resize-none !border-0 !bg-transparent text-base leading-relaxed break-all !outline-none !shadow-none focus:!outline-none focus:!border-0 focus:!ring-0 focus-visible:!outline-none focus-visible:!ring-0 focus-visible:!ring-offset-0 max-h-[200px] min-h-[24px] overflow-y-auto [field-sizing:content]'
 
@@ -122,6 +147,158 @@ const Chat = (_: object, ref: React.ForwardedRef<ChatRef>) => {
     return created ?? undefined
   }, [currentChatId, getChatById, onCreateDefaultChat])
 
+  const handleImageUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (!files || files.length === 0) return
+
+    Array.from(files).forEach((file) => {
+      if (!file.type.startsWith('image/')) {
+        toast.error('Please upload an image file')
+        return
+      }
+
+      const reader = new FileReader()
+      reader.onload = (event) => {
+        const base64 = event.target?.result as string
+        setUploadedImages((prev) => [...prev, { url: base64, mimeType: file.type }])
+      }
+      reader.readAsDataURL(file)
+    })
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+  }, [])
+
+  const removeImage = useCallback((index: number) => {
+    setUploadedImages((prev) => prev.filter((_, i) => i !== index))
+  }, [])
+
+  const handleDocumentUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (!files || files.length === 0) return
+
+    for (const file of Array.from(files)) {
+      const fileType = file.type.toLowerCase()
+      const fileName = file.name.toLowerCase()
+
+      // Check if it's a supported document type
+      const isSupported =
+        fileType === 'text/plain' ||
+        fileType === 'text/csv' ||
+        fileType === 'application/pdf' ||
+        fileType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
+        fileType === 'application/vnd.ms-excel' ||
+        fileName.endsWith('.txt') ||
+        fileName.endsWith('.csv') ||
+        fileName.endsWith('.pdf') ||
+        fileName.endsWith('.xlsx') ||
+        fileName.endsWith('.xls')
+
+      if (!isSupported) {
+        toast.error(`Unsupported file type: ${file.name}`)
+        continue
+      }
+
+      try {
+        // Dynamically import the file parser
+        const { parseFile } = await import('@/lib/fileParser')
+        const parsed = await parseFile(file)
+
+        setUploadedDocuments((prev) => [...prev, parsed])
+        toast.success(`File "${file.name}" uploaded successfully`)
+      } catch (error) {
+        console.error('Error parsing file:', error)
+        toast.error(`Failed to parse file: ${file.name}`)
+      }
+    }
+
+    if (documentInputRef.current) {
+      documentInputRef.current.value = ''
+    }
+  }, [])
+
+  const removeDocument = useCallback((index: number) => {
+    setUploadedDocuments((prev) => prev.filter((_, i) => i !== index))
+  }, [])
+
+  // Initialize speech recognition
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const SpeechRecognition =
+        (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+      if (SpeechRecognition) {
+        const recognition = new SpeechRecognition()
+        recognition.continuous = true
+        recognition.interimResults = true
+        recognition.lang = 'zh-CN' // Set to Chinese, you can make this configurable
+
+        recognition.onresult = (event: any) => {
+          let interimTranscript = ''
+          let finalTranscript = ''
+
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            const transcript = event.results[i][0].transcript
+            if (event.results[i].isFinal) {
+              finalTranscript += transcript
+            } else {
+              interimTranscript += transcript
+            }
+          }
+
+          if (finalTranscript) {
+            setMessage((prev) => prev + finalTranscript)
+          }
+        }
+
+        recognition.onerror = (event: any) => {
+          console.error('Speech recognition error:', event.error)
+          setIsListening(false)
+          if (event.error === 'not-allowed') {
+            toast.error('Microphone access denied. Please allow microphone access in your browser.')
+          } else if (event.error === 'no-speech') {
+            toast.error('No speech detected. Please try again.')
+          } else {
+            toast.error('Speech recognition error: ' + event.error)
+          }
+        }
+
+        recognition.onend = () => {
+          setIsListening(false)
+        }
+
+        recognitionRef.current = recognition
+      }
+    }
+
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop()
+      }
+    }
+  }, [])
+
+  const toggleVoiceInput = useCallback(() => {
+    if (!recognitionRef.current) {
+      toast.error('Speech recognition is not supported in your browser.')
+      return
+    }
+
+    if (isListening) {
+      recognitionRef.current.stop()
+      setIsListening(false)
+    } else {
+      try {
+        recognitionRef.current.start()
+        setIsListening(true)
+        toast.success('Listening... Speak now')
+      } catch (error) {
+        console.error('Error starting speech recognition:', error)
+        toast.error('Failed to start speech recognition')
+      }
+    }
+  }, [isListening])
+
   useEffect(() => {
     activeChatIdRef.current = currentChatId ?? null
   }, [currentChatId])
@@ -134,8 +311,8 @@ const Chat = (_: object, ref: React.ForwardedRef<ChatRef>) => {
 
       e.preventDefault()
       const input = getComposerText()
-      if (input.length < 1) {
-        setComposerError('Please enter a message to continue.')
+      if (input.length < 1 && uploadedImages.length === 0 && uploadedDocuments.length === 0) {
+        setComposerError('Please enter a message or upload a file to continue.')
         return
       }
 
@@ -162,10 +339,35 @@ const Chat = (_: object, ref: React.ForwardedRef<ChatRef>) => {
         setComposerError('This persona is missing a prompt. Please edit it and try again.')
         return
       }
+      // Build message content with text, images, and documents
+      let messageContent: MessageContent = input
+      if (uploadedImages.length > 0 || uploadedDocuments.length > 0) {
+        const contentParts: Array<
+          | { type: 'text'; text: string }
+          | { type: 'image'; image: string; mimeType?: string }
+          | { type: 'document'; name: string; content: string; mimeType: string }
+        > = []
+        if (input) {
+          contentParts.push({ type: 'text', text: input })
+        }
+        uploadedImages.forEach((img) => {
+          contentParts.push({ type: 'image', image: img.url, mimeType: img.mimeType })
+        })
+        uploadedDocuments.forEach((doc) => {
+          contentParts.push({
+            type: 'document',
+            name: doc.name,
+            content: doc.content,
+            mimeType: doc.mimeType
+          })
+        })
+        messageContent = contentParts
+      }
+
       const userMessage: ChatMessage = {
         id: generateMessageId(),
         createdAt: new Date().toISOString(),
-        content: input,
+        content: messageContent,
         role: 'user'
       }
       const pendingConversation = [...history, userMessage]
@@ -175,12 +377,14 @@ const Chat = (_: object, ref: React.ForwardedRef<ChatRef>) => {
       setConversation(pendingConversation, targetChatId)
       saveMessages(pendingConversation, targetChatId, { chat: activeChat })
       setMessage('')
+      setUploadedImages([])
+      setUploadedDocuments([])
       setCurrentMessage('')
 
       streamingChatIdRef.current = targetChatId
 
       try {
-        const response = await sendChatMessage(personaPrompt, history, input)
+        const response = await sendChatMessage(personaPrompt, history, messageContent)
 
         if (response.ok) {
           const data = response.body
@@ -275,7 +479,9 @@ const Chat = (_: object, ref: React.ForwardedRef<ChatRef>) => {
       currentChatId,
       loadingChatId,
       saveMessages,
-      setConversation
+      setConversation,
+      uploadedImages,
+      uploadedDocuments
     ]
   )
 
@@ -304,6 +510,8 @@ const Chat = (_: object, ref: React.ForwardedRef<ChatRef>) => {
       return
     }
     setConversation([], chatId)
+    setUploadedImages([])
+    setUploadedDocuments([])
   }
 
   useEffect(() => {
@@ -357,6 +565,46 @@ const Chat = (_: object, ref: React.ForwardedRef<ChatRef>) => {
     return (
       <div className="relative">
         <div className="bg-background border-border focus-within:ring-ring focus-within:border-ring has-[textarea[aria-invalid=true]]:border-destructive has-[textarea[aria-invalid=true]]:ring-destructive/20 flex flex-col rounded-2xl border shadow-[0_0_0_1px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.04)] transition-all duration-200 focus-within:ring-2 has-[textarea[aria-invalid=true]]:ring-2 dark:shadow-[0_0_0_1px_rgba(255,255,255,0.06),0_2px_8px_rgba(0,0,0,0.2)]">
+          {(uploadedImages.length > 0 || uploadedDocuments.length > 0) && (
+            <div className="flex flex-wrap gap-2 px-4 pt-3">
+              {uploadedImages.map((img, index) => (
+                <div key={`img-${index}`} className="group relative">
+                  <img
+                    src={img.url}
+                    alt="Upload preview"
+                    className="border-border h-20 w-20 rounded-lg border object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeImage(index)}
+                    className="bg-destructive text-destructive-foreground absolute -top-2 -right-2 rounded-full p-1 opacity-0 transition-opacity group-hover:opacity-100"
+                    aria-label="Remove image"
+                  >
+                    <X className="size-3" />
+                  </button>
+                </div>
+              ))}
+              {uploadedDocuments.map((doc, index) => (
+                <div
+                  key={`doc-${index}`}
+                  className="group border-border bg-muted relative flex items-center gap-2 rounded-lg border px-3 py-2"
+                >
+                  <FileText className="text-muted-foreground size-4 shrink-0" />
+                  <span className="max-w-[150px] truncate text-sm" title={doc.name}>
+                    {doc.name}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => removeDocument(index)}
+                    className="bg-destructive text-destructive-foreground ml-auto rounded-full p-1 opacity-0 transition-opacity group-hover:opacity-100"
+                    aria-label="Remove document"
+                  >
+                    <X className="size-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
           <div className="relative flex min-h-[44px] min-w-0 flex-1 items-start px-4 pt-2 pb-1">
             <label className="sr-only" htmlFor={chatInputId}>
               Message input
@@ -364,11 +612,14 @@ const Chat = (_: object, ref: React.ForwardedRef<ChatRef>) => {
             <p id={helperTextId} className="sr-only">
               Press Enter to send your message. Use Shift plus Enter to insert a new line.
             </p>
-            {!message && !isComposerFocused && (
-              <span className="text-foreground/50 pointer-events-none absolute top-2 left-4 text-base">
-                Ask anything
-              </span>
-            )}
+            {!message &&
+              !isComposerFocused &&
+              uploadedImages.length === 0 &&
+              uploadedDocuments.length === 0 && (
+                <span className="text-foreground/50 pointer-events-none absolute top-2 left-4 text-base">
+                  Ask anything
+                </span>
+              )}
             <textarea
               ref={textAreaRef}
               rows={1}
@@ -392,19 +643,57 @@ const Chat = (_: object, ref: React.ForwardedRef<ChatRef>) => {
             />
           </div>
 
-          <div className={`flex items-center ${actionAlignment} px-3 pb-3`}>
-            {showClear && (
+          <div className={`flex items-center justify-between px-3 pb-3`}>
+            <div className="flex items-center gap-2">
+              {showClear && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="shadow-none"
+                  disabled={isCurrentChatLoading}
+                  onClick={clearMessages}
+                >
+                  <Eraser className="mr-2 size-4" />
+                  Clear chat
+                </Button>
+              )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                className="hidden"
+                onChange={handleImageUpload}
+              />
               <Button
-                size="sm"
-                variant="outline"
-                className="shadow-none"
-                disabled={isCurrentChatLoading}
-                onClick={clearMessages}
+                size="icon-sm"
+                variant="ghost"
+                disabled={isCurrentChatLoading || !isChatHydrated}
+                onClick={() => fileInputRef.current?.click()}
+                aria-label="Upload image"
+                title="Upload image"
               >
-                <Eraser className="mr-2 size-4" />
-                Clear chat
+                <ImagePlus className="size-4" />
               </Button>
-            )}
+              <input
+                ref={documentInputRef}
+                type="file"
+                accept=".txt,.csv,.pdf,.xlsx,.xls,text/plain,text/csv,application/pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+                multiple
+                className="hidden"
+                onChange={handleDocumentUpload}
+              />
+              <Button
+                size="icon-sm"
+                variant="ghost"
+                disabled={isCurrentChatLoading || !isChatHydrated}
+                onClick={() => documentInputRef.current?.click()}
+                aria-label="Upload document"
+                title="Upload document (PDF, TXT, CSV, Excel)"
+              >
+                <FileText className="size-4" />
+              </Button>
+            </div>
             {isCurrentChatLoading ? (
               <div
                 className="flex items-center justify-center p-2"
@@ -414,16 +703,29 @@ const Chat = (_: object, ref: React.ForwardedRef<ChatRef>) => {
                 <Loader2 className="text-muted-foreground size-5 animate-spin" />
               </div>
             ) : (
-              <Button
-                size="icon-sm"
-                disabled={!canSend}
-                className="rounded-full"
-                onClick={sendMessage}
-                aria-label="Send message"
-                title="Send message"
-              >
-                <ArrowUp className="size-4" />
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  size="icon-sm"
+                  variant="ghost"
+                  disabled={isCurrentChatLoading || !isChatHydrated}
+                  onClick={toggleVoiceInput}
+                  aria-label={isListening ? 'Stop voice input' : 'Start voice input'}
+                  title={isListening ? 'Stop voice input' : 'Start voice input'}
+                  className={isListening ? 'text-destructive rounded-full' : 'rounded-full'}
+                >
+                  {isListening ? <MicOff className="size-4" /> : <Mic className="size-4" />}
+                </Button>
+                <Button
+                  size="icon-sm"
+                  disabled={!canSend}
+                  className="rounded-full"
+                  onClick={sendMessage}
+                  aria-label="Send message"
+                  title="Send message"
+                >
+                  <ArrowUp className="size-4" />
+                </Button>
+              </div>
             )}
           </div>
         </div>

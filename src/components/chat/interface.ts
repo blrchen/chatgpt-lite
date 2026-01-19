@@ -1,7 +1,15 @@
+export type MessageContent =
+  | string
+  | Array<
+      | { type: 'text'; text: string }
+      | { type: 'image'; image: string; mimeType?: string }
+      | { type: 'document'; name: string; content: string; mimeType: string }
+    >
+
 export interface ChatMessage {
   id: string
   createdAt: string
-  content: string
+  content: MessageContent
   role: ChatRole
 }
 

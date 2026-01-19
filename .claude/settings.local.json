@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run build)",
+      "Bash(npm install pdf-parse xlsx papaparse mammoth)",
+      "Bash(npm install --save-dev @types/papaparse @types/pdf-parse)",
+      "Bash(npm uninstall pdf-parse @types/pdf-parse)",
+      "Bash(npm install pdf2json)"
+    ]
+  }
+}
