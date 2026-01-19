@@ -3,15 +3,33 @@
 import Papa from 'papaparse'
 import * as XLSX from 'xlsx'
 
+// File size limit: 10MB
+const MAX_PDF_SIZE = 10 * 1024 * 1024 // 10MB in bytes
+
+export interface PDFImage {
+  pageNumber: number
+  name: string
+  width: number
+  height: number
+  dataUrl: string
+}
+
 export interface ParsedFile {
   name: string
   content: string
   mimeType: string
+  images?: PDFImage[]
 }
 
 // Parse PDF file (server-side via API)
 export const parsePDF = async (file: File): Promise<ParsedFile> => {
   try {
+    // Check file size before uploading (10MB limit)
+    if (file.size > MAX_PDF_SIZE) {
+      const sizeMB = (file.size / (1024 * 1024)).toFixed(2)
+      throw new Error(`File size (${sizeMB}MB) exceeds the maximum allowed size of 10MB`)
+    }
+
     const formData = new FormData()
     formData.append('file', file)
 
@@ -27,10 +45,21 @@ export const parsePDF = async (file: File): Promise<ParsedFile> => {
 
     const data = await response.json()
 
+    // Build content with text and image references
+    let content = `[PDF File: ${file.name}]\n\nPages: ${data.pages}\n\n`
+
+    // Add image summary if images exist
+    if (data.images && data.images.length > 0) {
+      content += `Images found: ${data.images.length}\n\n`
+    }
+
+    content += data.content
+
     return {
       name: file.name,
-      content: `[PDF File: ${file.name}]\n\nPages: ${data.pages}\n\n${data.content}`,
-      mimeType: file.type
+      content,
+      mimeType: file.type,
+      images: data.images || []
     }
   } catch (error) {
     console.error('PDF parsing error:', error)

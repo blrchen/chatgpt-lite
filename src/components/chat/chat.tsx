@@ -84,7 +84,12 @@ const Chat = (_: object, ref: React.ForwardedRef<ChatRef>) => {
   const [message, setMessage] = useState('')
   const [uploadedImages, setUploadedImages] = useState<Array<{ url: string; mimeType: string }>>([])
   const [uploadedDocuments, setUploadedDocuments] = useState<
-    Array<{ name: string; content: string; mimeType: string }>
+    Array<{
+      name: string
+      content: string
+      mimeType: string
+      images?: Array<{ pageNumber: number; name: string; width: number; height: number; dataUrl: string }>
+    }>
   >([])
 
   const [currentMessage, setCurrentMessage] = useState<string>('')
@@ -346,7 +351,19 @@ const Chat = (_: object, ref: React.ForwardedRef<ChatRef>) => {
         const contentParts: Array<
           | { type: 'text'; text: string }
           | { type: 'image'; image: string; mimeType?: string }
-          | { type: 'document'; name: string; content: string; mimeType: string }
+          | {
+              type: 'document'
+              name: string
+              content: string
+              mimeType: string
+              images?: Array<{
+                pageNumber: number
+                name: string
+                width: number
+                height: number
+                dataUrl: string
+              }>
+            }
         > = []
         if (input) {
           contentParts.push({ type: 'text', text: input })
@@ -359,7 +376,8 @@ const Chat = (_: object, ref: React.ForwardedRef<ChatRef>) => {
             type: 'document',
             name: doc.name,
             content: doc.content,
-            mimeType: doc.mimeType
+            mimeType: doc.mimeType,
+            images: doc.images // Include PDF images
           })
         })
         messageContent = contentParts

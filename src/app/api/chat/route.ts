@@ -54,7 +54,19 @@ type MessageContent =
   | Array<
       | { type: 'text'; text: string }
       | { type: 'image'; image: string | URL }
-      | { type: 'document'; name: string; content: string; mimeType: string }
+      | {
+          type: 'document'
+          name: string
+          content: string
+          mimeType: string
+          images?: Array<{
+            pageNumber: number
+            name: string
+            width: number
+            height: number
+            dataUrl: string
+          }>
+        }
     >
 
 type ChatCompletionMessage = {
@@ -79,17 +91,38 @@ const convertToCoreMessage = (msg: ChatCompletionMessage): ModelMessage => {
     }
     return {
       role: 'user',
-      content: msg.content.map((part) => {
+      content: msg.content.flatMap((part) => {
         if (part.type === 'text') {
-          return { type: 'text', text: part.text }
+          return [{ type: 'text', text: part.text }]
         } else if (part.type === 'image') {
-          return { type: 'image', image: part.image }
+          return [{ type: 'image', image: part.image }]
         } else {
-          // Convert document to text
-          return {
+          // Convert document to text and include images
+          const result: Array<{ type: 'text'; text: string } | { type: 'image'; image: string | URL }> =
+            []
+
+          // Add document text
+          result.push({
             type: 'text',
             text: `[Document: ${part.name}]\n\n${part.content}`
+          })
+
+          // Add document images if present
+          if (part.images && part.images.length > 0) {
+            result.push({
+              type: 'text',
+              text: `\n\n[This document contains ${part.images.length} image(s)]`
+            })
+
+            part.images.forEach((img) => {
+              result.push({
+                type: 'image',
+                image: img.dataUrl
+              })
+            })
           }
+
+          return result
         }
       })
     }
