@@ -2,10 +2,10 @@ FROM node:22-alpine AS base
 
 # Install dependencies only when needed
 FROM base AS deps
-RUN apk add --no-cache \  
-    libc6-compat \  
-    pixman cairo pango freetype harfbuzz fontconfig \  
-    jpeg-turbo giflib libpng
+RUN apk add --no-cache \
+    libc6-compat \
+    pixman cairo pango freetype harfbuzz fontconfig \
+    libjpeg-turbo giflib libpng
  
 
 WORKDIR /app
