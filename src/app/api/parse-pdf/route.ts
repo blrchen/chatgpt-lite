@@ -9,6 +9,14 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB in bytes
 
 export async function POST(req: NextRequest) {
   try {
+    if (typeof globalThis.DOMMatrix === 'undefined') {
+      const { DOMMatrix, DOMPoint, DOMRect } = await import('@napi-rs/canvas')
+      const globalWithDom = globalThis as Record<string, unknown>
+      globalWithDom.DOMMatrix = DOMMatrix
+      globalWithDom.DOMPoint = DOMPoint
+      globalWithDom.DOMRect = DOMRect
+    }
+
     // Dynamic import: Prevent triggering of pdfjs during module initialization stage
     const { PDFParse } = await import('pdf-parse')
 
