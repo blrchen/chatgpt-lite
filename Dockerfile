@@ -2,7 +2,11 @@ FROM node:22-alpine AS base
 
 # Install dependencies only when needed
 FROM base AS deps
-RUN apk add --no-cache libc6-compat
+RUN apk add --no-cache \
+    libc6-compat \
+    pixman cairo pango freetype harfbuzz fontconfig \
+    libjpeg-turbo giflib libpng
+ 
 
 WORKDIR /app
 
@@ -23,6 +27,11 @@ RUN npm run build
 FROM base AS runner
 WORKDIR /app
 
+RUN apk add --no-cache \
+    libc6-compat \
+    pixman cairo pango freetype harfbuzz fontconfig \
+    libjpeg-turbo giflib libpng
+
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs && \
     mkdir .next && \
@@ -31,6 +40,7 @@ RUN addgroup --system --gid 1001 nodejs && \
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=deps /app/node_modules ./node_modules
 
 USER nextjs
 

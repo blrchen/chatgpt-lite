@@ -1,16 +1,37 @@
-import { NextRequest, NextResponse } from 'next/server'
-import PDFParser from 'pdf2json'
-import { writeFileSync, unlinkSync } from 'fs'
 import { join } from 'path'
-import { tmpdir } from 'os'
+import { pathToFileURL } from 'url'
+import { NextRequest, NextResponse } from 'next/server'
 
-// Note: pdf2json requires Node.js environment
 export const runtime = 'nodejs'
 
-export async function POST(req: NextRequest) {
-  let tempFilePath: string | null = null
+// File size limit: 10MB
+const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB in bytes
 
+export async function POST(req: NextRequest) {
   try {
+    if (typeof globalThis.DOMMatrix === 'undefined') {
+      const { DOMMatrix, DOMPoint, DOMRect } = await import('@napi-rs/canvas')
+      const globalWithDom = globalThis as Record<string, unknown>
+      globalWithDom.DOMMatrix = DOMMatrix
+      globalWithDom.DOMPoint = DOMPoint
+      globalWithDom.DOMRect = DOMRect
+    }
+
+    // Dynamic import: Prevent triggering of pdfjs during module initialization stage
+    const { PDFParse } = await import('pdf-parse')
+
+    // Configure worker path for Node.js environment
+    // Convert to file:// URL for Windows compatibility
+    const workerPath = join(
+      process.cwd(),
+      'node_modules',
+      'pdf-parse',
+      'dist',
+      'worker',
+      'pdf.worker.mjs'
+    )
+    const workerUrl = pathToFileURL(workerPath).href
+    PDFParse.setWorker(workerUrl)
     const formData = await req.formData()
     const file = formData.get('file') as File
 
@@ -23,89 +44,53 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'File must be a PDF' }, { status: 400 })
     }
 
+    // Check file size (10MB limit)
+    if (file.size > MAX_FILE_SIZE) {
+      const sizeMB = (file.size / (1024 * 1024)).toFixed(2)
+      return NextResponse.json(
+        { error: `File size (${sizeMB}MB) exceeds the maximum allowed size of 10MB` },
+        { status: 413 }
+      )
+    }
+
     // Convert file to buffer
     const arrayBuffer = await file.arrayBuffer()
     const buffer = Buffer.from(arrayBuffer)
 
-    // Create a temporary file (pdf2json needs a file path)
-    tempFilePath = join(tmpdir(), `pdf-${Date.now()}-${Math.random().toString(36).substring(7)}.pdf`)
-    writeFileSync(tempFilePath, buffer)
+    // Parse PDF using pdf-parse
+    const parser = new PDFParse({ data: buffer })
 
-    // Parse PDF using pdf2json
-    const pdfParser = new PDFParser()
+    // Extract text
+    const textResult = await parser.getText()
 
-    const parsedData = await new Promise<{
-      Pages?: Array<{
-        Texts?: Array<{
-          R?: Array<{ T?: string }>
-        }>
-      }>
-    }>((resolve, reject) => {
-      pdfParser.on('pdfParser_dataError', (errData: Error | { parserError: Error }) => {
-        const errorMessage = errData instanceof Error
-          ? errData.message
-          : errData.parserError?.message || 'PDF parsing error'
-        reject(new Error(errorMessage))
-      })
+    // Extract images
+    const imageResult = await parser.getImage({ imageThreshold: 50 })
 
-      pdfParser.on('pdfParser_dataReady', (pdfData: {
-        Pages?: Array<{
-          Texts?: Array<{
-            R?: Array<{ T?: string }>
-          }>
-        }>
-      }) => {
-        resolve(pdfData)
-      })
+    await parser.destroy()
 
-      pdfParser.loadPDF(tempFilePath!)
-    })
-
-    // Extract text from parsed data
-    let text = ''
-    let pageCount = 0
-
-    if (parsedData.Pages) {
-      pageCount = parsedData.Pages.length
-
-      parsedData.Pages.forEach((page) => {
-        if (page.Texts) {
-          page.Texts.forEach((textItem) => {
-            if (textItem.R) {
-              textItem.R.forEach((run) => {
-                if (run.T) {
-                  text += decodeURIComponent(run.T) + ' '
-                }
-              })
-            }
-          })
-          text += '\n'
-        }
-      })
-    }
-
-    // Clean up temp file
-    if (tempFilePath) {
-      unlinkSync(tempFilePath)
+    // Process images into base64 data URLs
+    const images = []
+    for (const page of imageResult.pages) {
+      for (const img of page.images) {
+        images.push({
+          pageNumber: page.pageNumber,
+          name: img.name,
+          width: img.width,
+          height: img.height,
+          dataUrl: img.dataUrl // Base64 data URL
+        })
+      }
     }
 
     return NextResponse.json({
       success: true,
       name: file.name,
-      content: text.trim(),
-      pages: pageCount
+      content: textResult.text,
+      pages: textResult.total,
+      images: images
     })
   } catch (error) {
     console.error('PDF parsing error:', error)
-
-    // Clean up temp file on error
-    if (tempFilePath) {
-      try {
-        unlinkSync(tempFilePath)
-      } catch {
-        // Ignore cleanup errors
-      }
-    }
 
     return NextResponse.json(
       {
