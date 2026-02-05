@@ -1,8 +1,8 @@
 import { NextRequest } from 'next/server'
-import { createAzure } from '@ai-sdk/azure'
+import { azure as azureProvider, createAzure } from '@ai-sdk/azure'
 import { createOpenAI } from '@ai-sdk/openai'
 import type { ModelMessage } from '@ai-sdk/provider-utils'
-import { convertToModelMessages, streamText, type LanguageModel } from 'ai'
+import { LanguageModel, streamText } from 'ai'
 
 export const runtime = 'edge'
 
@@ -12,7 +12,7 @@ export const runtime = 'edge'
  *
  * @returns {LanguageModel} Configured language model (Azure or OpenAI)
  */
-function getModel(): LanguageModel {
+function getModel(): { model: LanguageModel; isAzure: boolean } {
   // Check if Azure OpenAI credentials are provided
   const azureResourceName = process.env.AZURE_OPENAI_RESOURCE_NAME
   const azureApiKey = process.env.AZURE_OPENAI_API_KEY
@@ -24,7 +24,7 @@ function getModel(): LanguageModel {
       resourceName: azureResourceName,
       apiKey: azureApiKey
     })
-    return azure(azureDeployment)
+    return { model: azure(azureDeployment), isAzure: true }
   }
 
   // Fallback to OpenAI
@@ -46,7 +46,7 @@ function getModel(): LanguageModel {
     baseURL: openaiBaseUrl
   })
 
-  return openai.chat(openaiModel)
+  return { model: openai.chat(openaiModel), isAzure: false }
 }
 
 type MessageContent =
@@ -74,6 +74,7 @@ type ChatCompletionMessage = {
   content: MessageContent
 }
 
+
 const convertToCoreMessage = (msg: ChatCompletionMessage): ModelMessage => {
   if (msg.role === 'system') {
     return {
@@ -98,8 +99,9 @@ const convertToCoreMessage = (msg: ChatCompletionMessage): ModelMessage => {
           return [{ type: 'image', image: part.image }]
         } else {
           // Convert document to text and include images
-          const result: Array<{ type: 'text'; text: string } | { type: 'image'; image: string | URL }> =
-            []
+          const result: Array<
+            { type: 'text'; text: string } | { type: 'image'; image: string | URL }
+          > = []
 
           // Add document text
           result.push({
@@ -143,21 +145,45 @@ export async function POST(req: NextRequest) {
       input: MessageContent
     }
 
-    // Build messages array with proper typing
     const messagesWithHistory: ModelMessage[] = [
       { role: 'system', content: prompt },
       ...messages.map(convertToCoreMessage),
       convertToCoreMessage({ role: 'user', content: input })
     ]
 
-    // Use streamText from ai-sdk
-    const result = await streamText({
-      model: getModel(),
-      messages: messagesWithHistory,
-      temperature: 1
+    const { model, isAzure } = getModel()
+
+    // Auto-enable web search tool for Azure native configuration
+    // The model will intelligently decide when to use it based on the question
+    const canUseWebSearch = isAzure
+
+    console.log('[Chat API] Auto web search:', {
+      isAzure,
+      canUseWebSearch,
+      modelWillDecide: canUseWebSearch
     })
 
-    // Return the text stream
+    // Use streamText from ai-sdk
+    const result = await streamText({
+      model,
+      messages: messagesWithHistory,
+      tools: canUseWebSearch
+        ? ({
+            // ✅ Azure Web Search (preview)
+            // The model will automatically decide when to use this tool
+            web_search_preview: azureProvider.tools.webSearchPreview({
+              searchContextSize: 'high'
+              // userLocation: {
+              //   type: 'approximate',
+              //   country: 'CN'
+              // }
+            })
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          } as any)
+        : undefined
+      // Note: No toolChoice specified - let the model decide intelligently
+    })
+
     return result.toTextStreamResponse()
   } catch (error) {
     console.error(error)
