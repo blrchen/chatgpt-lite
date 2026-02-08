@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server'
 import { azure as azureProvider, createAzure } from '@ai-sdk/azure'
 import { createOpenAI } from '@ai-sdk/openai'
 import type { ModelMessage } from '@ai-sdk/provider-utils'
-import { LanguageModel, streamText } from 'ai'
+import { convertToModelMessages, LanguageModel, streamText, UIMessage } from 'ai'
 
 export const runtime = 'edge'
 
@@ -49,106 +49,16 @@ function getModel(): { model: LanguageModel; isAzure: boolean } {
   return { model: openai.chat(openaiModel), isAzure: false }
 }
 
-type MessageContent =
-  | string
-  | Array<
-      | { type: 'text'; text: string }
-      | { type: 'image'; image: string | URL }
-      | {
-          type: 'document'
-          name: string
-          content: string
-          mimeType: string
-          images?: Array<{
-            pageNumber: number
-            name: string
-            width: number
-            height: number
-            dataUrl: string
-          }>
-        }
-    >
-
-type ChatCompletionMessage = {
-  role: 'assistant' | 'user' | 'system'
-  content: MessageContent
-}
-
-
-const convertToCoreMessage = (msg: ChatCompletionMessage): ModelMessage => {
-  if (msg.role === 'system') {
-    return {
-      role: 'system',
-      content: typeof msg.content === 'string' ? msg.content : ''
-    }
-  }
-
-  if (msg.role === 'user') {
-    if (typeof msg.content === 'string') {
-      return {
-        role: 'user',
-        content: msg.content
-      }
-    }
-    return {
-      role: 'user',
-      content: msg.content.flatMap((part) => {
-        if (part.type === 'text') {
-          return [{ type: 'text', text: part.text }]
-        } else if (part.type === 'image') {
-          return [{ type: 'image', image: part.image }]
-        } else {
-          // Convert document to text and include images
-          const result: Array<
-            { type: 'text'; text: string } | { type: 'image'; image: string | URL }
-          > = []
-
-          // Add document text
-          result.push({
-            type: 'text',
-            text: `[Document: ${part.name}]\n\n${part.content}`
-          })
-
-          // Add document images if present
-          if (part.images && part.images.length > 0) {
-            result.push({
-              type: 'text',
-              text: `\n\n[This document contains ${part.images.length} image(s)]`
-            })
-
-            part.images.forEach((img) => {
-              result.push({
-                type: 'image',
-                image: img.dataUrl
-              })
-            })
-          }
-
-          return result
-        }
-      })
-    }
-  }
-
-  // assistant
-  return {
-    role: 'assistant',
-    content: typeof msg.content === 'string' ? msg.content : ''
-  }
-}
-
 export async function POST(req: NextRequest) {
   try {
-    const { prompt, messages, input } = (await req.json()) as {
+    const { prompt, messages } = (await req.json()) as {
       prompt: string
-      messages: ChatCompletionMessage[]
-      input: MessageContent
+      messages: UIMessage[]
     }
 
     const messagesWithHistory: ModelMessage[] = [
       { role: 'system', content: prompt },
-      ...messages.map(convertToCoreMessage),
-      convertToCoreMessage({ role: 'user', content: input })
+      ...(await convertToModelMessages(messages))
     ]
 
     const { model, isAzure } = getModel()
@@ -164,7 +74,7 @@ export async function POST(req: NextRequest) {
     })
 
     // Use streamText from ai-sdk
-    const result = await streamText({
+    const result = streamText({
       model,
       messages: messagesWithHistory,
       tools: canUseWebSearch
@@ -184,7 +94,11 @@ export async function POST(req: NextRequest) {
       // Note: No toolChoice specified - let the model decide intelligently
     })
 
-    return result.toTextStreamResponse()
+    // ✅ Use toUIMessageStreamResponse to include text + sources (annotations from web search)
+    // This automatically includes SourceUrlUIPart for citations
+    return result.toUIMessageStreamResponse({
+      sendSources: true
+    })
   } catch (error) {
     console.error(error)
     return new Response(
