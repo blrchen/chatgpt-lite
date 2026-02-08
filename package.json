@@ -16,6 +16,7 @@
   "dependencies": {
     "@ai-sdk/azure": "^3.0.26",
     "@ai-sdk/openai": "^3.0.25",
+    "@ai-sdk/react": "^3.0.79",
     "@hookform/resolvers": "^5.2.2",
     "@napi-rs/canvas": "^0.1.88",
     "@radix-ui/react-dialog": "^1.1.15",

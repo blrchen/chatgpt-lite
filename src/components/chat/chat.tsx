@@ -11,8 +11,9 @@ import {
   useRef,
   useState
 } from 'react'
-import { ensureMessageIds, generateMessageId } from '@/components/chat/utils'
 import { Button } from '@/components/ui/button'
+import { UIMessage, useChat } from '@ai-sdk/react'
+import { DefaultChatTransport } from 'ai'
 import {
   AlertCircle,
   ArrowUp,
@@ -28,42 +29,36 @@ import { toast } from 'sonner'
 import { StickToBottom } from 'use-stick-to-bottom'
 
 import ChatContext from './chatContext'
-import type { ChatMessage, MessageContent } from './interface'
 import { Message } from './message'
 import { usePersonaContext } from './personaContext'
 
+type MessageContent =
+  | string
+  | Array<
+      | { type: 'text'; text: string }
+      | { type: 'image'; image: string; mimeType?: string }
+      | {
+          type: 'document'
+          name: string
+          content: string
+          mimeType: string
+          images?: Array<{
+            pageNumber: number
+            name: string
+            width: number
+            height: number
+            dataUrl: string
+          }>
+        }
+    >
+
 export interface ChatRef {
-  setConversation: (messages: ChatMessage[], chatId?: string | null) => void
-  getConversation: () => ChatMessage[]
+  setConversation: (messages: UIMessage[], chatId?: string | null) => void
+  getConversation: () => UIMessage[]
   focus: () => void
 }
 
-const toMessagePayload = (messages: ChatMessage[]) =>
-  messages.map(({ role, content }) => ({ role, content }))
-
-const sendChatMessage = async (
-  personaPrompt: string,
-  messages: ChatMessage[],
-  input: MessageContent
-) => {
-  const url = '/api/chat'
-
-  const data = {
-    prompt: personaPrompt,
-    messages: toMessagePayload(messages),
-    input
-  }
-
-  return await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(data)
-  })
-}
-
-type ConversationUpdater = ChatMessage[] | ((prev: ChatMessage[]) => ChatMessage[])
+type ConversationUpdater = UIMessage[] | ((prev: UIMessage[]) => UIMessage[])
 
 const Chat = (_: object, ref: React.ForwardedRef<ChatRef>) => {
   const {
@@ -76,7 +71,6 @@ const Chat = (_: object, ref: React.ForwardedRef<ChatRef>) => {
   } = useContext(ChatContext)
   const { getPersonaById } = usePersonaContext()
 
-  const [loadingChatId, setLoadingChatId] = useState<string | null>(null)
   const [composerError, setComposerError] = useState<string | null>(null)
   const [isComposerFocused, setIsComposerFocused] = useState(false)
   const [isComposing, setIsComposing] = useState(false)
@@ -88,11 +82,16 @@ const Chat = (_: object, ref: React.ForwardedRef<ChatRef>) => {
       name: string
       content: string
       mimeType: string
-      images?: Array<{ pageNumber: number; name: string; width: number; height: number; dataUrl: string }>
+      images?: Array<{
+        pageNumber: number
+        name: string
+        width: number
+        height: number
+        dataUrl: string
+      }>
     }>
   >([])
 
-  const [currentMessage, setCurrentMessage] = useState<string>('')
   const [isListening, setIsListening] = useState(false)
 
   const textAreaRef = useRef<HTMLTextAreaElement | null>(null)
@@ -102,41 +101,92 @@ const Chat = (_: object, ref: React.ForwardedRef<ChatRef>) => {
   const isManualStopRef = useRef<boolean>(false)
   const isListeningRef = useRef<boolean>(false)
 
-  const getComposerValue = useCallback(() => textAreaRef.current?.value ?? message ?? '', [message])
-  const getComposerText = useCallback(() => getComposerValue().trim(), [getComposerValue])
+  // Get persona prompt for current chat
+  const activeChat = currentChat || getChatById(currentChatId)
+  const personaForChat =
+    activeChat?.persona?.id && getPersonaById
+      ? (getPersonaById(activeChat.persona.id) ?? activeChat.persona)
+      : activeChat?.persona
+  const personaPrompt = personaForChat?.prompt?.trim() ?? ''
 
-  const [conversation, setConversationState] = useState<ChatMessage[]>([])
-  const conversationRef = useRef<ChatMessage[]>([])
-  const conversationChatIdRef = useRef<string | undefined>(undefined)
-  const activeChatIdRef = useRef<string | null>(null)
-  const streamingChatIdRef = useRef<string | null>(null)
+  // Use AI SDK's useChat hook
+  const {
+    messages: uiMessages,
+    sendMessage: sendAIMessage,
+    status,
+    setMessages: setUIMessages,
+    error: chatError,
+    stop,
+    regenerate
+  } = useChat({
+    transport: new DefaultChatTransport({
+      api: '/api/chat',
+      body: {
+        prompt: personaPrompt
+      }
+    }),
+    onError: (error) => {
+      console.error('[Chat Error]', error)
+      toast.error(error.message || 'Failed to send message')
+      setComposerError('Unable to send message. Please try again.')
+    },
+    onFinish: ({ message, messages, isAbort, isDisconnect, isError }) => {
+      console.log('[Chat] Message finished', {
+        messageId: message.id,
+        isAbort,
+        isDisconnect,
+        isError,
+        metadata: message.metadata
+      })
+      // Save to context after stream completes (UIMessages directly)
+      saveMessages(messages, currentChatId || undefined, { chat: activeChat })
+    }
+  })
+
+  const isLoading = status === 'submitted' || status === 'streaming'
+
+  // Use UI messages directly without conversion
+  const conversation: UIMessage[] = uiMessages
+  const conversationRef = useRef<UIMessage[]>(conversation)
+  const conversationChatIdRef = useRef<string | undefined>(currentChatId || undefined)
+  const activeChatIdRef = useRef<string | null>(currentChatId)
+
+  useEffect(() => {
+    conversationRef.current = conversation
+  }, [conversation])
+
+  useEffect(() => {
+    activeChatIdRef.current = currentChatId ?? null
+  }, [currentChatId])
+
+  // Sync conversation with chat context
   const setConversation = useCallback(
     (updater: ConversationUpdater, chatId?: string | null) => {
-      setConversationState((prev) => {
-        const next =
-          typeof updater === 'function'
-            ? (updater as (prev: ChatMessage[]) => ChatMessage[])(prev)
-            : updater
-        const nextWithIds = ensureMessageIds(next)
-        conversationRef.current = nextWithIds
-        const resolvedChatId =
-          chatId === null ? undefined : (chatId ?? currentChatId ?? conversationChatIdRef.current)
-        conversationChatIdRef.current = resolvedChatId
-        return nextWithIds
-      })
+      const next =
+        typeof updater === 'function'
+          ? (updater as (prev: UIMessage[]) => UIMessage[])(conversationRef.current)
+          : updater
+
+      setUIMessages(next)
+      conversationRef.current = next
+      const resolvedChatId =
+        chatId === null ? undefined : (chatId ?? currentChatId ?? conversationChatIdRef.current)
+      conversationChatIdRef.current = resolvedChatId
     },
-    [currentChatId]
+    [currentChatId, setUIMessages]
   )
 
   const chatInputId = useId()
   const helperTextId = useId()
   const errorTextId = useId()
-  const isCurrentChatLoading = loadingChatId !== null && loadingChatId === currentChatId
+  const isCurrentChatLoading = isLoading
   const hasActiveChat = Boolean(currentChatId ?? conversationChatIdRef.current)
+  const getComposerValue = useCallback(() => textAreaRef.current?.value ?? message ?? '', [message])
+  const getComposerText = useCallback(() => getComposerValue().trim(), [getComposerValue])
   const canSend =
     isChatHydrated &&
     hasActiveChat &&
-    !isCurrentChatLoading &&
+    status === 'ready' &&
     (Boolean(getComposerText()) || uploadedImages.length > 0 || uploadedDocuments.length > 0)
   const textareaClassName =
     'text-foreground w-full min-w-0 resize-none !border-0 !bg-transparent text-base leading-relaxed break-all !outline-none !shadow-none focus:!outline-none focus:!border-0 focus:!ring-0 focus-visible:!outline-none focus-visible:!ring-0 focus-visible:!ring-offset-0 max-h-[200px] min-h-[24px] overflow-y-auto [field-sizing:content]'
@@ -160,8 +210,6 @@ const Chat = (_: object, ref: React.ForwardedRef<ChatRef>) => {
     if (!files || files.length === 0) return
 
     Array.from(files).forEach((file) => {
-      // Check file type - on mobile browsers, file.type might be empty
-      // So also check file extension as fallback
       const fileName = file.name.toLowerCase()
       const isImage =
         file.type.startsWith('image/') ||
@@ -181,7 +229,6 @@ const Chat = (_: object, ref: React.ForwardedRef<ChatRef>) => {
       const reader = new FileReader()
       reader.onload = (event) => {
         const base64 = event.target?.result as string
-        // Use file.type if available, otherwise infer from extension
         const mimeType = file.type || `image/${fileName.split('.').pop()}`
         setUploadedImages((prev) => [...prev, { url: base64, mimeType }])
       }
@@ -209,7 +256,6 @@ const Chat = (_: object, ref: React.ForwardedRef<ChatRef>) => {
       const fileType = file.type.toLowerCase()
       const fileName = file.name.toLowerCase()
 
-      // Check if it's a supported document type
       const isSupported =
         fileType === 'text/plain' ||
         fileType === 'text/csv' ||
@@ -228,7 +274,6 @@ const Chat = (_: object, ref: React.ForwardedRef<ChatRef>) => {
       }
 
       try {
-        // Dynamically import the file parser
         const { parseFile } = await import('@/lib/fileParser')
         const parsed = await parseFile(file)
 
@@ -258,18 +303,15 @@ const Chat = (_: object, ref: React.ForwardedRef<ChatRef>) => {
         const recognition = new SpeechRecognition()
         recognition.continuous = true
         recognition.interimResults = true
-        recognition.lang = 'zh-CN' // Set to Chinese, you can make this configurable
+        recognition.lang = 'zh-CN'
 
         recognition.onresult = (event: any) => {
-          let interimTranscript = ''
           let finalTranscript = ''
 
           for (let i = event.resultIndex; i < event.results.length; i++) {
             const transcript = event.results[i][0].transcript
             if (event.results[i].isFinal) {
               finalTranscript += transcript
-            } else {
-              interimTranscript += transcript
             }
           }
 
@@ -281,18 +323,14 @@ const Chat = (_: object, ref: React.ForwardedRef<ChatRef>) => {
         recognition.onerror = (event: any) => {
           console.error('Speech recognition error:', event.error)
 
-          // Handle different error types
           if (event.error === 'not-allowed') {
             setIsListening(false)
             isListeningRef.current = false
             isManualStopRef.current = true
             toast.error('Microphone access denied. Please allow microphone access in your browser.')
           } else if (event.error === 'no-speech') {
-            // Don't show error for no-speech - it's common during pauses
-            // The recognition will auto-restart via onend handler
             console.log('No speech detected, will auto-restart if still listening')
           } else if (event.error === 'aborted') {
-            // Manual abort, don't show error
             console.log('Speech recognition aborted')
           } else {
             setIsListening(false)
@@ -303,7 +341,6 @@ const Chat = (_: object, ref: React.ForwardedRef<ChatRef>) => {
         }
 
         recognition.onend = () => {
-          // If it was a manual stop, just update state
           if (isManualStopRef.current) {
             setIsListening(false)
             isListeningRef.current = false
@@ -311,8 +348,6 @@ const Chat = (_: object, ref: React.ForwardedRef<ChatRef>) => {
             return
           }
 
-          // Auto-restart if it stopped unexpectedly and user hasn't manually stopped
-          // This handles browser auto-stop after silence
           if (isListeningRef.current) {
             try {
               recognition.start()
@@ -349,7 +384,6 @@ const Chat = (_: object, ref: React.ForwardedRef<ChatRef>) => {
       try {
         isManualStopRef.current = true
         recognitionRef.current.stop()
-        // Don't set state here - let onend handler do it
       } catch (error) {
         console.error('Error stopping speech recognition:', error)
         isManualStopRef.current = true
@@ -372,17 +406,13 @@ const Chat = (_: object, ref: React.ForwardedRef<ChatRef>) => {
     }
   }, [isListening])
 
-  useEffect(() => {
-    activeChatIdRef.current = currentChatId ?? null
-  }, [currentChatId])
-
   const sendMessage = useCallback(
-    async (e: React.FormEvent | React.MouseEvent) => {
-      if (loadingChatId !== null && loadingChatId === currentChatId) {
+    async (e?: React.FormEvent | React.MouseEvent) => {
+      if (status !== 'ready') {
         return
       }
 
-      e.preventDefault()
+      e?.preventDefault()
       const input = getComposerText()
       if (input.length < 1 && uploadedImages.length === 0 && uploadedDocuments.length === 0) {
         setComposerError('Please enter a message or upload a file to continue.')
@@ -400,18 +430,11 @@ const Chat = (_: object, ref: React.ForwardedRef<ChatRef>) => {
         return
       }
 
-      const targetChatId = activeChat.id
-      activeChatIdRef.current = targetChatId
-      const history = [...conversationRef.current]
-      const personaForChat =
-        activeChat.persona?.id && getPersonaById
-          ? (getPersonaById(activeChat.persona.id) ?? activeChat.persona)
-          : activeChat.persona
-      const personaPrompt = personaForChat?.prompt?.trim() ?? ''
       if (!personaPrompt) {
         setComposerError('This persona is missing a prompt. Please edit it and try again.')
         return
       }
+
       // Build message content with text, images, and documents
       let messageContent: MessageContent = input
       if (uploadedImages.length > 0 || uploadedDocuments.length > 0) {
@@ -444,158 +467,79 @@ const Chat = (_: object, ref: React.ForwardedRef<ChatRef>) => {
             name: doc.name,
             content: doc.content,
             mimeType: doc.mimeType,
-            images: doc.images // Include PDF images
+            images: doc.images
           })
         })
         messageContent = contentParts
       }
 
-      const userMessage: ChatMessage = {
-        id: generateMessageId(),
-        createdAt: new Date().toISOString(),
-        content: messageContent,
-        role: 'user'
-      }
-      const pendingConversation = [...history, userMessage]
-
-      setLoadingChatId(targetChatId)
       setComposerError(null)
-      setConversation(pendingConversation, targetChatId)
-      saveMessages(pendingConversation, targetChatId, { chat: activeChat })
       setMessage('')
       setUploadedImages([])
       setUploadedDocuments([])
-      setCurrentMessage('')
-
-      streamingChatIdRef.current = targetChatId
 
       try {
-        const response = await sendChatMessage(personaPrompt, history, messageContent)
-
-        if (response.ok) {
-          const data = response.body
-
-          if (!data) {
-            throw new Error('No data')
-          }
-
-          const reader = data.getReader()
-          const decoder = new TextDecoder('utf-8')
-          let done = false
-          let resultContent = ''
-          let frameHandle: number | null = null
-          let chunkBuffer = ''
-
-          const flushBuffer = () => {
-            if (!chunkBuffer) return
-            resultContent += chunkBuffer
-            chunkBuffer = ''
-            const isCurrentChatActive =
-              streamingChatIdRef.current === targetChatId &&
-              activeChatIdRef.current === targetChatId
-            if (isCurrentChatActive) {
-              setCurrentMessage(resultContent)
-            }
-          }
-
-          while (!done) {
-            try {
-              const { value, done: readerDone } = await reader.read()
-              const char = decoder.decode(value, { stream: true })
-              if (char) {
-                chunkBuffer += char
-                if (frameHandle === null) {
-                  frameHandle = requestAnimationFrame(() => {
-                    flushBuffer()
-                    frameHandle = null
-                  })
-                }
-              }
-              done = readerDone
-            } catch {
-              done = true
-            }
-          }
-
-          if (frameHandle !== null) {
-            cancelAnimationFrame(frameHandle)
-            frameHandle = null
-          }
-          flushBuffer()
-
-          const finalAssistantMessage: ChatMessage = {
-            id: generateMessageId(),
-            createdAt: new Date().toISOString(),
-            content: resultContent,
-            role: 'assistant'
-          }
-          const finalConversation: ChatMessage[] = [...pendingConversation, finalAssistantMessage]
-
-          if (activeChatIdRef.current === targetChatId) {
-            setConversation(finalConversation, targetChatId)
-          }
-          saveMessages(finalConversation, targetChatId, { chat: activeChat })
-          if (
-            streamingChatIdRef.current === targetChatId &&
-            activeChatIdRef.current === targetChatId
-          ) {
-            setCurrentMessage('')
-          }
-        } else {
-          const result = await response.json()
-          toast.error(result.error)
-          setComposerError('Unable to send message. Please try again.')
-        }
+        // Use AI SDK's sendMessage to send message
+        await sendAIMessage({
+          text: typeof messageContent === 'string' ? messageContent : JSON.stringify(messageContent)
+        })
       } catch (error) {
         console.error(error)
         toast.error(error instanceof Error ? error.message : 'Unknown error')
         setComposerError('Something went wrong. Please try again.')
-      } finally {
-        if (streamingChatIdRef.current === targetChatId) {
-          streamingChatIdRef.current = null
-        }
-        setLoadingChatId((prev) => (prev === targetChatId ? null : prev))
       }
     },
     [
+      status,
       isChatHydrated,
       ensureActiveChat,
-      getPersonaById,
       getComposerText,
-      currentChatId,
-      loadingChatId,
-      saveMessages,
-      setConversation,
       uploadedImages,
-      uploadedDocuments
+      uploadedDocuments,
+      personaPrompt,
+      sendAIMessage
     ]
   )
 
   const handleKeypress = useCallback(
     (e: React.KeyboardEvent) => {
-      // Block submission during IME composition (e.g., Chinese/Japanese/Korean input)
       if (e.key === 'Enter' && !e.shiftKey && !isComposing) {
         e.preventDefault()
-        if (!isChatHydrated || isCurrentChatLoading) {
+        if (!isChatHydrated || status !== 'ready') {
           return
         }
         const input = getComposerText()
-        if (!input) {
+        if (!input && uploadedImages.length === 0 && uploadedDocuments.length === 0) {
           setComposerError('Please enter a message to continue.')
           return
         }
-        sendMessage(e)
+        // Call sendMessage without event parameter
+        void sendMessage(e as any)
       }
     },
-    [getComposerText, isChatHydrated, isComposing, isCurrentChatLoading, sendMessage]
+    [
+      getComposerText,
+      isChatHydrated,
+      isComposing,
+      status,
+      sendMessage,
+      uploadedImages,
+      uploadedDocuments
+    ]
+  )
+
+  const handleSendClick = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>) => {
+      void sendMessage(e)
+    },
+    [sendMessage]
   )
 
   const clearMessages = () => {
-    const chatId = currentChatId ?? null
-    if (isCurrentChatLoading) {
+    if (status !== 'ready') {
       return
     }
-    setConversation([], chatId)
+    setConversation([], currentChatId)
     setUploadedImages([])
     setUploadedDocuments([])
   }
@@ -607,47 +551,23 @@ const Chat = (_: object, ref: React.ForwardedRef<ChatRef>) => {
   }, [currentChatId])
 
   useEffect(() => {
-    if (!currentChat?.id) {
-      setCurrentMessage('')
-      return
-    }
-    if (streamingChatIdRef.current && streamingChatIdRef.current !== currentChat.id) {
-      setCurrentMessage('')
-    }
-  }, [currentChat?.id])
-
-  useEffect(() => {
-    if (!currentChatId) {
-      return
-    }
-    if (!isChatHydrated) {
-      return
-    }
-    if (conversationChatIdRef.current !== currentChatId) {
-      setCurrentMessage('')
-    }
-  }, [currentChatId, isChatHydrated])
-
-  useEffect(() => {
-    if (!isChatHydrated) {
-      return
-    }
-    const targetChatId = conversationChatIdRef.current ?? currentChatId
-    if (!targetChatId) {
-      return
-    }
-    saveMessages(conversation, targetChatId)
-  }, [conversation, currentChatId, isChatHydrated, saveMessages])
-
-  useEffect(() => {
-    if (!isCurrentChatLoading) {
+    if (status === 'ready') {
       textAreaRef.current?.focus()
     }
-  }, [isCurrentChatLoading])
+  }, [status])
+
+  // Load conversation when chat changes
+  useEffect(() => {
+    if (currentChat?.id && isChatHydrated) {
+      // Messages are already in UIMessage format from context
+      const chatMessages = conversationRef.current
+      if (chatMessages.length > 0) {
+        setUIMessages(chatMessages)
+      }
+    }
+  }, [currentChat?.id, isChatHydrated, setUIMessages])
 
   const renderComposer = (showClear?: boolean) => {
-    const actionAlignment = showClear ? 'justify-between' : 'justify-end'
-
     return (
       <div className="relative">
         <div className="bg-background border-border focus-within:ring-ring focus-within:border-ring has-[textarea[aria-invalid=true]]:border-destructive has-[textarea[aria-invalid=true]]:ring-destructive/20 flex flex-col rounded-2xl border shadow-[0_0_0_1px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.04)] transition-all duration-200 focus-within:ring-2 has-[textarea[aria-invalid=true]]:ring-2 dark:shadow-[0_0_0_1px_rgba(255,255,255,0.06),0_2px_8px_rgba(0,0,0,0.2)]">
@@ -711,7 +631,7 @@ const Chat = (_: object, ref: React.ForwardedRef<ChatRef>) => {
               rows={1}
               className={textareaClassName}
               value={message}
-              disabled={isCurrentChatLoading || !isChatHydrated}
+              disabled={status !== 'ready' || !isChatHydrated}
               id={chatInputId}
               aria-invalid={!!composerError}
               aria-describedby={composerError ? `${helperTextId} ${errorTextId}` : helperTextId}
@@ -736,7 +656,7 @@ const Chat = (_: object, ref: React.ForwardedRef<ChatRef>) => {
                   size="sm"
                   variant="outline"
                   className="shadow-none"
-                  disabled={isCurrentChatLoading}
+                  disabled={status !== 'ready'}
                   onClick={clearMessages}
                 >
                   <Eraser className="mr-2 size-4" />
@@ -754,7 +674,7 @@ const Chat = (_: object, ref: React.ForwardedRef<ChatRef>) => {
               <Button
                 size="icon-sm"
                 variant="ghost"
-                disabled={isCurrentChatLoading || !isChatHydrated}
+                disabled={status !== 'ready' || !isChatHydrated}
                 onClick={() => fileInputRef.current?.click()}
                 aria-label="Upload image"
                 title="Upload image"
@@ -772,7 +692,7 @@ const Chat = (_: object, ref: React.ForwardedRef<ChatRef>) => {
               <Button
                 size="icon-sm"
                 variant="ghost"
-                disabled={isCurrentChatLoading || !isChatHydrated}
+                disabled={status !== 'ready' || !isChatHydrated}
                 onClick={() => documentInputRef.current?.click()}
                 aria-label="Upload document"
                 title="Upload document (PDF, TXT, CSV, Excel)"
@@ -781,19 +701,32 @@ const Chat = (_: object, ref: React.ForwardedRef<ChatRef>) => {
               </Button>
             </div>
             {isCurrentChatLoading ? (
-              <div
-                className="flex items-center justify-center p-2"
-                role="status"
-                aria-live="polite"
-              >
-                <Loader2 className="text-muted-foreground size-5 animate-spin" />
+              <div className="flex gap-2">
+                {status === 'submitted' && (
+                  <div
+                    className="flex items-center justify-center p-2"
+                    role="status"
+                    aria-live="polite"
+                  >
+                    <Loader2 className="text-muted-foreground size-5 animate-spin" />
+                  </div>
+                )}
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => stop()}
+                  aria-label="Stop generation"
+                  title="Stop generation"
+                >
+                  Stop
+                </Button>
               </div>
             ) : (
               <div className="flex gap-2">
                 <Button
                   size="icon-sm"
                   variant="ghost"
-                  disabled={isCurrentChatLoading || !isChatHydrated}
+                  disabled={status !== 'ready' || !isChatHydrated}
                   onClick={toggleVoiceInput}
                   aria-label={isListening ? 'Stop voice input' : 'Start voice input'}
                   title={isListening ? 'Stop voice input' : 'Start voice input'}
@@ -805,7 +738,7 @@ const Chat = (_: object, ref: React.ForwardedRef<ChatRef>) => {
                   size="icon-sm"
                   disabled={!canSend}
                   className="rounded-full"
-                  onClick={sendMessage}
+                  onClick={handleSendClick}
                   aria-label="Send message"
                   title="Send message"
                 >
@@ -823,6 +756,19 @@ const Chat = (_: object, ref: React.ForwardedRef<ChatRef>) => {
           >
             <AlertCircle className="text-destructive size-3.5 shrink-0" />
             <span className="font-medium">{composerError}</span>
+            {chatError && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="ml-auto h-6 px-2 text-xs"
+                onClick={() => {
+                  setComposerError(null)
+                  regenerate()
+                }}
+              >
+                Retry
+              </Button>
+            )}
           </div>
         )}
       </div>
@@ -831,7 +777,7 @@ const Chat = (_: object, ref: React.ForwardedRef<ChatRef>) => {
 
   useImperativeHandle(ref, () => {
     return {
-      setConversation(messages: ChatMessage[], chatId?: string | null) {
+      setConversation(messages: UIMessage[], chatId?: string | null) {
         setConversation(messages, chatId)
       },
       getConversation() {
@@ -851,7 +797,6 @@ const Chat = (_: object, ref: React.ForwardedRef<ChatRef>) => {
         resize="smooth"
       >
         <StickToBottom.Content className="flex min-h-full flex-col">
-          {/* Main chat area */}
           <div className="@container/chat mx-auto w-full max-w-5xl flex-1 px-4 pt-4 pb-3 md:px-6 lg:px-8">
             {!isChatHydrated ? (
               <div className="flex h-full min-h-[60vh] items-center justify-center">
@@ -877,21 +822,9 @@ const Chat = (_: object, ref: React.ForwardedRef<ChatRef>) => {
                 {conversation.map((item) => (
                   <Message key={item.id} message={item} />
                 ))}
-                {currentMessage && (
-                  <Message
-                    key="streaming"
-                    message={{
-                      id: 'streaming',
-                      createdAt: conversation.at(-1)?.createdAt ?? new Date().toISOString(),
-                      content: currentMessage,
-                      role: 'assistant'
-                    }}
-                  />
-                )}
               </div>
             )}
           </div>
-          {/* Input area - only show at bottom when there are messages */}
           {conversation.length > 0 && (
             <div className="bg-background sticky bottom-0 mt-auto">
               <div className="@container/chat mx-auto w-full max-w-5xl px-4 pt-0 pb-2 md:px-6 lg:px-8">

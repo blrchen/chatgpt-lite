@@ -1,13 +1,83 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { DefaultPersona, ensureMessageIds } from '@/components/chat/utils'
+import { DefaultPersona } from '@/components/chat/utils'
 import { cacheGet, cacheGetJson, cacheRemove, cacheSet } from '@/lib/cache'
 import { v4 as uuid } from 'uuid'
 
 import { ChatRef } from './chat'
 import type { ChatContextValue } from './chatContext'
-import { Chat, ChatMessage, MessageContent, Persona } from './interface'
+import { Chat, ChatMessage, MessageContent, Persona, UIMessage } from './interface'
+
+// Convert legacy ChatMessage to UIMessage format
+const convertChatMessageToUIMessage = (msg: ChatMessage): UIMessage => {
+  const parts: any[] = []
+
+  // Convert content to parts
+  if (typeof msg.content === 'string') {
+    if (msg.content) {
+      parts.push({ type: 'text', text: msg.content })
+    }
+  } else {
+    msg.content.forEach((part) => {
+      if (part.type === 'text') {
+        parts.push({ type: 'text', text: part.text })
+      } else if (part.type === 'image') {
+        parts.push({
+          type: 'file',
+          mediaType: part.mimeType || 'image/png',
+          url: part.image
+        })
+      } else if (part.type === 'document') {
+        // Store document info in metadata
+        parts.push({ type: 'text', text: `[Document: ${part.name}]` })
+      }
+    })
+  }
+
+  // Convert sources to source parts
+  if (msg.sources) {
+    msg.sources.forEach((source) => {
+      if (source.type === 'source-url') {
+        parts.push({
+          type: 'source-url',
+          sourceId: source.sourceId,
+          url: source.url,
+          title: source.title
+        })
+      } else if (source.type === 'source-document') {
+        parts.push({
+          type: 'source-document',
+          sourceId: source.sourceId,
+          title: source.title
+        })
+      }
+    })
+  }
+
+  return {
+    id: msg.id,
+    role: msg.role,
+    parts,
+    metadata: {
+      createdAt: msg.createdAt,
+      sources: msg.sources
+    }
+  }
+}
+
+// Check if a message is in legacy format
+const isLegacyMessage = (msg: any): msg is ChatMessage => {
+  return msg && typeof msg === 'object' && 'content' in msg && !('parts' in msg)
+}
+
+// Ensure all messages have IDs
+const ensureMessageIds = (messages: UIMessage[]): UIMessage[] => {
+  return messages.map((msg) => ({
+    ...msg,
+    id: msg.id || uuid()
+  }))
+}
 
 const STORAGE_KEYS = {
   chatList: 'chatList',
@@ -42,27 +112,18 @@ const truncateToWords = (text: string, maxWords: number) => {
 
 const stripHtmlTags = (text: string) => text.replace(/<br\s*\/?>/gi, ' ').replace(/<[^>]*>/g, '')
 
-const getTextFromContent = (content: MessageContent): string => {
-  if (typeof content === 'string') {
-    return content
-  }
-  return content
-    .filter((part) => part.type === 'text' || part.type === 'document')
-    .map((part) => {
-      if (part.type === 'text') {
-        return part.text
-      } else if (part.type === 'document') {
-        return `[${part.name}]`
-      }
-      return ''
-    })
+const getTextFromUIMessage = (msg: UIMessage): string => {
+  if (!msg.parts) return ''
+  return msg.parts
+    .filter((part: any) => part.type === 'text')
+    .map((part: any) => part.text)
     .join(' ')
 }
 
-const deriveTitleFromMessages = (messages: ChatMessage[], fallback: string) => {
+const deriveTitleFromMessages = (messages: UIMessage[], fallback: string) => {
   const userMessage = messages.find((msg) => msg.role === 'user')
-  const userContent = userMessage ? getTextFromContent(userMessage.content).trim() : ''
-  const firstContent = messages[0] ? getTextFromContent(messages[0].content).trim() : ''
+  const userContent = userMessage ? getTextFromUIMessage(userMessage).trim() : ''
+  const firstContent = messages[0] ? getTextFromUIMessage(messages[0]).trim() : ''
   const candidate = stripHtmlTags(userContent || firstContent || '')
   if (!candidate) {
     return fallback
@@ -73,7 +134,7 @@ const deriveTitleFromMessages = (messages: ChatMessage[], fallback: string) => {
 const loadInitialChatData = () => ({
   chatList: [],
   currentChatId: undefined,
-  messagesById: new Map<string, ChatMessage[]>()
+  messagesById: new Map<string, UIMessage[]>()
 })
 
 const loadStoredChatData = () => {
@@ -82,13 +143,19 @@ const loadStoredChatData = () => {
   }
   const storedChatList = normalizeChatList(cacheGetJson<Chat[]>(STORAGE_KEYS.chatList, []))
   const storedCurrentChatId = cacheGet(STORAGE_KEYS.chatCurrentId)
-  const messagesById = new Map<string, ChatMessage[]>()
+  const messagesById = new Map<string, UIMessage[]>()
 
   storedChatList.forEach((chat) => {
     if (!chat?.id) {
       return
     }
-    const messages = cacheGetJson<ChatMessage[]>(`ms_${chat.id}`, [])
+    const rawMessages = cacheGetJson<any[]>(`ms_${chat.id}`, [])
+
+    // Convert legacy ChatMessage format to UIMessage if needed
+    const messages = rawMessages.map((msg) =>
+      isLegacyMessage(msg) ? convertChatMessageToUIMessage(msg) : msg
+    )
+
     messagesById.set(chat.id, ensureMessageIds(messages))
   })
 
@@ -105,7 +172,7 @@ const loadStoredChatData = () => {
 type SyncOptions = { persist?: boolean; refreshConversation?: boolean }
 
 const useChatHook = (): ChatContextValue => {
-  const messagesMapRef = useRef<Map<string, ChatMessage[]>>(new Map<string, ChatMessage[]>())
+  const messagesMapRef = useRef<Map<string, UIMessage[]>>(new Map<string, UIMessage[]>())
   const chatInstanceRef = useRef<ChatRef | null>(null)
   const chatListRef = useRef<Chat[]>([])
   const currentChatIdRef = useRef<string | undefined>(undefined)
@@ -186,14 +253,19 @@ const useChatHook = (): ChatContextValue => {
   )
 
   const saveMessages = useCallback(
-    (messages: ChatMessage[], chatId?: string, options?: { chat?: Chat }) => {
+    (messages: UIMessage[], chatId?: string, options?: { chat?: Chat }) => {
       const targetChatId = chatId ?? currentChatIdRef.current
       if (!targetChatId) {
         return
       }
       const previousCount = messagesMapRef.current.get(targetChatId)?.length ?? 0
       const normalizedMessages = ensureMessageIds(messages)
-      const latestTimestamp = normalizedMessages.at(-1)?.createdAt ?? new Date().toISOString()
+
+      // Get timestamp from metadata or use current time
+      const latestTimestamp =
+        (normalizedMessages.at(-1)?.metadata as any)?.createdAt ||
+        new Date().toISOString()
+
       if (messages.length > 0) {
         cacheSet(`ms_${targetChatId}`, JSON.stringify(normalizedMessages))
         messagesMapRef.current.set(targetChatId, normalizedMessages)
