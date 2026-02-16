@@ -11,6 +11,7 @@
   --font-sans: var(--theme-font-sans);
   --font-mono: var(--theme-font-mono);
   --font-serif: var(--theme-font-serif);
+  --font-display: var(--theme-font-display);
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
@@ -116,6 +117,36 @@
       transform: translateY(calc(-100% - var(--gap, 2rem)));
     }
   }
+  @keyframes voice-ring {
+    0% {
+      transform: scale(1);
+      opacity: 0.6;
+    }
+    100% {
+      transform: scale(2.2);
+      opacity: 0;
+    }
+  }
+  @keyframes breathe {
+    0%, 100% {
+      opacity: 0.3;
+      transform: scale(0.9);
+    }
+    50% {
+      opacity: 0.6;
+      transform: scale(1.1);
+    }
+  }
+  @keyframes pulse-dot {
+    0%, 80%, 100% {
+      opacity: 0.3;
+      transform: scale(0.8);
+    }
+    40% {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
 }
 
 /* Custom utilities */
@@ -139,10 +170,12 @@
   --font-geist-sans: "Geist", "Inter", "Helvetica Neue", Arial, sans-serif;
   --font-geist-mono: "Geist Mono", "JetBrains Mono", "SFMono-Regular", ui-monospace,
     monospace;
-  --font-serif: "Georgia", "Times New Roman", serif;
+  --font-editorial-serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua",
+    Georgia, serif;
   --theme-font-sans: var(--font-geist-sans);
   --theme-font-mono: var(--font-geist-mono);
-  --theme-font-serif: var(--font-serif);
+  --theme-font-serif: var(--font-editorial-serif);
+  --theme-font-display: var(--font-editorial-serif);
   --radius: 0.5rem;
   /* z-index scale */
   --z-dropdown: 10;
@@ -308,7 +341,7 @@
 
   *[class^='text-'] {
     color: transparent;
-    @apply animate-pulse select-none rounded-md bg-foreground/20;
+    @apply animate-pulse motion-reduce:animate-none select-none rounded-md bg-foreground/20;
   }
 
   .skeleton-bg {
@@ -316,7 +349,7 @@
   }
 
   .skeleton-div {
-    @apply animate-pulse bg-foreground/20;
+    @apply animate-pulse motion-reduce:animate-none bg-foreground/20;
   }
 }
 
@@ -343,4 +376,28 @@ table td {
 ::view-transition-new(root) {
   animation: none;
   mix-blend-mode: normal;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [class*='animate-'] {
+    animation: none !important;
+  }
+}
+
+[data-slot='button'].transition-all {
+  transition-property: color, background-color, border-color,
+    text-decoration-color, fill, stroke, opacity, transform;
+}
+
+[data-slot='button'].bg-destructive {
+  color: var(--destructive-foreground);
+}
+
+[data-slot='dialog-overlay'] {
+  background-color: var(--overlay);
+  z-index: var(--z-overlay);
+}
+
+[data-slot='dialog-content'] {
+  z-index: var(--z-modal);
 }

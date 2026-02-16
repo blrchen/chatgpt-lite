@@ -3,16 +3,9 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 type CopyFn = (text: string) => Promise<boolean>
 type UseCopyToClipboardReturn = { copy: CopyFn; copied: boolean }
 
-export const useCopyToClipboard = (resetDelay = 1500): UseCopyToClipboardReturn => {
+export function useCopyToClipboard(resetDelay = 1500): UseCopyToClipboardReturn {
   const [copied, setCopied] = useState(false)
-  const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  const clearResetTimer = useCallback(() => {
-    if (resetTimerRef.current) {
-      clearTimeout(resetTimerRef.current)
-      resetTimerRef.current = null
-    }
-  }, [])
+  const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
   const copy: CopyFn = useCallback(
     async (text) => {
@@ -25,8 +18,8 @@ export const useCopyToClipboard = (resetDelay = 1500): UseCopyToClipboardReturn 
       try {
         await navigator.clipboard.writeText(text)
         setCopied(true)
-        clearResetTimer()
-        resetTimerRef.current = setTimeout(() => setCopied(false), resetDelay)
+        clearTimeout(timerRef.current)
+        timerRef.current = setTimeout(() => setCopied(false), resetDelay)
         return true
       } catch (error) {
         console.warn('Copy failed', error)
@@ -34,14 +27,12 @@ export const useCopyToClipboard = (resetDelay = 1500): UseCopyToClipboardReturn 
         return false
       }
     },
-    [clearResetTimer, resetDelay]
+    [resetDelay]
   )
 
   useEffect(() => {
-    return () => {
-      clearResetTimer()
-    }
-  }, [clearResetTimer])
+    return () => clearTimeout(timerRef.current)
+  }, [])
 
   return { copy, copied }
 }

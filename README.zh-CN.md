@@ -20,6 +20,9 @@ ChatGPT Lite 是一个基于 Next.js 16 和 [OpenAI Chat API](https://platform.o
 - **角色系统** - 创建并切换不同的 AI 人设，自定义系统提示词
 - **持久化聊天记录** - 所有对话本地保存，无需数据库
 - **双平台支持** - 同时兼容 OpenAI 和 Azure OpenAI API
+- **文件附件** - 支持直接上传图片、PDF、电子表格（XLSX/CSV）及文本文件
+- **语音输入** - 通过 Web Speech API 语音识别，支持连续听写
+- **联网搜索** - Azure 和 OpenAI 模型可按需搜索网络，并显示来源引用
 
 **用户体验：**
 
@@ -30,8 +33,9 @@ ChatGPT Lite 是一个基于 Next.js 16 和 [OpenAI Chat API](https://platform.o
 
 **开发体验：**
 
-- 基于 **Next.js 16 App Router**、**React 19**、**TypeScript** 和 **Tailwind CSS v4** 构建
-- 采用 **Shadcn/ui** 组件库，架构清晰易扩展
+- 基于 **Next.js 16 App Router**、**React 19** 和 **Tailwind CSS v4** 构建
+- 使用 **Vercel AI SDK**（`@ai-sdk/react`）实现流式聊天及 UI 消息协议
+- 采用 **Shadcn/ui** 组件库及 **Radix UI** 原语，架构清晰易扩展
 - 支持一键部署到 Vercel、Docker 或任意 Node.js 环境
 
 如果你需要更适合初学者的 ChatGPT UI 代码库，建议查看 [ChatGPT Minimal](https://github.com/blrchen/chatgpt-minimal)。
@@ -64,7 +68,7 @@ Azure OpenAI 账户用户：
 
 ```bash
 docker run -d -p 3000:3000 \
-   -e AZURE_OPENAI_API_BASE_URL=<你的_AZURE_OPENAI_ENDPOINT> \
+   -e AZURE_OPENAI_RESOURCE_NAME=<你的_AZURE_RESOURCE_NAME> \
    -e AZURE_OPENAI_API_KEY=<你的_AZURE_OPENAI_API_KEY> \
    -e AZURE_OPENAI_DEPLOYMENT=<你的_AZURE_OPENAI_DEPLOYMENT_NAME> \
    blrchen/chatgpt-lite
@@ -91,15 +95,15 @@ docker run -d -p 3000:3000 \
 | ------------------- | -------------------------------------------------------------------------------- | ---------------------- |
 | OPENAI_API_BASE_URL | （可选）如需为 `api.openai.com` 配置反向代理可设此变量。                             | https://api.openai.com |
 | OPENAI_API_KEY      | 从 [OpenAI API](https://platform.openai.com/account/api-keys) 获取的密钥字符串。 |                        |
-| OPENAI_MODEL        | （可选）使用的 GPT 模型                                                          | gpt-3.5-turbo          |
+| OPENAI_MODEL        | （可选）使用的 GPT 模型                                                          | gpt-4o-mini          |
 
 **Azure OpenAI 账户：**
 
-| 名称                      | 说明                                        |
-| ------------------------- | ------------------------------------------- |
-| AZURE_OPENAI_API_BASE_URL | 终端地址（如 https://xxx.openai.azure.com） |
-| AZURE_OPENAI_API_KEY      | 密钥                                        |
-| AZURE_OPENAI_DEPLOYMENT   | 模型部署名称                                |
+| 名称                       | 说明                                          |
+| -------------------------- | --------------------------------------------- |
+| AZURE_OPENAI_RESOURCE_NAME | Azure 资源名称（如 "my-openai-resource"）     |
+| AZURE_OPENAI_API_KEY       | 密钥                                          |
+| AZURE_OPENAI_DEPLOYMENT    | 模型部署名称（不是模型名）                    |
 
 ## 致谢
 

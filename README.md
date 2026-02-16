@@ -20,6 +20,9 @@ ChatGPT Lite is a lightweight ChatGPT web application built with Next.js 16 and 
 - **Persona System** - Create and switch between custom AI personalities with different system prompts
 - **Persistent Chat History** - All conversations saved locally with no database required
 - **Dual Provider Support** - Works with both OpenAI and Azure OpenAI APIs
+- **File Attachments** - Upload images, PDFs, spreadsheets (XLSX/CSV), and text files directly in chat
+- **Voice Input** - Dictate messages using Web Speech API with continuous recognition
+- **Web Search Integration** - Azure and OpenAI models can search the web when needed, with source citations
 
 **User Experience:**
 
@@ -30,8 +33,9 @@ ChatGPT Lite is a lightweight ChatGPT web application built with Next.js 16 and 
 
 **Developer Experience:**
 
-- Built with **Next.js 16 App Router**, **React 19**, **TypeScript**, and **Tailwind CSS v4**
-- Clean, extensible architecture using **Shadcn/ui** components
+- Built with **Next.js 16 App Router**, **React 19**, and **Tailwind CSS v4**
+- **Vercel AI SDK** (`@ai-sdk/react`) for streaming chat with UI message protocol
+- Clean, extensible architecture using **Shadcn/ui** components and **Radix UI** primitives
 - Easy deployment to Vercel, Docker, or any Node.js environment
 
 If you’re looking for a more beginner-friendly ChatGPT UI codebase, check out [ChatGPT Minimal](https://github.com/blrchen/chatgpt-minimal).
@@ -64,7 +68,7 @@ For Azure OpenAI account users:
 
 ```bash
 docker run -d -p 3000:3000 \
-   -e AZURE_OPENAI_API_BASE_URL="<YOUR_AZURE_OPENAI_ENDPOINT>" \
+   -e AZURE_OPENAI_RESOURCE_NAME="<YOUR_AZURE_RESOURCE_NAME>" \
    -e AZURE_OPENAI_API_KEY="<YOUR_AZURE_OPENAI_API_KEY>" \
    -e AZURE_OPENAI_DEPLOYMENT="<YOUR_AZURE_OPENAI_DEPLOYMENT_NAME>" \
    blrchen/chatgpt-lite
@@ -91,15 +95,15 @@ For OpenAI account:
 | ------------------- | ------------------------------------------------------------------------------------------------ | ------------------------ |
 | OPENAI_API_BASE_URL | (Optional) Use this if you plan to use a reverse proxy for `api.openai.com`.                     | `https://api.openai.com` |
 | OPENAI_API_KEY      | Secret key obtained from the [OpenAI API website](https://platform.openai.com/account/api-keys). |                          |
-| OPENAI_MODEL        | (Optional) GPT model to use                                                                      | `gpt-3.5-turbo`          |
+| OPENAI_MODEL        | (Optional) GPT model to use                                                                      | `gpt-4o-mini`          |
 
 For Azure OpenAI account:
 
-| Name                      | Description                                      |
-| ------------------------- | ------------------------------------------------ |
-| AZURE_OPENAI_API_BASE_URL | Endpoint (e.g., <https://xxx.openai.azure.com>). |
-| AZURE_OPENAI_API_KEY      | API Key.                                         |
-| AZURE_OPENAI_DEPLOYMENT   | Model deployment name.                           |
+| Name                       | Description                                    |
+| -------------------------- | ---------------------------------------------- |
+| AZURE_OPENAI_RESOURCE_NAME | Azure resource name (e.g., "my-openai-resource"). |
+| AZURE_OPENAI_API_KEY       | API Key.                                       |
+| AZURE_OPENAI_DEPLOYMENT    | Model deployment name (not the model name). |
 
 ## Acknowledgments
 

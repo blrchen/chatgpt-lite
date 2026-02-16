@@ -1,41 +1,33 @@
-'use client'
+const isBrowser = typeof window !== 'undefined'
 
-const isBrowser = () => typeof window !== 'undefined'
-
-export const cacheGet = (key: string): string | null => {
-  if (!isBrowser()) {
-    return null
-  }
-
-  return localStorage.getItem(key)
+export function cacheGet(key: string): string | null {
+  return isBrowser ? localStorage.getItem(key) : null
 }
 
-export const cacheSet = (key: string, value: string) => {
-  if (!isBrowser()) {
-    return
+export function cacheSet(key: string, value: string): void {
+  if (isBrowser) {
+    localStorage.setItem(key, value)
   }
-
-  localStorage.setItem(key, value)
 }
 
-export const cacheRemove = (key: string) => {
-  if (!isBrowser()) {
-    return
-  }
-
-  localStorage.removeItem(key)
+export function cacheSetJson<T>(key: string, value: T): void {
+  cacheSet(key, JSON.stringify(value))
 }
 
-export const cacheGetJson = <T>(key: string, fallback: T): T => {
-  if (!isBrowser()) {
+export function cacheRemove(key: string): void {
+  if (isBrowser) {
+    localStorage.removeItem(key)
+  }
+}
+
+export function cacheGetJson<T>(key: string, fallback: T): T {
+  if (!isBrowser) {
     return fallback
   }
-
   const raw = localStorage.getItem(key)
   if (!raw) {
     return fallback
   }
-
   try {
     return JSON.parse(raw) as T
   } catch {

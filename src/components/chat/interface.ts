@@ -1,52 +1,38 @@
-import { UIMessage as AISDKUIMessage } from '@ai-sdk/react'
+import type { PDFImage } from '@/lib/file-parser'
+import type { UIMessage, UIMessagePart, UITools } from 'ai'
 
-// Re-export UIMessage from AI SDK
-export type UIMessage = AISDKUIMessage
+export type TextMessagePart = { type: 'text'; text: string }
+export type ImageMessagePart = { type: 'image'; image: string; mimeType?: string }
+export type DocumentMessagePart = {
+  type: 'document'
+  name: string
+  content: string
+  mimeType: string
+  images?: PDFImage[]
+}
 
-// Legacy types - kept for backward compatibility with localStorage
-export type MessageContent =
-  | string
-  | Array<
-      | { type: 'text'; text: string }
-      | { type: 'image'; image: string; mimeType?: string }
-      | { type: 'document'; name: string; content: string; mimeType: string }
-    >
+export type MessageContentPart = TextMessagePart | ImageMessagePart | DocumentMessagePart
+export type MessageContent = string | MessageContentPart[]
 
-export type SourceAnnotation =
-  | {
-      type: 'source-url'
-      sourceId: string
-      url: string
-      title?: string
-    }
-  | {
-      type: 'source-document'
-      sourceId: string
-      title?: string
-      documentId?: string
-    }
-  | {
-      type: 'citation'
-      sourceId: string
-      text: string
-      reference?: string
-    }
-  | {
-      type: 'url_citation' // Claude native format with text positions
-      sourceId?: string
-      url: string
-      title?: string
-      start_index: number // Character position where citation starts
-      end_index: number // Character position where citation ends
-    }
+export type ChatMessageSource =
+  | { type: 'url'; id: string; url: string; title?: string }
+  | { type: 'document'; id: string; mediaType: string; title: string; filename?: string }
 
-// Legacy ChatMessage type - kept for backward compatibility
-export interface ChatMessage {
-  id: string
-  createdAt: string
-  content: MessageContent
-  role: ChatRole
-  sources?: SourceAnnotation[]
+export type DocumentAttachmentData = {
+  name: string
+  content: string
+  mimeType: string
+  images?: PDFImage[]
+}
+
+export type ChatMessageDataParts = {
+  document: DocumentAttachmentData
+}
+
+export type ChatMessagePart = UIMessagePart<ChatMessageDataParts, UITools>
+
+export interface ChatMessage extends UIMessage<unknown, ChatMessageDataParts, UITools> {
+  createdAt?: string
 }
 
 export interface Persona {
@@ -61,6 +47,7 @@ export interface Chat {
   createdAt: string
   updatedAt: string
   title: string
+  pinned?: boolean
   persona?: Persona
 }
 

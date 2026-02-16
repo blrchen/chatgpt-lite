@@ -2,15 +2,15 @@
 
 import {
   createContext,
-  ReactNode,
   useCallback,
   useContext,
   useEffect,
   useMemo,
-  useState
+  useState,
+  type ReactNode
 } from 'react'
 import { useAppContext } from '@/contexts/app'
-import { cacheGetJson, cacheSet } from '@/lib/cache'
+import { cacheGetJson, cacheSetJson } from '@/lib/cache'
 import { v4 as uuid } from 'uuid'
 
 import type { Persona } from './interface'
@@ -33,7 +33,7 @@ const PERSONAS_STORAGE_KEY = 'Personas'
 
 const PersonaContext = createContext<PersonaContextValue | null>(null)
 
-export const usePersonaContext = () => {
+export function usePersonaContext(): PersonaContextValue {
   const context = useContext(PersonaContext)
   if (!context) {
     throw new Error('usePersonaContext must be used within PersonaProvider')
@@ -41,7 +41,11 @@ export const usePersonaContext = () => {
   return context
 }
 
-export const PersonaProvider = ({ children }: { children: ReactNode }) => {
+type PersonaProviderProps = {
+  children: ReactNode
+}
+
+export function PersonaProvider({ children }: PersonaProviderProps): React.JSX.Element {
   const {
     personaModalOpen,
     openPersonaModal: openPersonaModalFromApp,
@@ -49,20 +53,12 @@ export const PersonaProvider = ({ children }: { children: ReactNode }) => {
   } = useAppContext()
   const [personas, setPersonas] = useState<Persona[]>(() => {
     const stored = cacheGetJson<Persona[]>(PERSONAS_STORAGE_KEY, [])
-    return stored.map((persona) => {
-      if (!persona.id) {
-        return {
-          ...persona,
-          id: uuid()
-        }
-      }
-      return persona
-    })
+    return stored.map((persona) => (persona.id ? persona : { ...persona, id: uuid() }))
   })
   const [editPersona, setEditPersona] = useState<Persona | undefined>(undefined)
 
   useEffect(() => {
-    cacheSet(PERSONAS_STORAGE_KEY, JSON.stringify(personas))
+    cacheSetJson(PERSONAS_STORAGE_KEY, personas)
   }, [personas])
 
   const closePersonaModal = useCallback(() => {
@@ -109,10 +105,10 @@ export const PersonaProvider = ({ children }: { children: ReactNode }) => {
 
   const getPersonaById = useCallback(
     (id: string) => {
-      return (
-        personas.find((persona) => persona.id === id) ||
-        (id === DefaultPersona.id ? DefaultPersona : undefined)
-      )
+      const found = personas.find((persona) => persona.id === id)
+      if (found) return found
+      if (id === DefaultPersona.id) return DefaultPersona
+      return undefined
     },
     [personas]
   )

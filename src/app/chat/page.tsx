@@ -1,20 +1,19 @@
 'use client'
 
 import { Suspense, useCallback, useContext } from 'react'
-import {
-  Chat,
-  ChatContext,
-  PersonaProvider,
-  SideBar,
-  useChatHook,
-  type Persona
-} from '@/components/chat'
+import Chat from '@/components/chat/chat'
+import ChatContext from '@/components/chat/chatContext'
+import type { Persona } from '@/components/chat/interface'
+import { PersonaProvider } from '@/components/chat/personaContext'
+import { SideBar } from '@/components/chat/sidebar'
+import useChatHook from '@/components/chat/useChatHook'
+import { Header } from '@/components/header/header'
 import { useAppContext } from '@/contexts/app'
 
 import PersonaModal from './persona-modal'
 import PersonaPanel from './persona-panel'
 
-const ChatProvider = () => {
+function ChatProvider(): React.JSX.Element {
   const provider = useChatHook()
 
   return (
@@ -26,7 +25,7 @@ const ChatProvider = () => {
   )
 }
 
-const ChatExperience = () => {
+function ChatExperience(): React.JSX.Element {
   const { chatRef, onCreateChat } = useContext(ChatContext)
   const { closePersonaPanel } = useAppContext()
 
@@ -40,13 +39,12 @@ const ChatExperience = () => {
 
   return (
     <>
-      <div className="bg-background flex min-h-0 flex-1 flex-col overflow-hidden">
-        <div className="relative flex flex-1 overflow-hidden">
-          <SideBar />
-          <div className="relative flex flex-1 flex-col overflow-hidden transition-all duration-300">
-            <Chat ref={chatRef} />
-            <PersonaPanel onStartChat={handleStartPersonaChat} />
-          </div>
+      <div className="bg-background flex min-h-0 flex-1 overflow-hidden">
+        <SideBar />
+        <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+          <Header />
+          <Chat ref={chatRef} />
+          <PersonaPanel onStartChat={handleStartPersonaChat} />
         </div>
       </div>
       <PersonaModal />
@@ -54,12 +52,10 @@ const ChatExperience = () => {
   )
 }
 
-const ChatPage = () => {
+export default function ChatPage(): React.JSX.Element {
   return (
     <Suspense>
       <ChatProvider />
     </Suspense>
   )
 }
-
-export default ChatPage

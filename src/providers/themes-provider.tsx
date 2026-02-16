@@ -6,48 +6,23 @@ import { useAppContext } from '@/contexts/app'
 import { cacheGet } from '@/lib/cache'
 import {
   applyThemePresetStyles,
-  getInitialPresetId,
   getThemePresetCss,
   isValidPresetId,
-  resolvePresetId as resolvePreset,
+  resolvePresetId,
   THEME_STYLE_ELEMENT_ID
 } from '@/lib/themes'
 import { CacheKey } from '@/services/constant'
-import { ThemeMode } from '@/types/theme'
+import type { ThemeMode } from '@/types/theme'
 import { ThemeProvider as NextThemesProvider, type ThemeProviderProps } from 'next-themes'
 
-const isValidTheme = (value?: string | null): value is ThemeMode =>
-  value === 'light' || value === 'dark'
-const DEFAULT_THEME_MODE: ThemeMode = isValidTheme(process.env.NEXT_PUBLIC_DEFAULT_THEME)
-  ? (process.env.NEXT_PUBLIC_DEFAULT_THEME as ThemeMode)
-  : 'light'
-
-const resolvePresetId = (current: string) => {
-  if (typeof window === 'undefined') {
-    return resolvePreset(current)
-  }
-  if (isValidPresetId(current)) {
-    return current
-  }
-  return getInitialPresetId(cacheGet(CacheKey.ThemePreset))
+function isValidTheme(value?: string | null): value is ThemeMode {
+  return value === 'light' || value === 'dark'
 }
 
-function ThemePresetStyle() {
-  const { themePreset } = useAppContext()
-  const presetId = useMemo(() => resolvePresetId(themePreset), [themePreset])
-  const css = useMemo(() => getThemePresetCss(presetId), [presetId])
+const DEFAULT_THEME_ENV = process.env.NEXT_PUBLIC_DEFAULT_THEME
+const DEFAULT_THEME_MODE: ThemeMode = isValidTheme(DEFAULT_THEME_ENV) ? DEFAULT_THEME_ENV : 'light'
 
-  return (
-    <style
-      id={THEME_STYLE_ELEMENT_ID}
-      dangerouslySetInnerHTML={{ __html: css }}
-      suppressHydrationWarning
-    />
-  )
-}
-
-const ThemePresetStyleScript = () => {
-  const script = `(function() {
+const THEME_PRESET_STYLE_SCRIPT = `(function() {
   try {
     document.documentElement.classList.add('theme-loading');
     var css = localStorage.getItem('${CacheKey.ThemePresetCss}');
@@ -63,12 +38,40 @@ const ThemePresetStyleScript = () => {
     // Ignore errors (e.g., storage disabled)
   }
 })();`
-  return <script dangerouslySetInnerHTML={{ __html: script }} suppressHydrationWarning />
+
+function getPresetId(current: string): string {
+  if (typeof window === 'undefined') {
+    return resolvePresetId(current)
+  }
+  return isValidPresetId(current) ? current : resolvePresetId(cacheGet(CacheKey.ThemePreset))
 }
 
-function ThemePresetSync() {
+function ThemePresetStyle(): React.JSX.Element {
   const { themePreset } = useAppContext()
-  const presetId = useMemo(() => resolvePresetId(themePreset), [themePreset])
+  const presetId = useMemo(() => getPresetId(themePreset), [themePreset])
+  const css = useMemo(() => getThemePresetCss(presetId), [presetId])
+
+  return (
+    <style
+      id={THEME_STYLE_ELEMENT_ID}
+      dangerouslySetInnerHTML={{ __html: css }}
+      suppressHydrationWarning
+    />
+  )
+}
+
+function ThemePresetStyleScript(): React.JSX.Element {
+  return (
+    <script
+      dangerouslySetInnerHTML={{ __html: THEME_PRESET_STYLE_SCRIPT }}
+      suppressHydrationWarning
+    />
+  )
+}
+
+function ThemePresetSync(): null {
+  const { themePreset } = useAppContext()
+  const presetId = useMemo(() => getPresetId(themePreset), [themePreset])
 
   useInsertionEffect(() => {
     applyThemePresetStyles(presetId)
@@ -78,7 +81,7 @@ function ThemePresetSync() {
   return null
 }
 
-export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
+export function ThemeProvider({ children, ...props }: ThemeProviderProps): React.JSX.Element {
   return (
     <NextThemesProvider
       attribute="class"

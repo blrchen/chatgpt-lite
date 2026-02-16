@@ -2,46 +2,68 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { Mic, MicOff, Volume2, VolumeX, Square } from 'lucide-react'
+import { cn } from '@/lib/utils'
+import type {
+  SpeechRecognitionErrorEvent,
+  SpeechRecognitionEvent,
+  SpeechRecognitionInstance
+} from '@/types/speech-recognition'
+import { Mic, MicOff, Square } from 'lucide-react'
 import { toast } from 'sonner'
 
-interface Message {
+type VoiceMessage = {
   role: 'user' | 'assistant'
   content: string
   timestamp: Date
 }
 
-export function VoiceChat() {
+type ConversationHistoryEntry = Pick<VoiceMessage, 'role' | 'content'>
+
+export function VoiceChat(): React.JSX.Element {
   const [isListening, setIsListening] = useState(false)
   const [isSpeaking, setIsSpeaking] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
-  const [messages, setMessages] = useState<Message[]>([])
+  const [messages, setMessages] = useState<VoiceMessage[]>([])
   const [interimTranscript, setInterimTranscript] = useState('')
   const [autoMode, setAutoMode] = useState(false)
 
-  const recognitionRef = useRef<any>(null)
+  const recognitionRef = useRef<SpeechRecognitionInstance | null>(null)
   const synthRef = useRef<SpeechSynthesis | null>(null)
   const currentUtteranceRef = useRef<SpeechSynthesisUtterance | null>(null)
-  const conversationHistoryRef = useRef<Array<{ role: string; content: string }>>([])
+  const conversationHistoryRef = useRef<ConversationHistoryEntry[]>([])
+  const autoModeRef = useRef(autoMode)
+  const isSpeakingRef = useRef(isSpeaking)
+  const handleUserMessageRef = useRef<((text: string) => Promise<void>) | null>(null)
+  const lastFinalTranscriptRef = useRef<string>('')
+  const isProcessingRef = useRef(false)
+
+  useEffect(() => {
+    autoModeRef.current = autoMode
+  }, [autoMode])
+
+  useEffect(() => {
+    isSpeakingRef.current = isSpeaking
+  }, [isSpeaking])
 
   // Initialize speech recognition
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
       if (SpeechRecognition) {
         const recognition = new SpeechRecognition()
         recognition.continuous = true
         recognition.interimResults = true
         recognition.lang = 'zh-CN'
 
-        recognition.onresult = (event: any) => {
+        recognition.onresult = (event: SpeechRecognitionEvent) => {
           let interim = ''
-          let final = ''
+          let finalTranscript = ''
 
           for (let i = event.resultIndex; i < event.results.length; i++) {
-            const transcript = event.results[i][0].transcript
-            if (event.results[i].isFinal) {
-              final += transcript
+            const result = event.results[i]
+            const transcript = result[0].transcript
+            if (result.isFinal) {
+              finalTranscript += transcript
             } else {
               interim += transcript
             }
@@ -49,13 +71,18 @@ export function VoiceChat() {
 
           setInterimTranscript(interim)
 
-          if (final) {
-            handleUserMessage(final)
+          if (finalTranscript) {
+            // Prevent duplicate messages: skip if same as last final or already processing
+            const trimmed = finalTranscript.trim()
+            if (trimmed && trimmed !== lastFinalTranscriptRef.current && !isProcessingRef.current) {
+              lastFinalTranscriptRef.current = trimmed
+              void handleUserMessageRef.current?.(trimmed)
+            }
             setInterimTranscript('')
           }
         }
 
-        recognition.onerror = (event: any) => {
+        recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
           console.error('Speech recognition error:', event.error)
           if (event.error !== 'no-speech' && event.error !== 'aborted') {
             setIsListening(false)
@@ -64,7 +91,7 @@ export function VoiceChat() {
         }
 
         recognition.onend = () => {
-          if (autoMode && !isSpeaking) {
+          if (autoModeRef.current && !isSpeakingRef.current) {
             // Restart listening in auto mode
             try {
               recognition.start()
@@ -90,10 +117,66 @@ export function VoiceChat() {
         synthRef.current.cancel()
       }
     }
-  }, [autoMode, isSpeaking])
+  }, [])
 
-  const handleUserMessage = async (text: string) => {
-    const userMessage: Message = {
+  function speakText(text: string): void {
+    if (!synthRef.current) {
+      setIsProcessing(false)
+      isProcessingRef.current = false
+      lastFinalTranscriptRef.current = ''
+      return
+    }
+
+    // Cancel any ongoing speech
+    synthRef.current.cancel()
+
+    const utterance = new SpeechSynthesisUtterance(text)
+    utterance.lang = 'zh-CN'
+    utterance.rate = 1.0
+    utterance.pitch = 1.0
+
+    utterance.onstart = () => {
+      isSpeakingRef.current = true
+      setIsSpeaking(true)
+      setIsProcessing(false)
+      isProcessingRef.current = false
+    }
+
+    utterance.onend = () => {
+      isSpeakingRef.current = false
+      setIsSpeaking(false)
+      currentUtteranceRef.current = null
+      lastFinalTranscriptRef.current = '' // Reset to allow same message to be sent again
+
+      // Resume listening in auto mode
+      if (autoModeRef.current && recognitionRef.current) {
+        setTimeout(() => {
+          try {
+            recognitionRef.current?.start()
+            setIsListening(true)
+          } catch (e) {
+            console.error('Failed to restart listening:', e)
+          }
+        }, 500)
+      }
+    }
+
+    utterance.onerror = (event: SpeechSynthesisErrorEvent) => {
+      console.error('Speech synthesis error:', event)
+      isSpeakingRef.current = false
+      setIsSpeaking(false)
+      setIsProcessing(false)
+      isProcessingRef.current = false
+      currentUtteranceRef.current = null
+      lastFinalTranscriptRef.current = ''
+    }
+
+    currentUtteranceRef.current = utterance
+    synthRef.current.speak(utterance)
+  }
+
+  async function handleUserMessage(text: string): Promise<void> {
+    const userMessage: VoiceMessage = {
       role: 'user',
       content: text,
       timestamp: new Date()
@@ -108,15 +191,17 @@ export function VoiceChat() {
     }
     setIsListening(false)
     setIsProcessing(true)
+    isProcessingRef.current = true
 
     try {
       // Call chat API
+      const contextMessages = conversationHistoryRef.current.slice(0, -1)
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           prompt: 'You are a helpful voice assistant. Respond concisely and naturally.',
-          messages: conversationHistoryRef.current.slice(-10), // Keep last 10 messages for context
+          messages: contextMessages.slice(-10), // Keep last 10 prior messages for context
           input: text
         })
       })
@@ -134,12 +219,13 @@ export function VoiceChat() {
           const { done, value } = await reader.read()
           if (done) break
 
-          const chunk = decoder.decode(value)
+          const chunk = decoder.decode(value, { stream: true })
           assistantText += chunk
         }
+        assistantText += decoder.decode()
       }
 
-      const assistantMessage: Message = {
+      const assistantMessage: VoiceMessage = {
         role: 'assistant',
         content: assistantText,
         timestamp: new Date()
@@ -154,55 +240,12 @@ export function VoiceChat() {
       console.error('Error getting response:', error)
       toast.error('Failed to get response from AI')
       setIsProcessing(false)
+      isProcessingRef.current = false
+      lastFinalTranscriptRef.current = '' // Reset to allow same message to be sent again if needed
     }
   }
 
-  const speakText = (text: string) => {
-    if (!synthRef.current) {
-      setIsProcessing(false)
-      return
-    }
-
-    // Cancel any ongoing speech
-    synthRef.current.cancel()
-
-    const utterance = new SpeechSynthesisUtterance(text)
-    utterance.lang = 'zh-CN'
-    utterance.rate = 1.0
-    utterance.pitch = 1.0
-
-    utterance.onstart = () => {
-      setIsSpeaking(true)
-      setIsProcessing(false)
-    }
-
-    utterance.onend = () => {
-      setIsSpeaking(false)
-      currentUtteranceRef.current = null
-
-      // Resume listening in auto mode
-      if (autoMode && recognitionRef.current) {
-        setTimeout(() => {
-          try {
-            recognitionRef.current.start()
-            setIsListening(true)
-          } catch (e) {
-            console.error('Failed to restart listening:', e)
-          }
-        }, 500)
-      }
-    }
-
-    utterance.onerror = (event) => {
-      console.error('Speech synthesis error:', event)
-      setIsSpeaking(false)
-      setIsProcessing(false)
-      currentUtteranceRef.current = null
-    }
-
-    currentUtteranceRef.current = utterance
-    synthRef.current.speak(utterance)
-  }
+  handleUserMessageRef.current = handleUserMessage
 
   const toggleListening = useCallback(() => {
     if (!recognitionRef.current) {
@@ -228,6 +271,7 @@ export function VoiceChat() {
   const stopSpeaking = useCallback(() => {
     if (synthRef.current) {
       synthRef.current.cancel()
+      isSpeakingRef.current = false
       setIsSpeaking(false)
       currentUtteranceRef.current = null
     }
@@ -257,8 +301,13 @@ export function VoiceChat() {
   const clearConversation = useCallback(() => {
     setMessages([])
     conversationHistoryRef.current = []
+    setInterimTranscript('')
+    isProcessingRef.current = false
+    lastFinalTranscriptRef.current = ''
     if (synthRef.current) {
       synthRef.current.cancel()
+      isSpeakingRef.current = false
+      currentUtteranceRef.current = null
     }
     if (recognitionRef.current && isListening) {
       recognitionRef.current.stop()
@@ -270,32 +319,42 @@ export function VoiceChat() {
   }, [isListening])
 
   return (
-    <div className="flex h-full flex-col bg-background">
+    <div className="bg-background flex h-full flex-col">
       {/* Header */}
-      <div className="border-b border-border px-6 py-4">
-        <h1 className="text-2xl font-bold">Voice Conversation</h1>
-        <p className="text-sm text-muted-foreground mt-1">
+      <div className="border-border border-b px-6 pt-[calc(1rem+env(safe-area-inset-top))] pb-4">
+        <h1 className="text-foreground font-display text-2xl font-medium tracking-tight text-balance">
+          Voice Conversation
+        </h1>
+        <p className="text-muted-foreground mt-1 text-sm text-pretty">
           Talk naturally with AI - it can interrupt and respond in real-time
         </p>
       </div>
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-6 py-4">
-        <div className="max-w-3xl mx-auto space-y-4">
+        <div className="mx-auto max-w-3xl space-y-4">
           {messages.map((message, index) => (
             <div
               key={index}
-              className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+              className={cn('flex', message.role === 'user' ? 'justify-end' : 'justify-start')}
             >
               <div
-                className={`max-w-[80%] rounded-2xl px-4 py-2.5 ${
+                className={cn(
+                  'max-w-[80%] rounded-2xl px-4 py-2.5',
                   message.role === 'user'
                     ? 'bg-primary text-primary-foreground'
                     : 'bg-muted text-foreground'
-                }`}
+                )}
               >
-                <p className="text-sm">{message.content}</p>
-                <p className="text-xs opacity-70 mt-1">
+                <p className="text-sm text-pretty break-words whitespace-pre-wrap">
+                  {message.content}
+                </p>
+                <p
+                  className={cn(
+                    'mt-1 text-xs tabular-nums',
+                    message.role === 'user' ? 'text-primary-foreground' : 'text-muted-foreground'
+                  )}
+                >
                   {message.timestamp.toLocaleTimeString()}
                 </p>
               </div>
@@ -304,16 +363,18 @@ export function VoiceChat() {
 
           {interimTranscript && (
             <div className="flex justify-end">
-              <div className="max-w-[80%] rounded-2xl px-4 py-2.5 bg-primary/50 text-primary-foreground">
-                <p className="text-sm italic">{interimTranscript}</p>
+              <div className="bg-primary/90 text-primary-foreground max-w-[80%] rounded-2xl px-4 py-2.5">
+                <p className="text-sm text-pretty break-words whitespace-pre-wrap italic">
+                  {interimTranscript}
+                </p>
               </div>
             </div>
           )}
 
           {isProcessing && (
             <div className="flex justify-start">
-              <div className="max-w-[80%] rounded-2xl px-4 py-2.5 bg-muted text-foreground">
-                <p className="text-sm">Thinking...</p>
+              <div className="bg-muted text-foreground max-w-[80%] rounded-2xl px-4 py-2.5">
+                <p className="text-sm text-pretty">Thinking...</p>
               </div>
             </div>
           )}
@@ -321,52 +382,57 @@ export function VoiceChat() {
       </div>
 
       {/* Controls */}
-      <div className="border-t border-border px-6 py-6">
-        <div className="max-w-3xl mx-auto">
+      <div className="border-border border-t px-6 pt-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
+        <div className="mx-auto max-w-3xl">
           {/* Status indicators */}
-          <div className="flex items-center justify-center gap-6 mb-6">
+          <div className="mb-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
             <div className="flex items-center gap-2">
               <div
-                className={`w-3 h-3 rounded-full ${
-                  isListening ? 'bg-green-500 animate-pulse' : 'bg-gray-300'
-                }`}
+                className={cn(
+                  'size-3 rounded-full',
+                  isListening ? 'bg-primary animate-pulse motion-reduce:animate-none' : 'bg-muted'
+                )}
               />
-              <span className="text-sm text-muted-foreground">
+              <span className="text-muted-foreground text-sm">
                 {isListening ? 'Listening' : 'Not listening'}
               </span>
             </div>
 
             <div className="flex items-center gap-2">
               <div
-                className={`w-3 h-3 rounded-full ${
-                  isSpeaking ? 'bg-blue-500 animate-pulse' : 'bg-gray-300'
-                }`}
+                className={cn(
+                  'size-3 rounded-full',
+                  isSpeaking ? 'bg-accent animate-pulse motion-reduce:animate-none' : 'bg-muted'
+                )}
               />
-              <span className="text-sm text-muted-foreground">
+              <span className="text-muted-foreground text-sm">
                 {isSpeaking ? 'Speaking' : 'Silent'}
               </span>
             </div>
 
             <div className="flex items-center gap-2">
               <div
-                className={`w-3 h-3 rounded-full ${
-                  autoMode ? 'bg-purple-500 animate-pulse' : 'bg-gray-300'
-                }`}
+                className={cn(
+                  'size-3 rounded-full',
+                  autoMode
+                    ? 'bg-secondary-foreground animate-pulse motion-reduce:animate-none'
+                    : 'bg-muted'
+                )}
               />
-              <span className="text-sm text-muted-foreground">
+              <span className="text-muted-foreground text-sm">
                 {autoMode ? 'Auto mode' : 'Manual mode'}
               </span>
             </div>
           </div>
 
           {/* Control buttons */}
-          <div className="flex items-center justify-center gap-4">
+          <div className="flex flex-wrap items-center justify-center gap-4">
             <Button
               size="lg"
               variant={isListening ? 'destructive' : 'default'}
               onClick={toggleListening}
               disabled={isSpeaking || isProcessing}
-              className="h-16 w-16 rounded-full"
+              className="disabled:bg-muted disabled:text-muted-foreground size-16 rounded-full disabled:opacity-100"
             >
               {isListening ? <MicOff className="size-6" /> : <Mic className="size-6" />}
             </Button>
@@ -376,7 +442,7 @@ export function VoiceChat() {
                 size="lg"
                 variant="outline"
                 onClick={stopSpeaking}
-                className="h-16 w-16 rounded-full"
+                className="size-16 rounded-full"
               >
                 <Square className="size-6" />
               </Button>
@@ -387,6 +453,7 @@ export function VoiceChat() {
               variant={autoMode ? 'default' : 'outline'}
               onClick={toggleAutoMode}
               disabled={isProcessing}
+              className="disabled:bg-muted disabled:text-muted-foreground disabled:opacity-100"
             >
               {autoMode ? 'Disable Auto' : 'Enable Auto'}
             </Button>
@@ -396,7 +463,7 @@ export function VoiceChat() {
             </Button>
           </div>
 
-          <p className="text-center text-sm text-muted-foreground mt-4">
+          <p className="text-muted-foreground mt-4 text-center text-sm text-pretty">
             {autoMode
               ? 'Auto mode: Speak anytime, AI will respond automatically'
               : 'Manual mode: Click microphone to speak, AI will respond when you finish'}

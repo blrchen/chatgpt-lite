@@ -1,9 +1,9 @@
 'use client'
 
-import { createContext, MutableRefObject } from 'react'
+import { createContext, type MutableRefObject } from 'react'
 
 import type { ChatRef } from './chat'
-import { Chat, Persona, UIMessage } from './interface'
+import type { Chat, ChatMessage, Persona } from './interface'
 
 type ChatContextValue = {
   chatRef?: MutableRefObject<ChatRef | null>
@@ -13,11 +13,12 @@ type ChatContextValue = {
   isChatHydrated: boolean
   getChatById: (id?: string | null) => Chat | undefined
   updateChatTitle: (id: string, title: string) => void
+  updateChatPinned: (id: string, pinned: boolean) => void
   onDeleteChat: (chat: Chat) => void
   onCreateChat: (persona: Persona, firstMessage?: string) => Chat | undefined
   onCreateDefaultChat: (firstMessage?: string) => Chat | undefined
   onChangeChat: (chat: Chat) => void
-  saveMessages: (messages: UIMessage[], chatId?: string, options?: { chat?: Chat }) => void
+  saveMessages: (messages: ChatMessage[], chatId?: string, options?: { chat?: Chat }) => void
 }
 
 const ChatContext = createContext<ChatContextValue>({
@@ -27,6 +28,7 @@ const ChatContext = createContext<ChatContextValue>({
   isChatHydrated: false,
   getChatById: () => undefined,
   updateChatTitle: () => {},
+  updateChatPinned: () => {},
   onDeleteChat: () => {},
   onCreateChat: () => undefined,
   onCreateDefaultChat: () => undefined,

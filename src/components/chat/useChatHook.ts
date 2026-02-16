@@ -1,129 +1,157 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { DefaultPersona } from '@/components/chat/utils'
-import { cacheGet, cacheGetJson, cacheRemove, cacheSet } from '@/lib/cache'
+import type { ChatRef } from '@/components/chat/chat'
+import { getTextFromParts } from '@/components/chat/chat-attachments'
+import type { ChatContextValue } from '@/components/chat/chatContext'
+import type { Chat, ChatMessage, Persona } from '@/components/chat/interface'
+import { DefaultPersona, ensureMessageIds } from '@/components/chat/utils'
+import { cacheGet, cacheGetJson, cacheRemove, cacheSet, cacheSetJson } from '@/lib/cache'
 import { v4 as uuid } from 'uuid'
-
-import { ChatRef } from './chat'
-import type { ChatContextValue } from './chatContext'
-import { Chat, ChatMessage, MessageContent, Persona, UIMessage } from './interface'
-
-// Convert legacy ChatMessage to UIMessage format
-const convertChatMessageToUIMessage = (msg: ChatMessage): UIMessage => {
-  const parts: any[] = []
-
-  // Convert content to parts
-  if (typeof msg.content === 'string') {
-    if (msg.content) {
-      parts.push({ type: 'text', text: msg.content })
-    }
-  } else {
-    msg.content.forEach((part) => {
-      if (part.type === 'text') {
-        parts.push({ type: 'text', text: part.text })
-      } else if (part.type === 'image') {
-        parts.push({
-          type: 'file',
-          mediaType: part.mimeType || 'image/png',
-          url: part.image
-        })
-      } else if (part.type === 'document') {
-        // Store document info in metadata
-        parts.push({ type: 'text', text: `[Document: ${part.name}]` })
-      }
-    })
-  }
-
-  // Convert sources to source parts
-  if (msg.sources) {
-    msg.sources.forEach((source) => {
-      if (source.type === 'source-url') {
-        parts.push({
-          type: 'source-url',
-          sourceId: source.sourceId,
-          url: source.url,
-          title: source.title
-        })
-      } else if (source.type === 'source-document') {
-        parts.push({
-          type: 'source-document',
-          sourceId: source.sourceId,
-          title: source.title
-        })
-      }
-    })
-  }
-
-  return {
-    id: msg.id,
-    role: msg.role,
-    parts,
-    metadata: {
-      createdAt: msg.createdAt,
-      sources: msg.sources
-    }
-  }
-}
-
-// Check if a message is in legacy format
-const isLegacyMessage = (msg: any): msg is ChatMessage => {
-  return msg && typeof msg === 'object' && 'content' in msg && !('parts' in msg)
-}
-
-// Ensure all messages have IDs
-const ensureMessageIds = (messages: UIMessage[]): UIMessage[] => {
-  return messages.map((msg) => ({
-    ...msg,
-    id: msg.id || uuid()
-  }))
-}
 
 const STORAGE_KEYS = {
   chatList: 'chatList',
   chatCurrentId: 'chatCurrentID'
 } as const
 
-const normalizeChatList = (list: Chat[]) => {
+const WORD_SPLIT_REGEX = /\s+/
+const BR_TAG_REGEX = /<br\s*\/?>/gi
+const HTML_TAG_REGEX = /<[^>]*>/g
+
+type StoredChatData = {
+  chatList: Chat[]
+  currentChatId: string | undefined
+  messagesById: Map<string, ChatMessage[]>
+}
+
+function normalizeChatList(list: unknown): Chat[] {
+  if (!Array.isArray(list)) {
+    return []
+  }
+
   const seen = new Set<string>()
   const now = new Date().toISOString()
   const result: Chat[] = []
 
   for (const chat of list) {
-    if (!chat?.id || seen.has(chat.id)) continue
-    seen.add(chat.id)
+    if (!chat || typeof chat !== 'object') continue
+    const record = chat as Chat
+    const chatId = record.id
+    if (!chatId || typeof chatId !== 'string' || seen.has(chatId)) continue
+    seen.add(chatId)
 
-    const createdAt = chat.createdAt ?? now
-    const updatedAt = chat.updatedAt ?? createdAt
-    const title = chat.title || chat.persona?.name || 'New Chat'
-    result.push({ ...chat, createdAt, updatedAt, title })
+    const createdAt = record.createdAt ?? now
+    const updatedAt = record.updatedAt ?? createdAt
+    const title = record.title || record.persona?.name || 'New Chat'
+    const pinned = record.pinned ?? false
+    result.push({ ...record, pinned, createdAt, updatedAt, title })
   }
 
   return result
 }
 
-const sortChatsByRecent = (list: Chat[]) =>
-  [...list].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+function sortChatsByPinnedThenRecent(list: Chat[]): Chat[] {
+  return [...list].sort((a, b) => {
+    const pinnedDiff = Number(Boolean(b.pinned)) - Number(Boolean(a.pinned))
+    if (pinnedDiff !== 0) {
+      return pinnedDiff
+    }
+    return b.updatedAt.localeCompare(a.updatedAt)
+  })
+}
 
-const truncateToWords = (text: string, maxWords: number) => {
-  const words = text.split(/\s+/).slice(0, maxWords)
+function truncateToWords(text: string, maxWords: number): string {
+  const words = text.split(WORD_SPLIT_REGEX).slice(0, maxWords)
   return words.join(' ')
 }
 
-const stripHtmlTags = (text: string) => text.replace(/<br\s*\/?>/gi, ' ').replace(/<[^>]*>/g, '')
-
-const getTextFromUIMessage = (msg: UIMessage): string => {
-  if (!msg.parts) return ''
-  return msg.parts
-    .filter((part: any) => part.type === 'text')
-    .map((part: any) => part.text)
-    .join(' ')
+function stripHtmlTags(text: string): string {
+  return text.replace(BR_TAG_REGEX, ' ').replace(HTML_TAG_REGEX, '')
 }
 
-const deriveTitleFromMessages = (messages: UIMessage[], fallback: string) => {
+function normalizeMessage(message: ChatMessage): ChatMessage {
+  const parts = Array.isArray(message.parts) ? message.parts.filter(Boolean) : []
+
+  return {
+    ...message,
+    parts,
+    createdAt: message.createdAt ?? new Date().toISOString()
+  }
+}
+
+function isLegacyMessage(message: unknown): boolean {
+  if (!message || typeof message !== 'object') {
+    return true
+  }
+
+  const candidate = message as {
+    parts?: unknown
+    content?: unknown
+    sources?: unknown
+  }
+
+  if (
+    Object.prototype.hasOwnProperty.call(candidate, 'content') ||
+    Object.prototype.hasOwnProperty.call(candidate, 'sources')
+  ) {
+    return true
+  }
+
+  return !Array.isArray(candidate.parts)
+}
+
+function detectLegacyStoredChats(chatList: Chat[]): boolean {
+  if (typeof window === 'undefined' || chatList.length === 0) {
+    return false
+  }
+
+  for (const chat of chatList) {
+    if (!chat?.id) continue
+    const storedMessagesRaw = cacheGetJson<unknown>(`ms_${chat.id}`, [])
+    if (!Array.isArray(storedMessagesRaw)) {
+      return true
+    }
+    for (const message of storedMessagesRaw) {
+      if (isLegacyMessage(message)) {
+        return true
+      }
+    }
+  }
+
+  return false
+}
+
+function clearStoredChatsSafely(): void {
+  try {
+    cacheRemove(STORAGE_KEYS.chatList)
+    cacheRemove(STORAGE_KEYS.chatCurrentId)
+
+    if (typeof window === 'undefined') {
+      return
+    }
+
+    const keysToRemove: string[] = []
+    for (let i = 0; i < localStorage.length; i += 1) {
+      const key = localStorage.key(i)
+      if (key && key.startsWith('ms_')) {
+        keysToRemove.push(key)
+      }
+    }
+
+    keysToRemove.forEach((key) => {
+      cacheRemove(key)
+    })
+  } catch (error) {
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('[useChatHook] Failed to clear legacy chats', error)
+    }
+  }
+}
+
+function deriveTitleFromMessages(messages: ChatMessage[], fallback: string): string {
   const userMessage = messages.find((msg) => msg.role === 'user')
-  const userContent = userMessage ? getTextFromUIMessage(userMessage).trim() : ''
-  const firstContent = messages[0] ? getTextFromUIMessage(messages[0]).trim() : ''
+  const userContent = userMessage ? getTextFromParts(userMessage.parts ?? []).trim() : ''
+  const firstContent = messages[0] ? getTextFromParts(messages[0].parts ?? []).trim() : ''
   const candidate = stripHtmlTags(userContent || firstContent || '')
   if (!candidate) {
     return fallback
@@ -131,48 +159,63 @@ const deriveTitleFromMessages = (messages: UIMessage[], fallback: string) => {
   return truncateToWords(candidate, 4)
 }
 
-const loadInitialChatData = () => ({
-  chatList: [],
-  currentChatId: undefined,
-  messagesById: new Map<string, UIMessage[]>()
-})
+function loadInitialChatData(): StoredChatData {
+  return {
+    chatList: [],
+    currentChatId: undefined,
+    messagesById: new Map<string, ChatMessage[]>()
+  }
+}
 
-const loadStoredChatData = () => {
+function loadStoredChatData(): StoredChatData {
   if (typeof window === 'undefined') {
     return loadInitialChatData()
   }
-  const storedChatList = normalizeChatList(cacheGetJson<Chat[]>(STORAGE_KEYS.chatList, []))
-  const storedCurrentChatId = cacheGet(STORAGE_KEYS.chatCurrentId)
-  const messagesById = new Map<string, UIMessage[]>()
 
-  storedChatList.forEach((chat) => {
-    if (!chat?.id) {
-      return
+  try {
+    const storedChatListRaw = cacheGetJson<unknown>(STORAGE_KEYS.chatList, [])
+    const storedChatList = normalizeChatList(storedChatListRaw)
+    if (detectLegacyStoredChats(storedChatList)) {
+      clearStoredChatsSafely()
+      return loadInitialChatData()
     }
-    const rawMessages = cacheGetJson<any[]>(`ms_${chat.id}`, [])
+    const storedCurrentChatId = cacheGet(STORAGE_KEYS.chatCurrentId)
+    const messagesById = new Map<string, ChatMessage[]>()
 
-    // Convert legacy ChatMessage format to UIMessage if needed
-    const messages = rawMessages.map((msg) =>
-      isLegacyMessage(msg) ? convertChatMessageToUIMessage(msg) : msg
-    )
+    storedChatList.forEach((chat) => {
+      if (!chat?.id) {
+        return
+      }
+      const storedMessagesRaw = cacheGetJson<unknown>(`ms_${chat.id}`, [])
+      const storedMessages = Array.isArray(storedMessagesRaw)
+        ? storedMessagesRaw.filter((message) => message && typeof message === 'object')
+        : []
+      const normalizedMessages = ensureMessageIds(
+        storedMessages.map((message) => normalizeMessage(message as ChatMessage))
+      )
+      messagesById.set(chat.id, normalizedMessages)
+    })
 
-    messagesById.set(chat.id, ensureMessageIds(messages))
-  })
+    const initialChat =
+      storedChatList.find((chat) => chat.id === storedCurrentChatId) || storedChatList[0]
 
-  const initialChat =
-    storedChatList.find((chat) => chat.id === storedCurrentChatId) || storedChatList[0]
-
-  return {
-    chatList: storedChatList,
-    currentChatId: initialChat?.id,
-    messagesById
+    return {
+      chatList: storedChatList,
+      currentChatId: initialChat?.id,
+      messagesById
+    }
+  } catch (error) {
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('[useChatHook] Failed to hydrate stored chats', error)
+    }
+    return loadInitialChatData()
   }
 }
 
 type SyncOptions = { persist?: boolean; refreshConversation?: boolean }
 
-const useChatHook = (): ChatContextValue => {
-  const messagesMapRef = useRef<Map<string, UIMessage[]>>(new Map<string, UIMessage[]>())
+function useChatHook(): ChatContextValue {
+  const messagesMapRef = useRef<Map<string, ChatMessage[]>>(new Map<string, ChatMessage[]>())
   const chatInstanceRef = useRef<ChatRef | null>(null)
   const chatListRef = useRef<Chat[]>([])
   const currentChatIdRef = useRef<string | undefined>(undefined)
@@ -190,7 +233,7 @@ const useChatHook = (): ChatContextValue => {
 
   const applyState = useCallback(
     (nextList: Chat[], requestedCurrentId?: string, options?: SyncOptions) => {
-      const normalized = sortChatsByRecent(normalizeChatList(nextList))
+      const normalized = sortChatsByPinnedThenRecent(normalizeChatList(nextList))
       const requestedId = requestedCurrentId ?? currentChatIdRef.current
       const resolvedCurrentId = normalized.find((chat) => chat.id === requestedId)
         ? requestedId
@@ -214,7 +257,7 @@ const useChatHook = (): ChatContextValue => {
       })
 
       if (shouldPersist) {
-        cacheSet(STORAGE_KEYS.chatList, JSON.stringify(normalized))
+        cacheSetJson(STORAGE_KEYS.chatList, normalized)
         if (resolvedCurrentId) {
           cacheSet(STORAGE_KEYS.chatCurrentId, resolvedCurrentId)
         } else {
@@ -246,66 +289,72 @@ const useChatHook = (): ChatContextValue => {
       const nextList = chatListRef.current.map((chat) =>
         chat.id === chatId ? { ...chat, title: title || chat.title } : chat
       )
-      chatListRef.current = nextList
+      applyState(nextList, currentChatIdRef.current, { refreshConversation: false })
+    },
+    [applyState]
+  )
+
+  const updateChatPinned = useCallback(
+    (chatId: string, pinned: boolean) => {
+      const nextList = chatListRef.current.map((chat) =>
+        chat.id === chatId ? { ...chat, pinned } : chat
+      )
       applyState(nextList, currentChatIdRef.current, { refreshConversation: false })
     },
     [applyState]
   )
 
   const saveMessages = useCallback(
-    (messages: UIMessage[], chatId?: string, options?: { chat?: Chat }) => {
+    (messages: ChatMessage[], chatId?: string, options?: { chat?: Chat }) => {
       const targetChatId = chatId ?? currentChatIdRef.current
       if (!targetChatId) {
         return
       }
       const previousCount = messagesMapRef.current.get(targetChatId)?.length ?? 0
-      const normalizedMessages = ensureMessageIds(messages)
-
-      // Get timestamp from metadata or use current time
-      const latestTimestamp =
-        (normalizedMessages.at(-1)?.metadata as any)?.createdAt ||
-        new Date().toISOString()
-
+      const normalizedMessages = ensureMessageIds(messages.map(normalizeMessage))
+      const latestTimestamp = normalizedMessages.at(-1)?.createdAt ?? new Date().toISOString()
+      const hasNewMessages = normalizedMessages.length > previousCount
+      const activityTimestamp = hasNewMessages ? new Date().toISOString() : latestTimestamp
       if (messages.length > 0) {
-        cacheSet(`ms_${targetChatId}`, JSON.stringify(normalizedMessages))
+        cacheSetJson(`ms_${targetChatId}`, normalizedMessages)
         messagesMapRef.current.set(targetChatId, normalizedMessages)
       } else {
         cacheRemove(`ms_${targetChatId}`)
         messagesMapRef.current.delete(targetChatId)
       }
       const baseList = chatListRef.current
-      const withChat = baseList.some((item) => item.id === targetChatId)
-        ? baseList.map((item) =>
-            item.id === targetChatId
-              ? {
-                  ...item,
-                  updatedAt: messages.length > 0 ? latestTimestamp : item.updatedAt,
-                  title:
-                    previousCount === 0 &&
-                    normalizedMessages.length > 0 &&
-                    (!item.persona || item.persona.id === 'chatgpt')
-                      ? deriveTitleFromMessages(
-                          normalizedMessages,
-                          item.title ||
-                            options?.chat?.title ||
-                            options?.chat?.persona?.name ||
-                            'New Chat'
-                        )
-                      : item.title
-                }
-              : item
-          )
-        : [
-            {
-              id: targetChatId,
-              persona: options?.chat?.persona,
-              title: options?.chat?.title || options?.chat?.persona?.name || 'New Chat',
-              createdAt: latestTimestamp,
-              updatedAt: latestTimestamp
-            },
-            ...baseList
-          ]
-      const nextList = withChat
+      const existingChatIndex = baseList.findIndex((item) => item.id === targetChatId)
+      const isFirstMessage = previousCount === 0 && normalizedMessages.length > 0
+
+      let nextList: Chat[]
+      if (existingChatIndex !== -1) {
+        nextList = baseList.map((item) => {
+          if (item.id !== targetChatId) return item
+
+          const isDefaultPersona = !item.persona || item.persona.id === 'chatgpt'
+          const shouldDeriveTitle = isFirstMessage && isDefaultPersona
+          const fallbackTitle =
+            item.title || options?.chat?.title || options?.chat?.persona?.name || 'New Chat'
+
+          return {
+            ...item,
+            updatedAt: messages.length > 0 ? activityTimestamp : item.updatedAt,
+            title: shouldDeriveTitle
+              ? deriveTitleFromMessages(normalizedMessages, fallbackTitle)
+              : item.title
+          }
+        })
+      } else {
+        const newChat: Chat = {
+          id: targetChatId,
+          persona: options?.chat?.persona,
+          title: options?.chat?.title || options?.chat?.persona?.name || 'New Chat',
+          createdAt: latestTimestamp,
+          updatedAt: latestTimestamp
+        }
+        nextList = [newChat, ...baseList]
+      }
+
       applyState(nextList, currentChatIdRef.current, { refreshConversation: false })
     },
     [applyState]
@@ -315,7 +364,8 @@ const useChatHook = (): ChatContextValue => {
     (chat: Chat, options?: { persistOutgoing?: boolean }) => {
       const { persistOutgoing = true } = options || {}
       const prevId = currentChatIdRef.current
-      if (persistOutgoing && prevId && prevId !== chat.id) {
+      const isStreaming = chatInstanceRef.current?.isStreaming?.() ?? false
+      if (persistOutgoing && prevId && prevId !== chat.id && !isStreaming) {
         const outgoingMessages = chatInstanceRef.current?.getConversation() || []
         saveMessages(outgoingMessages, prevId)
       }
@@ -369,6 +419,7 @@ const useChatHook = (): ChatContextValue => {
       messagesMapRef.current.delete(chat.id)
 
       const hasChatsLeft = filteredList.length > 0
+      const now = new Date().toISOString()
       const nextList = hasChatsLeft
         ? filteredList
         : [
@@ -376,15 +427,14 @@ const useChatHook = (): ChatContextValue => {
               id: uuid(),
               title: 'New Chat',
               persona: DefaultPersona,
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString()
+              createdAt: now,
+              updatedAt: now
             }
           ]
 
-      const nextChatId =
-        currentChatId === chat.id || currentChatIdRef.current === chat.id || !hasChatsLeft
-          ? nextList[0]?.id
-          : currentChatIdRef.current
+      const isCurrentChatDeleted = currentChatId === chat.id || currentChatIdRef.current === chat.id
+      const needsNewSelection = isCurrentChatDeleted || !hasChatsLeft
+      const nextChatId = needsNewSelection ? nextList[0]?.id : currentChatIdRef.current
 
       applyState(nextList, nextChatId)
     },
@@ -422,6 +472,7 @@ const useChatHook = (): ChatContextValue => {
     isChatHydrated,
     getChatById,
     updateChatTitle,
+    updateChatPinned,
     onCreateChat,
     onCreateDefaultChat,
     onDeleteChat,

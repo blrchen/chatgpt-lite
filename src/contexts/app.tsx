@@ -2,21 +2,24 @@
 
 import {
   createContext,
-  Dispatch,
-  ReactNode,
-  SetStateAction,
   useCallback,
   useContext,
   useEffect,
-  useState
+  useMemo,
+  useState,
+  type Dispatch,
+  type ReactNode,
+  type SetStateAction
 } from 'react'
-import { cacheGet, cacheGetJson, cacheSet } from '@/lib/cache'
+import { cacheGet, cacheGetJson, cacheSet, cacheSetJson } from '@/lib/cache'
 import { getInitialPresetId } from '@/lib/themes'
 import { CacheKey } from '@/services/constant'
 
 const SIDEBAR_STORAGE_KEY = 'sidebarToggle'
 
-const getInitialThemePreset = () => getInitialPresetId(cacheGet(CacheKey.ThemePreset))
+function getInitialThemePreset(): string {
+  return getInitialPresetId(cacheGet(CacheKey.ThemePreset))
+}
 
 interface AppContextValue {
   themePreset: string
@@ -33,7 +36,7 @@ interface AppContextValue {
 
 const AppContext = createContext<AppContextValue | null>(null)
 
-export const useAppContext = () => {
+export function useAppContext(): AppContextValue {
   const context = useContext(AppContext)
   if (!context) {
     throw new Error('useAppContext must be used within AppContextProvider')
@@ -41,7 +44,11 @@ export const useAppContext = () => {
   return context
 }
 
-export const AppContextProvider = ({ children }: { children: ReactNode }) => {
+type AppContextProviderProps = {
+  children: ReactNode
+}
+
+export function AppContextProvider({ children }: AppContextProviderProps): React.JSX.Element {
   const [themePreset, setThemePreset] = useState<string>(getInitialThemePreset)
   const [toggleSidebar, setToggleSidebarState] = useState<boolean>(false)
   const [personaPanelOpen, setPersonaPanelOpen] = useState<boolean>(false)
@@ -59,43 +66,42 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
   const onToggleSidebar = useCallback(() => {
     setToggleSidebarState((prev) => {
       const next = !prev
-      cacheSet(SIDEBAR_STORAGE_KEY, JSON.stringify(next))
+      cacheSetJson(SIDEBAR_STORAGE_KEY, next)
       return next
     })
   }, [])
 
-  const openPersonaPanel = useCallback(() => {
-    setPersonaPanelOpen(true)
-  }, [])
+  const openPersonaPanel = useCallback(() => setPersonaPanelOpen(true), [])
+  const closePersonaPanel = useCallback(() => setPersonaPanelOpen(false), [])
+  const openPersonaModal = useCallback(() => setPersonaModalOpen(true), [])
+  const closePersonaModal = useCallback(() => setPersonaModalOpen(false), [])
 
-  const closePersonaPanel = useCallback(() => {
-    setPersonaPanelOpen(false)
-  }, [])
-
-  const openPersonaModal = useCallback(() => {
-    setPersonaModalOpen(true)
-  }, [])
-
-  const closePersonaModal = useCallback(() => {
-    setPersonaModalOpen(false)
-  }, [])
-
-  return (
-    <AppContext.Provider
-      value={{
-        themePreset,
-        setThemePreset,
-        toggleSidebar,
-        onToggleSidebar,
-        personaPanelOpen,
-        openPersonaPanel,
-        closePersonaPanel,
-        personaModalOpen,
-        openPersonaModal,
-        closePersonaModal
-      }}
-    >
-      {children}
-    </AppContext.Provider>
+  // Memoize context value to prevent unnecessary re-renders of consumers
+  const contextValue = useMemo<AppContextValue>(
+    () => ({
+      themePreset,
+      setThemePreset,
+      toggleSidebar,
+      onToggleSidebar,
+      personaPanelOpen,
+      openPersonaPanel,
+      closePersonaPanel,
+      personaModalOpen,
+      openPersonaModal,
+      closePersonaModal
+    }),
+    [
+      themePreset,
+      toggleSidebar,
+      personaPanelOpen,
+      personaModalOpen,
+      onToggleSidebar,
+      openPersonaPanel,
+      closePersonaPanel,
+      openPersonaModal,
+      closePersonaModal
+    ]
   )
+
+  return <AppContext.Provider value={contextValue}>{children}</AppContext.Provider>
 }

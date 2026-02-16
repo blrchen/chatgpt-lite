@@ -4,7 +4,7 @@
  */
 
 import { CacheKey } from '@/services/constant'
-import { ThemeModeValues, ThemePreset } from '@/types/theme'
+import type { ThemeModeValues, ThemePreset } from '@/types/theme'
 
 import { defaultPresets } from './tweakcn-presets'
 
@@ -13,7 +13,7 @@ const STYLE_ELEMENT_ID = 'chatgpt-lite-theme-styles'
 
 const SYSTEM_FONT_STACKS: Record<string, string> = {
   'font-sans': 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-  'font-serif': 'Georgia, Cambria, "Times New Roman", serif',
+  'font-serif': '"Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif',
   'font-mono': 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace'
 }
 
@@ -39,8 +39,7 @@ export const isValidPresetId = (id: string | null | undefined): id is string =>
 export const resolvePresetId = (id: string | null | undefined): string =>
   isValidPresetId(id) ? id : DEFAULT_THEME_PRESET
 
-export const getInitialPresetId = (cachedId: string | null | undefined): string =>
-  isValidPresetId(cachedId) ? cachedId : DEFAULT_THEME_PRESET
+export const getInitialPresetId = resolvePresetId
 
 const fontKeyMap: Record<string, string> = {
   'font-sans': 'theme-font-sans',
@@ -72,12 +71,7 @@ const ensureStyleElement = () => {
   return styleEl
 }
 
-const getThemePreset = (presetId?: string): ThemePreset => {
-  if (presetId && themePresets[presetId]) {
-    return themePresets[presetId]
-  }
-  return themePresets[DEFAULT_THEME_PRESET]
-}
+const getThemePreset = (presetId?: string): ThemePreset => themePresets[resolvePresetId(presetId)]
 
 export const getThemePresetCss = (presetId?: string) => {
   const preset = getThemePreset(presetId)

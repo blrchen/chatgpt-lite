@@ -1,7 +1,5 @@
 import { redirect } from 'next/navigation'
 
-const Home = () => {
+export default function Home(): never {
   redirect('/chat')
 }
-
-export default Home

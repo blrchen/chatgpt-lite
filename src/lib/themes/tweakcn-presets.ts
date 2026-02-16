@@ -5,7 +5,7 @@
  * To update this file, copy the contents from the source and adjust imports as needed.
  */
 
-import { ThemePreset } from '@/types/theme'
+import type { ThemePreset } from '@/types/theme'
 
 export const defaultPresets: Record<string, ThemePreset> = {
   'modern-minimal': {
