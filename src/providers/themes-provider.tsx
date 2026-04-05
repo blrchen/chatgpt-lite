@@ -1,19 +1,14 @@
 'use client'
 
-import { useInsertionEffect, useMemo } from 'react'
+import { useEffect, useInsertionEffect } from 'react'
 import { Toaster } from '@/components/ui/sonner'
-import { useAppContext } from '@/contexts/app'
-import { cacheGet } from '@/lib/cache'
-import {
-  applyThemePresetStyles,
-  getThemePresetCss,
-  isValidPresetId,
-  resolvePresetId,
-  THEME_STYLE_ELEMENT_ID
-} from '@/lib/themes'
-import { CacheKey } from '@/services/constant'
+import { TooltipProvider } from '@/components/ui/tooltip'
+import { resolvePresetId } from '@/lib/themes/theme-preset'
+import { applyThemePresetStyles } from '@/lib/themes/theme-preset-styles'
+import { CACHE_KEY } from '@/services/constant'
+import { selectThemePreset, useAppStore } from '@/store/app-store'
 import type { ThemeMode } from '@/types/theme'
-import { ThemeProvider as NextThemesProvider, type ThemeProviderProps } from 'next-themes'
+import { ThemeProvider as NextThemesProvider, useTheme, type ThemeProviderProps } from 'next-themes'
 
 function isValidTheme(value?: string | null): value is ThemeMode {
   return value === 'light' || value === 'dark'
@@ -21,64 +16,71 @@ function isValidTheme(value?: string | null): value is ThemeMode {
 
 const DEFAULT_THEME_ENV = process.env.NEXT_PUBLIC_DEFAULT_THEME
 const DEFAULT_THEME_MODE: ThemeMode = isValidTheme(DEFAULT_THEME_ENV) ? DEFAULT_THEME_ENV : 'light'
+const FALLBACK_THEME_COLOR = '#fcfbfa'
+let cachedThemeColorMetas: HTMLMetaElement[] = []
+let lastAppliedThemeColor: string | null = null
 
-const THEME_PRESET_STYLE_SCRIPT = `(function() {
-  try {
-    document.documentElement.classList.add('theme-loading');
-    var css = localStorage.getItem('${CacheKey.ThemePresetCss}');
-    if (!css) return;
-    var styleEl = document.getElementById('${THEME_STYLE_ELEMENT_ID}');
-    if (!styleEl) {
-      styleEl = document.createElement('style');
-      styleEl.id = '${THEME_STYLE_ELEMENT_ID}';
-      document.head.appendChild(styleEl);
-    }
-    styleEl.textContent = css;
-  } catch (error) {
-    // Ignore errors (e.g., storage disabled)
+function getThemeColorMetas(): HTMLMetaElement[] {
+  cachedThemeColorMetas = cachedThemeColorMetas.filter((meta) => meta.isConnected)
+  if (cachedThemeColorMetas.length > 0) {
+    return cachedThemeColorMetas
   }
-})();`
 
-function getPresetId(current: string): string {
-  if (typeof window === 'undefined') {
-    return resolvePresetId(current)
+  const foundMetas = Array.from(
+    document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')
+  )
+  if (foundMetas.length > 0) {
+    cachedThemeColorMetas = foundMetas
+    return cachedThemeColorMetas
   }
-  return isValidPresetId(current) ? current : resolvePresetId(cacheGet(CacheKey.ThemePreset))
+
+  const themeColorMeta = document.createElement('meta')
+  themeColorMeta.name = 'theme-color'
+  document.head.appendChild(themeColorMeta)
+  cachedThemeColorMetas = [themeColorMeta]
+  return cachedThemeColorMetas
 }
 
-function ThemePresetStyle(): React.JSX.Element {
-  const { themePreset } = useAppContext()
-  const presetId = useMemo(() => getPresetId(themePreset), [themePreset])
-  const css = useMemo(() => getThemePresetCss(presetId), [presetId])
-
-  return (
-    <style
-      id={THEME_STYLE_ELEMENT_ID}
-      dangerouslySetInnerHTML={{ __html: css }}
-      suppressHydrationWarning
-    />
-  )
-}
-
-function ThemePresetStyleScript(): React.JSX.Element {
-  return (
-    <script
-      dangerouslySetInnerHTML={{ __html: THEME_PRESET_STYLE_SCRIPT }}
-      suppressHydrationWarning
-    />
-  )
-}
-
-function ThemePresetSync(): null {
-  const { themePreset } = useAppContext()
-  const presetId = useMemo(() => getPresetId(themePreset), [themePreset])
+function ThemeSync(): null {
+  const themePreset = useAppStore(selectThemePreset)
+  const presetId = resolvePresetId(themePreset)
+  const { resolvedTheme } = useTheme()
 
   useInsertionEffect(() => {
     applyThemePresetStyles(presetId)
     document.documentElement.classList.remove('theme-loading')
   }, [presetId])
 
+  useEffect(() => {
+    const frameId = window.requestAnimationFrame(syncThemeColorMeta)
+    return () => {
+      window.cancelAnimationFrame(frameId)
+    }
+  }, [presetId, resolvedTheme])
+
   return null
+}
+
+function syncThemeColorMeta(): void {
+  if (typeof document === 'undefined') {
+    return
+  }
+
+  const mainContent = document.getElementById('main-content')
+  const backgroundColor =
+    (mainContent && getComputedStyle(mainContent).backgroundColor) ||
+    getComputedStyle(document.documentElement).backgroundColor
+
+  const nextThemeColor = backgroundColor || FALLBACK_THEME_COLOR
+  if (nextThemeColor === lastAppliedThemeColor) {
+    return
+  }
+
+  for (const themeColorMeta of getThemeColorMetas()) {
+    themeColorMeta.content = nextThemeColor
+  }
+
+  lastAppliedThemeColor = nextThemeColor
 }
 
 export function ThemeProvider({ children, ...props }: ThemeProviderProps): React.JSX.Element {
@@ -86,14 +88,12 @@ export function ThemeProvider({ children, ...props }: ThemeProviderProps): React
     <NextThemesProvider
       attribute="class"
       disableTransitionOnChange
-      storageKey={CacheKey.Theme}
+      storageKey={CACHE_KEY.THEME}
       defaultTheme={DEFAULT_THEME_MODE}
       {...props}
     >
-      <ThemePresetStyleScript />
-      <ThemePresetStyle />
-      <ThemePresetSync />
-      {children}
+      <ThemeSync />
+      <TooltipProvider delayDuration={120}>{children}</TooltipProvider>
       <Toaster position="top-center" richColors />
     </NextThemesProvider>
   )

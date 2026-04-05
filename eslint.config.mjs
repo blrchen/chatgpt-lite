@@ -17,8 +17,17 @@ const eslintConfig = defineConfig([
   ]),
   {
     rules: {
-      "react-hooks/set-state-in-effect": "off",
-      "@typescript-eslint/no-empty-object-type": "off",
+      // Treat React/Next performance guidance as hard gates in CI.
+      "react-hooks/exhaustive-deps": "error",
+      "react-hooks/incompatible-library": "error",
+      "react-hooks/unsupported-syntax": "error",
+      "@next/next/google-font-display": "error",
+      "@next/next/google-font-preconnect": "error",
+      "@next/next/next-script-for-ga": "error",
+      "@next/next/no-before-interactive-script-outside-document": "error",
+      "@next/next/no-css-tags": "error",
+      "@next/next/no-img-element": "error",
+      "@next/next/no-unwanted-polyfillio": "error",
     },
   },
 ]);

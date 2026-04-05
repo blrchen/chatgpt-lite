@@ -1,25 +1,51 @@
 'use client'
 
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { memo, useCallback, useDeferredValue, useId, useMemo, useState } from 'react'
+import { AppButton, AppIconButton } from '@/components/common/app-button'
+import { ButtonWithTooltip } from '@/components/common/button-with-tooltip'
+import { ThemeOptionsDropdownPlaceholder } from '@/components/theme/options-dropdown-placeholder'
+import { Badge } from '@/components/ui/badge'
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList
+} from '@/components/ui/command'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Separator } from '@/components/ui/separator'
-import { useAppContext } from '@/contexts/app'
-import { themePresetEntries, themePresets } from '@/lib/themes'
+import { useHydrated } from '@/hooks/useHydrated'
+import { getThemePreset, getThemePresetEntries, resolvePresetId } from '@/lib/themes/theme-preset'
 import { cn } from '@/lib/utils'
-import type { ThemePreset } from '@/types/theme'
+import { isMobileViewport } from '@/lib/viewport'
+import { selectSetThemePreset, selectThemePreset, useAppStore } from '@/store/app-store'
+import type { ThemeMode, ThemePreset } from '@/types/theme'
 import {
   ChevronDownIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   MoonIcon,
-  SearchIcon,
   ShuffleIcon,
   SunIcon
 } from 'lucide-react'
 import { useTheme } from 'next-themes'
 
 const SWATCH_KEYS = ['primary', 'accent', 'secondary', 'border'] as const
+
+type ThemeOptionsDropdownContentProps = {
+  themeMode: ThemeMode
+  themePreset: string
+  setThemePreset: (presetId: string) => void
+}
+
+type DesktopThemeActionButtonProps = {
+  children: React.ReactNode
+  className: string
+  disabled: boolean
+  label: string
+  onClick: () => void
+}
 
 function getCircularIndex(current: number, length: number, direction: 'prev' | 'next'): number {
   const normalizedCurrent = current === -1 ? 0 : current
@@ -28,260 +54,269 @@ function getCircularIndex(current: number, length: number, direction: 'prev' | '
 }
 
 function sortOptions(entries: Array<[string, ThemePreset]>): Array<[string, ThemePreset]> {
-  return [...entries].sort((a, b) => {
-    const nameA = (a[1].label || a[0]).toLowerCase()
-    const nameB = (b[1].label || b[0]).toLowerCase()
+  return entries.toSorted((a, b) => {
+    const nameA = getPresetLabel(a[0], a[1]).toLowerCase()
+    const nameB = getPresetLabel(b[0], b[1]).toLowerCase()
     return nameA.localeCompare(nameB)
   })
 }
 
-export default function ThemeOptionsDropdown(): React.JSX.Element | null {
-  const { themePreset, setThemePreset } = useAppContext()
-  const { theme } = useTheme()
-  const resolvedTheme: 'light' | 'dark' = theme === 'dark' ? 'dark' : 'light'
-  const [mounted, setMounted] = useState(false)
+function getPresetLabel(id: string, preset: ThemePreset): string {
+  return preset.label || id
+}
+
+function getPresetColors(preset: ThemePreset, mode: ThemeMode): Record<string, string> {
+  return preset.styles[mode]
+}
+
+const SORTED_THEME_OPTIONS = sortOptions(getThemePresetEntries())
+
+function DesktopThemeActionButton({
+  children,
+  className,
+  disabled,
+  label,
+  onClick
+}: DesktopThemeActionButtonProps): React.JSX.Element {
+  return (
+    <ButtonWithTooltip label={label} placement="bottom">
+      <AppIconButton
+        variant="ghost"
+        size="icon-sm"
+        className={className}
+        aria-label={label}
+        onClick={onClick}
+        disabled={disabled}
+      >
+        {children}
+      </AppIconButton>
+    </ButtonWithTooltip>
+  )
+}
+
+export default function ThemeOptionsDropdown(): React.JSX.Element {
+  const themePreset = useAppStore(selectThemePreset)
+  const setThemePreset = useAppStore(selectSetThemePreset)
+  const { resolvedTheme } = useTheme()
+  const themeMode: ThemeMode = resolvedTheme === 'dark' ? 'dark' : 'light'
+  const mounted = useHydrated()
+  if (!mounted) {
+    return <ThemeOptionsDropdownPlaceholder />
+  }
+
+  return (
+    <ThemeOptionsDropdownContent
+      key={themeMode}
+      themeMode={themeMode}
+      themePreset={themePreset}
+      setThemePreset={setThemePreset}
+    />
+  )
+}
+
+function ThemeOptionsDropdownContent({
+  themeMode,
+  themePreset,
+  setThemePreset
+}: ThemeOptionsDropdownContentProps): React.JSX.Element {
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState('')
-  const [previewMode, setPreviewMode] = useState<'light' | 'dark'>(resolvedTheme)
-  const options = useMemo(() => sortOptions(themePresetEntries), [])
-  const dropdownRef = useRef<HTMLDivElement | null>(null)
+  const [previewMode, setPreviewMode] = useState<ThemeMode>(themeMode)
+  const themePickerPanelId = useId()
 
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  const selectedPreset = themePresets[themePreset]
-  const selectedColors =
-    selectedPreset?.styles?.[resolvedTheme] ?? selectedPreset?.styles?.light ?? {}
+  const resolvedThemePreset = resolvePresetId(themePreset)
+  const selectedPreset = getThemePreset(resolvedThemePreset)
+  const selectedPresetLabel = getPresetLabel(resolvedThemePreset, selectedPreset)
+  const selectedColors = getPresetColors(selectedPreset, themeMode)
+  const normalizedSearch = search.trim().toLowerCase()
+  const deferredNormalizedSearch = useDeferredValue(normalizedSearch)
 
   const filteredOptions = useMemo(() => {
-    if (!search.trim()) {
-      return options
+    if (!deferredNormalizedSearch) {
+      return SORTED_THEME_OPTIONS
     }
-    const query = search.trim().toLowerCase()
-    return options.filter(([id, preset]) => {
-      const name = (preset.label || id).toLowerCase()
-      return name.includes(query) || id.toLowerCase().includes(query)
-    })
-  }, [options, search])
 
-  const closeDropdown = useCallback(() => {
-    setOpen(false)
-    setSearch('')
+    return SORTED_THEME_OPTIONS.filter(([id, preset]) => {
+      const name = getPresetLabel(id, preset).toLowerCase()
+      return (
+        name.includes(deferredNormalizedSearch) ||
+        id.toLowerCase().includes(deferredNormalizedSearch)
+      )
+    })
+  }, [deferredNormalizedSearch])
+  const hasFilteredOptions = filteredOptions.length > 0
+
+  const handleOpenChange = useCallback((nextOpen: boolean) => {
+    setOpen(nextOpen)
+    if (!nextOpen) {
+      setSearch('')
+    }
   }, [])
 
   const handleSelect = useCallback(
     (presetId: string) => {
-      if (!presetId) {
-        return
-      }
-
       setThemePreset(presetId)
-      closeDropdown()
+      handleOpenChange(false)
     },
-    [closeDropdown, setThemePreset]
+    [handleOpenChange, setThemePreset]
   )
-
-  useEffect(() => {
-    if (!open) {
-      return
-    }
-
-    const handleClick = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        closeDropdown()
-      }
-    }
-
-    const handleKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        closeDropdown()
-      }
-    }
-
-    document.addEventListener('mousedown', handleClick)
-    document.addEventListener('keydown', handleKey)
-
-    return () => {
-      document.removeEventListener('mousedown', handleClick)
-      document.removeEventListener('keydown', handleKey)
-    }
-  }, [open, closeDropdown])
-
-  useEffect(() => {
-    setPreviewMode(resolvedTheme)
-  }, [resolvedTheme])
 
   const handleTogglePreview = useCallback(() => {
     setPreviewMode((current) => (current === 'light' ? 'dark' : 'light'))
   }, [])
 
+  const previewToggleLabel = `Preview ${previewMode === 'light' ? 'dark' : 'light'} tokens`
+
   const handleShuffleSelect = useCallback(() => {
-    if (!filteredOptions.length) {
+    if (!hasFilteredOptions) {
       return
     }
-    const random = filteredOptions[Math.floor(Math.random() * filteredOptions.length)]
-    if (random) {
-      handleSelect(random[0])
-    }
-  }, [handleSelect, filteredOptions])
+    const [randomPresetId] = filteredOptions[Math.floor(Math.random() * filteredOptions.length)]
+    handleSelect(randomPresetId)
+  }, [filteredOptions, handleSelect, hasFilteredOptions])
 
   const handleStepSelect = useCallback(
     (direction: 'prev' | 'next') => {
-      if (!filteredOptions.length) {
+      if (!hasFilteredOptions) {
         return
       }
-      const currentIndex = filteredOptions.findIndex(([id]) => id === themePreset)
+      const currentIndex = filteredOptions.findIndex(([id]) => id === resolvedThemePreset)
       const nextIndex = getCircularIndex(currentIndex, filteredOptions.length, direction)
       handleSelect(filteredOptions[nextIndex][0])
     },
-    [handleSelect, themePreset, filteredOptions]
+    [filteredOptions, handleSelect, hasFilteredOptions, resolvedThemePreset]
   )
 
-  if (!mounted) {
-    return null
-  }
-
   return (
-    <div className="border-input flex items-stretch rounded-md border" ref={dropdownRef}>
-      <Button
-        variant="ghost"
-        size="sm"
-        className="border-input disabled:text-muted-foreground hidden size-9 rounded-l-md rounded-r-none border-r disabled:bg-transparent disabled:opacity-100 md:flex"
-        aria-label="Select previous theme"
-        title="Select previous theme"
+    <div className="border-border/60 flex items-stretch rounded-md border">
+      <DesktopThemeActionButton
+        className="border-input disabled:border-border/60 hidden rounded-l-md rounded-r-none border-r md:flex"
+        label="Select previous theme"
         onClick={() => handleStepSelect('prev')}
-        disabled={!filteredOptions.length}
+        disabled={!hasFilteredOptions}
       >
-        <ChevronLeftIcon className="size-4" />
-      </Button>
-      <div className="relative">
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => setOpen((prev) => !prev)}
-          className="text-card-foreground group h-9 max-w-[260px] min-w-40 items-center justify-between gap-2 rounded-md px-2.5 text-sm font-medium focus-visible:ring-[3px] md:rounded-none"
-          aria-haspopup="listbox"
-          aria-expanded={open}
-          aria-label={`Selected theme: ${selectedPreset?.label || themePreset}`}
-        >
-          <div className="flex min-w-0 items-center gap-2 text-left">
-            <MiniSwatches colors={selectedColors} className="shrink-0" swatchClassName="size-4" />
-            <span className="truncate">{selectedPreset?.label || themePreset}</span>
-          </div>
-          <ChevronDownIcon className="text-muted-foreground size-4 shrink-0" aria-hidden="true" />
-        </Button>
-
-        {open && (
-          <div className="border-border bg-popover text-popover-foreground fixed top-[calc(3.5rem+env(safe-area-inset-top))] right-2 left-2 z-30 rounded-xl border shadow-2xl md:absolute md:top-auto md:right-auto md:left-0 md:mt-2 md:w-80">
-            <div className="focus-within:ring-ring/50 flex items-center gap-2 border-b px-3 py-1.5 focus-within:ring-2 focus-within:ring-inset">
-              <SearchIcon className="text-muted-foreground size-4" aria-hidden="true" />
-              <Input
-                className="placeholder:text-foreground/60 h-9 border-0 bg-transparent px-0 text-sm focus-visible:border-0 focus-visible:ring-0"
-                placeholder="Search themes..."
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter' && filteredOptions[0]) {
-                    handleSelect(filteredOptions[0][0])
-                  }
-                }}
-                autoFocus
-              />
+        <ChevronLeftIcon className="size-4" aria-hidden="true" />
+      </DesktopThemeActionButton>
+      <Popover open={open} onOpenChange={handleOpenChange}>
+        <PopoverTrigger asChild>
+          <AppButton
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="text-card-foreground max-w-64 min-w-40 items-center justify-between gap-2 rounded-md px-3 text-sm font-medium focus-visible:ring-[3px] md:rounded-none"
+            aria-controls={open ? themePickerPanelId : undefined}
+            aria-expanded={open}
+            aria-label={`Selected theme: ${selectedPresetLabel}`}
+          >
+            <div className="flex min-w-0 items-center gap-2 text-left">
+              <MiniSwatches colors={selectedColors} className="shrink-0" swatchClassName="size-4" />
+              <span className="truncate">{selectedPresetLabel}</span>
             </div>
+            <ChevronDownIcon className="text-muted-foreground size-4 shrink-0" aria-hidden="true" />
+          </AppButton>
+        </PopoverTrigger>
+        <PopoverContent
+          id={themePickerPanelId}
+          align="center"
+          sideOffset={8}
+          collisionPadding={8}
+          className="border-border bg-popover text-popover-foreground w-[min(20rem,calc(100vw-1rem))] rounded-xl p-0 shadow-2xl md:w-80"
+          onOpenAutoFocus={(event) => {
+            if (isMobileViewport()) {
+              return
+            }
+
+            event.preventDefault()
+            const panel = event.currentTarget as HTMLElement | null
+            const input = panel?.querySelector<HTMLInputElement>('[cmdk-input]')
+            input?.focus()
+          }}
+        >
+          <Command shouldFilter={false} className="rounded-xl bg-transparent">
+            <CommandInput
+              name="theme-search"
+              value={search}
+              onValueChange={setSearch}
+              placeholder="Search themes…"
+              inputMode="search"
+              enterKeyHint="search"
+              autoComplete="off"
+              spellCheck={false}
+              aria-label="Search themes"
+              className="focus-visible:ring-ring/50 h-11 text-base focus-visible:ring-2"
+            />
             <div className="text-muted-foreground flex items-center gap-2 px-3 py-2 text-xs font-medium">
-              <span className="flex-1 text-left">
+              <span className="flex-1 text-left tabular-nums">
                 {filteredOptions.length} theme{filteredOptions.length === 1 ? '' : 's'}
               </span>
-              <div className="flex items-center gap-1">
-                <Button
+              <ButtonWithTooltip label={previewToggleLabel}>
+                <AppIconButton
                   variant="ghost"
                   size="icon"
-                  className="size-11 md:size-7"
-                  aria-label={`Preview ${previewMode === 'light' ? 'dark' : 'light'} tokens`}
-                  title={`Preview ${previewMode === 'light' ? 'dark' : 'light'} tokens`}
+                  className="size-11 md:size-11"
+                  touch={false}
+                  mutedDisabled={false}
+                  aria-label={previewToggleLabel}
                   onClick={handleTogglePreview}
                 >
                   {previewMode === 'light' ? (
-                    <MoonIcon className="size-3.5" />
+                    <MoonIcon className="size-4" aria-hidden="true" />
                   ) : (
-                    <SunIcon className="size-3.5" />
+                    <SunIcon className="size-4" aria-hidden="true" />
                   )}
-                </Button>
-              </div>
+                </AppIconButton>
+              </ButtonWithTooltip>
             </div>
             <Separator />
-            <div
-              className="max-h-[360px] overflow-y-auto p-1"
-              role="listbox"
-              aria-label="Theme presets"
-            >
-              <div className="flex items-center gap-2 px-3 pt-2 pb-1">
-                <p className="text-muted-foreground text-xs font-semibold text-pretty">Themes</p>
-              </div>
-              <div className="space-y-1">
+            <CommandList className="max-h-96 overscroll-contain p-1">
+              <CommandEmpty className="text-muted-foreground px-3 py-8 text-left text-sm">
+                No themes found.
+              </CommandEmpty>
+              <CommandGroup heading="Themes">
                 {filteredOptions.map(([id, preset]) => {
-                  const colors = preset.styles?.[previewMode] ?? preset.styles?.light ?? {}
-                  const isActive = id === themePreset
+                  const colors = getPresetColors(preset, previewMode)
+                  const isActive = id === resolvedThemePreset
                   return (
-                    <button
+                    <CommandItem
                       key={id}
-                      type="button"
-                      onClick={() => handleSelect(id)}
+                      value={id}
+                      onSelect={() => handleSelect(id)}
                       className={cn(
-                        'focus-visible:ring-ring group flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-[transform,background-color] duration-200 focus-visible:ring-2 focus-visible:outline-hidden',
+                        'focus-visible:ring-ring flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left transition-colors duration-200 focus-visible:ring-2 focus-visible:outline-hidden',
                         isActive
-                          ? 'bg-primary/10 text-foreground ring-primary/20 shadow-sm ring-1'
-                          : 'hover:bg-foreground/[0.04] text-foreground hover:translate-x-0.5'
+                          ? 'bg-accent text-accent-foreground ring-border shadow-sm ring-1'
+                          : 'text-foreground hover:bg-foreground/[0.04] data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground'
                       )}
-                      role="option"
-                      aria-selected={isActive}
                     >
                       <MiniSwatches colors={colors} />
-                      <div className="flex min-w-0 flex-1 flex-col">
-                        <span className="truncate text-sm leading-tight font-medium">
-                          {preset.label || id}
-                        </span>
-                        <span className="text-muted-foreground truncate text-xs leading-tight">
-                          {id}
-                        </span>
-                      </div>
-                      {isActive && (
-                        <span className="animate-in fade-in zoom-in-90 bg-primary text-primary-foreground rounded px-1.5 py-0.5 text-xs font-semibold uppercase shadow-sm duration-200 motion-reduce:animate-none">
-                          Active
-                        </span>
-                      )}
-                    </button>
+                      <span className="truncate text-sm leading-tight font-medium">
+                        {getPresetLabel(id, preset)}
+                      </span>
+                      {isActive && <Badge className="shadow-sm">Active</Badge>}
+                    </CommandItem>
                   )
                 })}
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-      <Button
-        variant="ghost"
-        size="sm"
-        className="border-input disabled:text-muted-foreground hidden size-9 rounded-none border-l disabled:bg-transparent disabled:opacity-100 md:flex"
-        aria-label="Shuffle themes"
-        title="Shuffle themes"
+              </CommandGroup>
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
+      <DesktopThemeActionButton
+        className="border-input disabled:border-border/60 hidden rounded-none border-l md:flex"
+        label="Shuffle themes"
         onClick={handleShuffleSelect}
-        disabled={!filteredOptions.length}
+        disabled={!hasFilteredOptions}
       >
-        <ShuffleIcon className="size-4" />
-      </Button>
-      <Button
-        variant="ghost"
-        size="sm"
-        className="border-input disabled:text-muted-foreground hidden size-9 rounded-l-none rounded-r-md border-l disabled:bg-transparent disabled:opacity-100 md:flex"
-        aria-label="Select next theme"
-        title="Select next theme"
+        <ShuffleIcon className="size-4" aria-hidden="true" />
+      </DesktopThemeActionButton>
+      <DesktopThemeActionButton
+        className="border-input disabled:border-border/60 hidden rounded-l-none rounded-r-md border-l md:flex"
+        label="Select next theme"
         onClick={() => handleStepSelect('next')}
-        disabled={!filteredOptions.length}
+        disabled={!hasFilteredOptions}
       >
-        <ChevronRightIcon className="size-4" />
-      </Button>
+        <ChevronRightIcon className="size-4" aria-hidden="true" />
+      </DesktopThemeActionButton>
     </div>
   )
 }
@@ -293,7 +328,7 @@ type MiniSwatchesProps = {
 }
 
 function getSwatchColor(colors: Record<string, string>, key: string): string {
-  return colors?.[key] ?? colors?.primary ?? colors?.accent ?? colors?.background ?? 'var(--muted)'
+  return colors[key] ?? colors.primary ?? 'var(--muted)'
 }
 
 const DEFAULT_SWATCH_CLASS = 'size-4'

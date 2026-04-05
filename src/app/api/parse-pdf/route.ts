@@ -1,14 +1,15 @@
 import { join } from 'path'
 import { pathToFileURL } from 'url'
 import { NextResponse, type NextRequest } from 'next/server'
+import { AppError } from '@/lib/errors'
+import type { PDFImage } from '@/lib/file-parser'
+import { formatSizeInMB } from '@/lib/size'
+import { MAX_PDF_FILE_SIZE } from '@/services/constant'
 
 export const runtime = 'nodejs'
+type PDFParseInstance = InstanceType<(typeof import('pdf-parse'))['PDFParse']>
 
-// File size limit: 10MB
-const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB in bytes
-
-// Configure worker path for Node.js environment
-// Convert to file:// URL for Windows compatibility
+// pdf.js falls back to a fake worker in Node.js, but it still resolves the worker module by path.
 const WORKER_PATH = join(
   process.cwd(),
   'node_modules',
@@ -20,73 +21,41 @@ const WORKER_PATH = join(
 const WORKER_URL = pathToFileURL(WORKER_PATH).href
 let isWorkerConfigured = false
 
-type ParsedPdfImage = {
-  pageNumber: number
-  name: string
-  width: number
-  height: number
-  dataUrl: string
+async function ensureDomPolyfill(): Promise<void> {
+  if (typeof globalThis.DOMMatrix !== 'undefined') {
+    return
+  }
+
+  const { DOMMatrix, DOMPoint, DOMRect } = await import('@napi-rs/canvas')
+  Object.assign(globalThis, { DOMMatrix, DOMPoint, DOMRect })
 }
 
-export async function POST(req: NextRequest): Promise<NextResponse> {
-  try {
-    const formData = await req.formData()
-    const fileValue = formData.get('file')
+async function loadPdfParseModule(): Promise<typeof import('pdf-parse')> {
+  await ensureDomPolyfill()
+  const pdfParseModule = await import('pdf-parse')
 
-    if (!fileValue || typeof fileValue === 'string') {
-      return NextResponse.json({ error: 'No file provided' }, { status: 400 })
-    }
+  if (!isWorkerConfigured) {
+    pdfParseModule.PDFParse.setWorker(WORKER_URL)
+    isWorkerConfigured = true
+  }
 
-    const file = fileValue
+  return pdfParseModule
+}
 
-    // Check file type
-    if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
-      return NextResponse.json({ error: 'File must be a PDF' }, { status: 400 })
-    }
+async function extractPDFData(parser: PDFParseInstance): Promise<{
+  content: string
+  pages: number
+  images: PDFImage[]
+}> {
+  // Keep parser operations sequential. In Node.js, pdf.js uses an in-process loopback worker,
+  // and concurrent calls on a fresh PDFParse instance race to transfer the same ArrayBuffer.
+  const textResult = await parser.getText()
+  const imageResult = await parser.getImage({ imageThreshold: 50 })
 
-    // Check file size (10MB limit)
-    if (file.size > MAX_FILE_SIZE) {
-      const sizeMB = (file.size / (1024 * 1024)).toFixed(2)
-      return NextResponse.json(
-        { error: `File size (${sizeMB}MB) exceeds the maximum allowed size of 10MB` },
-        { status: 413 }
-      )
-    }
-
-    const arrayBufferPromise = file.arrayBuffer()
-
-    if (typeof globalThis.DOMMatrix === 'undefined') {
-      const { DOMMatrix, DOMPoint, DOMRect } = await import('@napi-rs/canvas')
-      const globalWithDom = globalThis as Record<string, unknown>
-      globalWithDom.DOMMatrix = DOMMatrix
-      globalWithDom.DOMPoint = DOMPoint
-      globalWithDom.DOMRect = DOMRect
-    }
-
-    // Dynamic import: Prevent triggering of pdfjs during module initialization stage
-    const { PDFParse } = await import('pdf-parse')
-
-    if (!isWorkerConfigured) {
-      PDFParse.setWorker(WORKER_URL)
-      isWorkerConfigured = true
-    }
-
-    // Convert file to buffer
-    const buffer = Buffer.from(await arrayBufferPromise)
-
-    // Parse PDF using pdf-parse
-    const parser = new PDFParse({ data: buffer })
-
-    // Extract text
-    const textResult = await parser.getText()
-
-    // Extract images
-    const imageResult = await parser.getImage({ imageThreshold: 50 })
-
-    await parser.destroy()
-
-    // Process images into base64 data URLs
-    const images: ParsedPdfImage[] = imageResult.pages.flatMap((page) =>
+  return {
+    content: textResult.text,
+    pages: textResult.total,
+    images: imageResult.pages.flatMap((page) =>
       page.images.map((img) => ({
         pageNumber: page.pageNumber,
         name: img.name,
@@ -95,23 +64,51 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         dataUrl: img.dataUrl
       }))
     )
+  }
+}
 
-    return NextResponse.json({
-      success: true,
-      name: file.name,
-      content: textResult.text,
-      pages: textResult.total,
-      images
-    })
+export async function POST(req: NextRequest): Promise<Response> {
+  try {
+    const formData = await req.formData()
+    const fileValue = formData.get('file')
+
+    if (!fileValue || typeof fileValue === 'string') {
+      return new AppError('invalid_file', 'No file provided').toResponse()
+    }
+
+    if (fileValue.type !== 'application/pdf' && !fileValue.name.toLowerCase().endsWith('.pdf')) {
+      return new AppError('invalid_file', 'File must be a PDF').toResponse()
+    }
+
+    if (fileValue.size > MAX_PDF_FILE_SIZE) {
+      return new AppError(
+        'file_too_large',
+        `File size (${formatSizeInMB(fileValue.size)}) exceeds the maximum allowed size of ${formatSizeInMB(MAX_PDF_FILE_SIZE)}`
+      ).toResponse()
+    }
+
+    const [{ PDFParse }, arrayBuffer] = await Promise.all([
+      loadPdfParseModule(),
+      fileValue.arrayBuffer()
+    ])
+
+    const parser = new PDFParse({ data: new Uint8Array(arrayBuffer) })
+
+    try {
+      const parsedPDF = await extractPDFData(parser)
+
+      return NextResponse.json({
+        success: true,
+        name: fileValue.name,
+        content: parsedPDF.content,
+        pages: parsedPDF.pages,
+        images: parsedPDF.images
+      })
+    } finally {
+      await parser.destroy()
+    }
   } catch (error) {
     console.error('PDF parsing error:', error)
-
-    return NextResponse.json(
-      {
-        error: error instanceof Error ? error.message : 'Failed to parse PDF',
-        success: false
-      },
-      { status: 500 }
-    )
+    return AppError.from('parse_error', error, 'Failed to parse PDF').toResponse()
   }
 }

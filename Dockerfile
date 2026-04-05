@@ -19,7 +19,7 @@ FROM deps AS builder
 
 WORKDIR /app
 
-# Install dependencies based on the preferred package manager
+# Copy source and build the app
 COPY . .
 RUN npm run build
 

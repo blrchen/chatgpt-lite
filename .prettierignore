@@ -1,11 +1,13 @@
 .next
 node_modules
 src/components/ui
+src/hooks/use-mobile.ts
 
 *.md
 *.json
 
-src/app/globals.css
 eslint.config.mjs
 next.config.ts
+next-env.d.ts
 postcss.config.mjs
+src/app/globals.css

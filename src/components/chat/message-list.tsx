@@ -1,32 +1,35 @@
-'use client'
-
-import { useMemo } from 'react'
-import type { ChatMessage } from '@/components/chat/interface'
+import { useChatMessagesContext } from '@/components/chat/chat-session-context'
+import { ChatStreamError } from '@/components/chat/chat-stream-error'
 import { Message } from '@/components/chat/message'
-import { findLastMessageIndex } from '@/components/chat/utils'
+import { isStreamingStatus } from '@/lib/chat-utils'
 
-export interface MessageListProps {
-  messages: ChatMessage[]
-  isStreaming?: boolean
-}
+export function MessageList(): React.JSX.Element {
+  const { messages, streamStatus, streamPhase, error, onDismissError } = useChatMessagesContext()
+  const isStreaming = isStreamingStatus(streamStatus)
+  const lastMessageIndex = messages.length - 1
+  const lastAssistantIndex =
+    isStreaming && lastMessageIndex >= 0 && messages[lastMessageIndex].role === 'assistant'
+      ? lastMessageIndex
+      : -1
 
-export function MessageList({ messages, isStreaming }: MessageListProps): React.JSX.Element {
-  const lastAssistantIndex = useMemo(
-    () => (isStreaming ? findLastMessageIndex(messages, 'assistant') : -1),
-    [isStreaming, messages]
+  return (
+    <div className="flex flex-col gap-5">
+      {messages.map((item, index) => {
+        const isLastStreaming = isStreaming && index === lastAssistantIndex
+        return (
+          <div
+            key={item.id}
+            className="[contain-intrinsic-size:auto_80px] [content-visibility:auto]"
+          >
+            <Message
+              message={item}
+              isThinking={isLastStreaming}
+              streamPhase={isLastStreaming ? streamPhase : undefined}
+            />
+          </div>
+        )
+      })}
+      <ChatStreamError error={error} onDismissError={onDismissError} />
+    </div>
   )
-
-  const messageNodes = useMemo(
-    () =>
-      messages.map((item, index) => (
-        <Message
-          key={item.id}
-          message={item}
-          isThinking={Boolean(isStreaming) && index === lastAssistantIndex}
-        />
-      )),
-    [isStreaming, lastAssistantIndex, messages]
-  )
-
-  return <div className="space-y-4">{messageNodes}</div>
 }

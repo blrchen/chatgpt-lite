@@ -2,51 +2,37 @@
 
 English | [简体中文](./README.zh-CN.md)
 
+ChatGPT Lite is a feature-rich, self-hostable ChatGPT app. Built with Next.js. Ready to deploy and use.
+
 ## Demo
 
 Try the [ChatGPT Lite Demo Site](https://gptlite.vercel.app).
 
-![ChatGPT Lite Light Theme](./docs/images/demo.jpg)
-![ChatGPT Lite Dark Theme](./docs/images/demo-dark.jpg)
+| Light Theme | Dark Theme |
+|:-----------:|:----------:|
+| ![ChatGPT Lite Light Theme](./docs/images/demo.jpg) | ![ChatGPT Lite Dark Theme](./docs/images/demo-dark.jpg) |
 
 ## Features
 
-ChatGPT Lite is a lightweight ChatGPT web application built with Next.js 16 and the [OpenAI Chat API](https://platform.openai.com/docs/api-reference/chat). It supports both OpenAI and Azure OpenAI accounts.
+**Features:**
 
-**Core Features:**
-
-- **Real-time Streaming Responses** - Instant token-by-token output via Edge Runtime and Server-Sent Events
-- **Rich Markdown Rendering** - Full markdown support with syntax highlighting and KaTeX math equations
+- **Real-time Streaming Responses** - Instant token-by-token output via Server-Sent Events
+- **Rich Markdown Rendering** - Full markdown support with syntax highlighting
 - **Persona System** - Create and switch between custom AI personalities with different system prompts
-- **Persistent Chat History** - All conversations saved locally with no database required
-- **Dual Provider Support** - Works with both OpenAI and Azure OpenAI APIs
-- **File Attachments** - Upload images, PDFs, spreadsheets (XLSX/CSV), and text files directly in chat
-- **Voice Input** - Dictate messages using Web Speech API with continuous recognition
-- **Web Search Integration** - Azure and OpenAI models can search the web when needed, with source citations
-
-**User Experience:**
-
-- **Responsive Design** - Mobile-first interface with collapsible sidebar, optimized for all screen sizes
-- **40+ Built-in Themes** - Extensive theme library with light, dark, and colorful options
 - **Multi-conversation Management** - Organize and switch between multiple chat threads
-- **Privacy-focused** - Host your own instance without exposing API keys to end users
+- **Persistent Chat History** - All conversations saved locally with no server-side database required
+- **File Attachments** - Upload images, PDFs, spreadsheets (XLSX/CSV), and text files directly in chat
+- **Voice Input** - Dictate messages using Web Speech API
+- **Web Search Integration** - Models can search the web when needed, with source citations
+- **Supports OpenAI, Azure OpenAI, and OpenAI-compatible providers**
+- **40+ UI Themes**
+- **Responsive Design** - Desktop and mobile friendly with collapsible sidebar
 
-**Developer Experience:**
-
-- Built with **Next.js 16 App Router**, **React 19**, and **Tailwind CSS v4**
-- **Vercel AI SDK** (`@ai-sdk/react`) for streaming chat with UI message protocol
-- Clean, extensible architecture using **Shadcn/ui** components and **Radix UI** primitives
-- Easy deployment to Vercel, Docker, or any Node.js environment
-
-If you’re looking for a more beginner-friendly ChatGPT UI codebase, check out [ChatGPT Minimal](https://github.com/blrchen/chatgpt-minimal).
-
-## Prerequisites
-
-You need an OpenAI or Azure OpenAI account.
+This project is built on top of [ChatGPT Minimal](https://github.com/blrchen/chatgpt-minimal), extending it with themes, personas, file attachments, voice input, and more. Want something lighter? Check out ChatGPT Minimal. Small codebase, easy to understand, hack, and extend.
 
 ## Deployment
 
-Refer to the [Environment Variables](#environment-variables) section below for required configurations.
+For required environment variables, see [Environment Variables](#environment-variables).
 
 ### Deploy to Vercel
 
@@ -76,9 +62,9 @@ docker run -d -p 3000:3000 \
 
 ## Development
 
-### Running Locally
+### Run Locally
 
-1. Install Node.js 20.
+1. Install Node.js 22+.
 2. Clone this repository.
 3. Install dependencies using `npm install`.
 4. Copy `.env.example` to `.env.local` and update environment variables.
@@ -107,7 +93,7 @@ For Azure OpenAI account:
 
 ## Acknowledgments
 
-- Theme configurations from [tweakcn](https://github.com/jnsahaj/tweakcn)
+- Theme code from [tweakcn](https://github.com/jnsahaj/tweakcn)
 
 ## Contribution
 

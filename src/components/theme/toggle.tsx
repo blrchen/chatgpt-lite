@@ -1,18 +1,15 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { ButtonWithTooltip } from '@/components/common/button-with-tooltip'
 import { Button } from '@/components/ui/button'
+import { useHydrated } from '@/hooks/useHydrated'
 import { cn } from '@/lib/utils'
 import { Moon, Sun } from 'lucide-react'
 import { useTheme } from 'next-themes'
 
 export default function ThemeToggle(): React.JSX.Element | null {
   const { theme, setTheme } = useTheme()
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
+  const mounted = useHydrated()
 
   if (!mounted) {
     return null
@@ -20,30 +17,36 @@ export default function ThemeToggle(): React.JSX.Element | null {
 
   const isDark = theme === 'dark'
   const nextTheme = isDark ? 'light' : 'dark'
+  const nextThemeLabel = nextTheme === 'dark' ? 'Dark' : 'Light'
 
   return (
-    <Button
-      variant="ghost"
-      size="icon"
-      onClick={() => setTheme(nextTheme)}
-      className="hover:bg-primary/5 group relative size-11 overflow-hidden rounded-full transition-colors duration-200 md:size-9"
-      aria-label={`Switch to ${nextTheme} theme`}
-      title={`Switch to ${nextTheme} theme`}
-    >
-      <span className="relative flex size-5 items-center justify-center">
-        <Sun
-          className={cn(
-            'absolute size-5 transition-[transform,opacity] duration-200 ease-out group-hover:rotate-45 motion-reduce:transition-none',
-            isDark ? 'scale-100 rotate-0 opacity-100' : 'scale-0 rotate-90 opacity-0'
-          )}
-        />
-        <Moon
-          className={cn(
-            'absolute size-5 transition-[transform,opacity] duration-200 ease-out group-hover:-rotate-12 motion-reduce:transition-none',
-            isDark ? 'scale-0 -rotate-90 opacity-0' : 'scale-100 rotate-0 opacity-100'
-          )}
-        />
-      </span>
-    </Button>
+    <ButtonWithTooltip label={`Switch to ${nextThemeLabel} Theme`} placement="bottom">
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => setTheme(nextTheme)}
+        className="text-muted-foreground/50 hover:text-foreground/70 relative overflow-hidden rounded-full transition-colors duration-200 hover:bg-transparent"
+        aria-label={`Switch to ${nextThemeLabel} Theme`}
+      >
+        <span className="relative flex size-5 items-center justify-center">
+          <Sun
+            aria-hidden="true"
+            style={{ width: '100%', height: '100%' }}
+            className={cn(
+              'absolute inset-0 transition-[transform,opacity] duration-150 ease-out motion-reduce:transition-none',
+              isDark ? 'scale-100 rotate-0 opacity-100' : 'scale-0 rotate-90 opacity-0'
+            )}
+          />
+          <Moon
+            aria-hidden="true"
+            style={{ width: '100%', height: '100%' }}
+            className={cn(
+              'absolute inset-0 transition-[transform,opacity] duration-150 ease-out motion-reduce:transition-none',
+              isDark ? 'scale-0 -rotate-90 opacity-0' : 'scale-100 rotate-0 opacity-100'
+            )}
+          />
+        </span>
+      </Button>
+    </ButtonWithTooltip>
   )
 }

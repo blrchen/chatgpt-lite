@@ -2,51 +2,37 @@
 
 [English](./README.md) | 简体中文
 
+ChatGPT Lite 是一个功能完整、支持私有化部署的 ChatGPT 应用。基于 Next.js，开箱即用。
+
 ## 演示
 
 访问 [ChatGPT Lite 演示网站](https://gptlite.vercel.app)
 
-![浅色主题](./docs/images/demo.jpg)
-![深色主题](./docs/images/demo-dark.jpg)
+| 浅色主题 | 深色主题 |
+|:--------:|:-------:|
+| ![浅色主题](./docs/images/demo.jpg) | ![深色主题](./docs/images/demo-dark.jpg) |
 
 ## 功能介绍
 
-ChatGPT Lite 是一个基于 Next.js 16 和 [OpenAI Chat API](https://platform.openai.com/docs/api-reference/chat) 的轻量级 ChatGPT 网页应用，支持 OpenAI 与 Azure OpenAI 账户。
+**功能：**
 
-**核心功能：**
-
-- **实时流式响应** - 通过 Edge Runtime 和 Server-Sent Events 实现逐字输出
-- **丰富的 Markdown 渲染** - 完整支持 Markdown 语法、代码高亮及 KaTeX 数学公式
+- **实时流式响应** - 通过 Server-Sent Events 实现逐字输出
+- **丰富的 Markdown 渲染** - 完整支持 Markdown 语法及代码高亮
 - **角色系统** - 创建并切换不同的 AI 人设，自定义系统提示词
-- **持久化聊天记录** - 所有对话本地保存，无需数据库
-- **双平台支持** - 同时兼容 OpenAI 和 Azure OpenAI API
-- **文件附件** - 支持直接上传图片、PDF、电子表格（XLSX/CSV）及文本文件
-- **语音输入** - 通过 Web Speech API 语音识别，支持连续听写
-- **联网搜索** - Azure 和 OpenAI 模型可按需搜索网络，并显示来源引用
-
-**用户体验：**
-
-- **响应式设计** - 移动优先的界面设计，可折叠侧边栏，适配各种屏幕尺寸
-- **40+ 内置主题** - 丰富的主题库，涵盖浅色、深色及多彩风格
 - **多会话管理** - 轻松组织和切换多个聊天会话
-- **隐私保护** - 自托管实例，终端用户无需接触 API 密钥
+- **持久化聊天记录** - 所有对话本地保存，无需服务端数据库
+- **文件附件** - 支持直接上传图片、PDF、电子表格（XLSX/CSV）及文本文件
+- **语音输入** - 通过 Web Speech API 语音识别
+- **联网搜索** - 模型支持时可搜索网络，并显示来源引用
+- **支持 OpenAI、Azure OpenAI 及 OpenAI 兼容 API 提供商**
+- **40+ UI 主题**
+- **响应式设计** - 适配桌面与移动端，可折叠侧边栏
 
-**开发体验：**
+本项目基于 [ChatGPT Minimal](https://github.com/blrchen/chatgpt-minimal) 扩展开发，在其基础上增加了主题系统、角色系统、文件附件、语音输入等功能。如果只需要核心聊天功能，可以直接使用 ChatGPT Minimal，代码量小，代码清晰，易于扩展。
 
-- 基于 **Next.js 16 App Router**、**React 19** 和 **Tailwind CSS v4** 构建
-- 使用 **Vercel AI SDK**（`@ai-sdk/react`）实现流式聊天及 UI 消息协议
-- 采用 **Shadcn/ui** 组件库及 **Radix UI** 原语，架构清晰易扩展
-- 支持一键部署到 Vercel、Docker 或任意 Node.js 环境
+## 部署
 
-如果你需要更适合初学者的 ChatGPT UI 代码库，建议查看 [ChatGPT Minimal](https://github.com/blrchen/chatgpt-minimal)。
-
-## 前提条件
-
-你需要一个 OpenAI 或 Azure OpenAI 账户。
-
-## 部署方法
-
-在部署前，请根据下文 [环境变量](#环境变量) ，配置所需环境变量。
+部署所需的环境变量请参考[环境变量](#环境变量)章节。
 
 ### 部署到 Vercel
 
@@ -54,23 +40,23 @@ ChatGPT Lite 是一个基于 Next.js 16 和 [OpenAI Chat API](https://platform.o
 
 [![使用Vercel部署](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fblrchen%2Fchatgpt-lite&project-name=chatgpt-lite&framework=nextjs&repository-name=chatgpt-lite)
 
-### Docker 部署
+### 使用 Docker 部署
 
-OpenAI 账户用户：
+OpenAI 账户：
 
 ```bash
 docker run -d -p 3000:3000 \
-   -e OPENAI_API_KEY=<你的_OPENAI_API_KEY> \
+   -e OPENAI_API_KEY="<你的_OPENAI_API_KEY>" \
    blrchen/chatgpt-lite
 ```
 
-Azure OpenAI 账户用户：
+Azure OpenAI 账户：
 
 ```bash
 docker run -d -p 3000:3000 \
-   -e AZURE_OPENAI_RESOURCE_NAME=<你的_AZURE_RESOURCE_NAME> \
-   -e AZURE_OPENAI_API_KEY=<你的_AZURE_OPENAI_API_KEY> \
-   -e AZURE_OPENAI_DEPLOYMENT=<你的_AZURE_OPENAI_DEPLOYMENT_NAME> \
+   -e AZURE_OPENAI_RESOURCE_NAME="<你的_AZURE_RESOURCE_NAME>" \
+   -e AZURE_OPENAI_API_KEY="<你的_AZURE_OPENAI_API_KEY>" \
+   -e AZURE_OPENAI_DEPLOYMENT="<你的_AZURE_OPENAI_DEPLOYMENT_NAME>" \
    blrchen/chatgpt-lite
 ```
 
@@ -78,7 +64,7 @@ docker run -d -p 3000:3000 \
 
 ### 本地运行
 
-1. 安装 NodeJS 20。
+1. 安装 Node.js 22+。
 2. 克隆本仓库。
 3. 运行 `npm install` 安装依赖。
 4. 将 `.env.example` 复制为 `.env.local` 并根据需要修改环境变量。
@@ -107,7 +93,7 @@ docker run -d -p 3000:3000 \
 
 ## 致谢
 
-- 主题配置来自 [tweakcn](https://github.com/jnsahaj/tweakcn)
+- 主题代码来自 [tweakcn](https://github.com/jnsahaj/tweakcn)
 
 ## 贡献
 
