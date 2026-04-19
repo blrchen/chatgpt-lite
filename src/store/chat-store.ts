@@ -184,7 +184,6 @@ interface ChatState {
   onChangeChat: (chat: Chat) => void
   onCreateChat: (persona: Persona, firstMessage?: string) => Chat | undefined
   onCreateDefaultChat: (firstMessage?: string) => Chat | undefined
-  openOrCreateDefaultChat: () => Chat | undefined
   onDeleteChat: (chat: Chat) => void
   updateChatTitle: (chatId: string, title: string) => void
   updateChatPinned: (chatId: string, pinned: boolean) => void
@@ -207,7 +206,6 @@ export const selectCommitConversation = (s: ChatState) => s.commitConversation
 export const selectOnChangeChat = (s: ChatState) => s.onChangeChat
 export const selectOnCreateChat = (s: ChatState) => s.onCreateChat
 export const selectOnCreateDefaultChat = (s: ChatState) => s.onCreateDefaultChat
-export const selectOpenOrCreateDefaultChat = (s: ChatState) => s.openOrCreateDefaultChat
 export const selectOnDeleteChat = (s: ChatState) => s.onDeleteChat
 export const selectUpdateChatTitle = (s: ChatState) => s.updateChatTitle
 export const selectUpdateChatPinned = (s: ChatState) => s.updateChatPinned
@@ -340,34 +338,6 @@ export const useChatStore = create<ChatState>()(
 
     onCreateDefaultChat: (firstMessage) => {
       return get().onCreateChat(DefaultPersona, firstMessage)
-    },
-
-    openOrCreateDefaultChat: () => {
-      let selectedChat: Chat | undefined
-      set((state) => {
-        const emptyChat = state.chatList.find((chat) => {
-          return (chatRepo.getMessages(chat.id) ?? EMPTY_MESSAGES).length === 0
-        })
-
-        if (emptyChat) {
-          selectedChat = emptyChat
-          if (state.currentChatId === emptyChat.id) {
-            return state
-          }
-          return { currentChatId: emptyChat.id }
-        }
-
-        const newChat = createChatRecord({
-          personaId: DefaultPersona.id,
-          personaName: DefaultPersona.name
-        })
-        selectedChat = newChat
-        return {
-          chatList: sortChatsByPinnedThenRecent([newChat, ...state.chatList]),
-          currentChatId: newChat.id
-        }
-      })
-      return selectedChat
     },
 
     onDeleteChat: (chat) => {

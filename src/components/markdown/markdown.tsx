@@ -12,7 +12,7 @@ import { CopyStatusAnnouncement } from '@/components/accessibility/copy-status-a
 import { AppIconButton } from '@/components/common/app-button'
 import { ImagePreviewDialog } from '@/components/common/image-preview-dialog'
 import { Separator } from '@/components/ui/separator'
-import { useCopyToClipboard } from '@/hooks/useCopyToClipboard'
+import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard'
 import { cn } from '@/lib/utils'
 import type { Element, Nodes, Properties, Root } from 'hast'
 import { Check, Copy } from 'lucide-react'

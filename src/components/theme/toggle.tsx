@@ -2,7 +2,7 @@
 
 import { ButtonWithTooltip } from '@/components/common/button-with-tooltip'
 import { Button } from '@/components/ui/button'
-import { useHydrated } from '@/hooks/useHydrated'
+import { useHydrated } from '@/hooks/use-hydrated'
 import { cn } from '@/lib/utils'
 import { Moon, Sun } from 'lucide-react'
 import { useTheme } from 'next-themes'

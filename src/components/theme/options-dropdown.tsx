@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/command'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Separator } from '@/components/ui/separator'
-import { useHydrated } from '@/hooks/useHydrated'
+import { useHydrated } from '@/hooks/use-hydrated'
 import { getThemePreset, getThemePresetEntries, resolvePresetId } from '@/lib/themes/theme-preset'
 import { cn } from '@/lib/utils'
 import { isMobileViewport } from '@/lib/viewport'
@@ -237,7 +237,7 @@ function ThemeOptionsDropdownContent({
               name="theme-search"
               value={search}
               onValueChange={setSearch}
-              placeholder="Search themes…"
+              placeholder="Search themes..."
               inputMode="search"
               enterKeyHint="search"
               autoComplete="off"

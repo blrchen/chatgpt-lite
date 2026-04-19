@@ -13,3 +13,9 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - `src/lib/themes/tweakcn-presets.ts` is synced from
   [tweakcn](https://github.com/jnsahaj/tweakcn/blob/main/utils/theme-presets.ts).
   Local edits will be overwritten on next sync.
+
+## Design Constraints
+
+- **MUST NOT** add test frameworks unless explicitly requested.
+- **Client-side persistence only.** **MUST NOT** add server-side persistence (API/database/cloud sync) unless explicitly requested.
+- **`chatRepo` MUST NOT be imported outside `src/store/`.** Components and pages go through store actions or hooks.

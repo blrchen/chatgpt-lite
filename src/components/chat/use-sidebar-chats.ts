@@ -4,8 +4,8 @@ import {
   selectCurrentChatId,
   selectIsChatHydrated,
   selectOnChangeChat,
+  selectOnCreateDefaultChat,
   selectOnDeleteChat,
-  selectOpenOrCreateDefaultChat,
   selectUpdateChatPinned,
   selectUpdateChatTitle,
   useChatStore
@@ -70,7 +70,7 @@ export function useSidebarChats({ closeMobile }: UseSidebarChatsArgs): {
   const chatList = useChatStore(selectChatList)
   const onDeleteChat = useChatStore(selectOnDeleteChat)
   const onChangeChat = useChatStore(selectOnChangeChat)
-  const openOrCreateDefaultChat = useChatStore(selectOpenOrCreateDefaultChat)
+  const onCreateDefaultChat = useChatStore(selectOnCreateDefaultChat)
   const updateChatTitle = useChatStore(selectUpdateChatTitle)
   const updateChatPinned = useChatStore(selectUpdateChatPinned)
 
@@ -80,10 +80,10 @@ export function useSidebarChats({ closeMobile }: UseSidebarChatsArgs): {
   const trimmedRenameValue = renameValue.trim()
 
   const handleNewChat = useCallback(() => {
-    openOrCreateDefaultChat()
+    onCreateDefaultChat()
     closePersonaPanel()
     closeMobile()
-  }, [closePersonaPanel, closeMobile, openOrCreateDefaultChat])
+  }, [closePersonaPanel, closeMobile, onCreateDefaultChat])
 
   const handleOpenPersonaLibrary = useCallback(() => {
     openPersonaPanel()

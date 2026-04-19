@@ -5,7 +5,7 @@ import { ChatComposer, type ChatComposerHandle } from '@/components/chat/chat-co
 import { ChatSessionProvider } from '@/components/chat/chat-session-context'
 import { MessageList } from '@/components/chat/message-list'
 import { Separator } from '@/components/ui/separator'
-import { useChatSession } from '@/hooks/useChatSession'
+import { useChatSession } from '@/hooks/use-chat-session'
 import { isMobileViewport } from '@/lib/viewport'
 import { selectCurrentChatId, selectIsChatHydrated, useChatStore } from '@/store/chat-store'
 import { Loader2 } from 'lucide-react'

@@ -3,9 +3,9 @@
 import { forwardRef, memo, useCallback, useId, useImperativeHandle, useRef, useState } from 'react'
 import { useChatComposerContext } from '@/components/chat/chat-session-context'
 import { ConfirmActionDialog } from '@/components/common/confirm-action-dialog'
-import { useFileAttachments } from '@/hooks/useFileAttachments'
-import { useInViewport } from '@/hooks/useInViewport'
-import { useVoiceRecognition } from '@/hooks/useVoiceRecognition'
+import { useFileAttachments } from '@/hooks/use-file-attachments'
+import { useInViewport } from '@/hooks/use-in-viewport'
+import { useVoiceRecognition } from '@/hooks/use-voice-recognition'
 import { getItem, removeItem, setItem } from '@/lib/client-storage'
 import { CACHE_KEY } from '@/services/constant'
 

@@ -38,7 +38,7 @@
     "remark-gfm": "^4.0.1",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.5.0",
-    "tailwindcss-animate": "^1.0.7",
+    "tw-animate-css": "^1.3.5",
     "use-stick-to-bottom": "^1.1.3",
     "xlsx": "^0.18.5",
     "zod": "^4.3.6",
